@@ -3,7 +3,9 @@
 Interactive bf console; exit with ^C.
 
 Line buffer size: 4096 chars
+
 Code buffer size: 8388608 chars
+
 Memory size: 8388608 chars
 
 ## Building / Running It
