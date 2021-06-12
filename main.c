@@ -52,7 +52,7 @@ void print_error(int errnum) {
 		break;
 
 	default:
-		fprintf(stderr, "%s: error: unknown erro %d\n",
+		fprintf(stderr, "%s: error: unknown error %d\n",
 			progname, errnum);
 
 		exit(errnum);
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
 
 		char endl;
 
-		int ret = scanf("%" LINE_SIZE_PRI "[^\n]%c", line, &endl);
+		int ret = scanf(" %" LINE_SIZE_PRI "[^\n]%c", line, &endl);
 
 		if(ret != 2) print_error(-1);
 
@@ -132,7 +132,6 @@ void print_help() {
 void run(char *start, size_t len) {
 	int brackets_open = 0;
 	size_t sub_start = 0;
-	int ret = 0;
 
 	for(size_t i = 0; i < len; i++) {
 		switch(start[i]) {
@@ -178,13 +177,11 @@ void run(char *start, size_t len) {
 			break;
 
 		case '.':
-			printf("%c", mem[ptr]);
+			putchar(mem[ptr]);
 			break;
 
 		case ',':
-			ret = scanf("%c", &mem[ptr]);
-			if(ret != 1) print_error(-1);
-
+			mem[ptr] = getchar();
 			break;
 		}
 	}
