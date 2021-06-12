@@ -12,6 +12,11 @@ Extended Brainfuck commands:
   ?: Prints the help and copyright disclaimer to the console.
   /: Clears the memory and moves the pointer to 0.
   *: Prints memory values around the current pointer value.
+  
+  {: Begins a block of code.
+  }: Ends a block of code.
+
+Note, once a block of code has been started, code will not be executed until the block has been ended.
 ```
 
 ## Building / Running It
