@@ -67,8 +67,8 @@ int main(int argc, char **argv) {
 	size_t insertion_point = 0;
 
 	while(!feof(stdin)) {
-		if(!insertion_point) printf("bf) ");
-		else printf("bf contd.) ");
+		if(!insertion_point) printf("[bf@%zx] ", ptr);
+		else printf("> ");
 
 		if(CODE_SIZE - insertion_point < LINE_SIZE) {
 			insertion_point = 0;
@@ -157,7 +157,7 @@ void run(char *start, size_t len) {
 
 		switch(start[i]) {
 		case '>':
-			if(ptr < MEM_SIZE) ptr++;
+			if(ptr < MEM_SIZE - 1) ptr++;
 			else ptr = 0;
 
 			break;
