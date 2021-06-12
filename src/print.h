@@ -17,6 +17,8 @@
 #define BAD_ARGS 1
 #define CODE_TOO_LONG 2
 #define LINE_TOO_LONG 3
+#define NESTED_BRACES 4
+#define BAD_BRACKETS 5
 
 extern const char *progname;
 

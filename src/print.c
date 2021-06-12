@@ -58,6 +58,14 @@ void print_error(int errnum) {
 		fprintf(stderr, "%s: error: line too long.\n", progname);
 		break;
 
+	case NESTED_BRACES:
+		fprintf(stderr, "%s: error: nested braces.\n", progname);
+		break;
+
+	case BAD_BRACKETS:
+		fprintf(stderr, "%s: error: unpaired brackets.\n", progname);
+		break;
+
 	default:
 		fprintf(stderr, "%s: error: unknown error %d\n",
 			progname, errnum);
@@ -79,7 +87,13 @@ void print_help() {
 	printf("  Extended Brainfuck commands:\n");
 	printf("    ?: Prints the help and copyright disclaimer to the console.\n");
 	printf("    /: Clears the memory and moves the pointer to 0.\n");
-	printf("    *: Prints memory values around the current pointer value.\n");
+	printf("    *: Prints memory values around the current pointer value.\n\n");
+
+	printf("    {: Begins a block of code.\n");
+	printf("    }: Ends a block of code.\n\n");
+
+	printf("  Note, once a block of code has been started, code will not be "
+		"executed until the block has been ended.\n");
 }
 
 void print_mem() {

@@ -31,21 +31,22 @@ int main(int argc, char **argv) {
 	size_t insertion_point = 0;
 
 	printf("Bfcli: The Interactive Brainfuck Command-Line Interpreter\n");
-	printf("Copyright (C) 2021 Jyothiraditya Nellakra\n");
+	printf("Copyright (C) 2021 Jyothiraditya Nellakra\n\n");
 
-	printf("This program comes with ABSOLUTELY NO WARRANTY.\n");
-	printf("This is free software, and you are welcome to redistribute it\n");
-	printf("under certain conditions; for details type `?'.\n\n");
+	printf("  This program comes with ABSOLUTELY NO WARRANTY; for details type `?'.\n");
+	printf("  This is free software, and you are welcome to redistribute it\n");
+	printf("  under certain conditions.\n\n");
 
+loop:
 	while(!feof(stdin)) {
-		if(!insertion_point) printf("[bfcli@%zx] ", ptr);
-		else printf("> ");
+		if(!insertion_point) printf("bfcli@data:%zx$ ", ptr);
+		else printf("$ ");
 
 		if(CODE_SIZE - insertion_point < LINE_SIZE) {
 			insertion_point = 0;
 
 			print_error(CODE_TOO_LONG);
-			continue;
+			goto loop;
 		}
 
 		char endl;
@@ -56,13 +57,16 @@ int main(int argc, char **argv) {
 
 		if(endl != '\n' && !feof(stdin)) {
 			print_error(LINE_TOO_LONG);
-			continue;
+			goto loop;
 		}
 
 		strcpy(&code[insertion_point], line);
 
 		size_t len = strlen(code);
 		int brackets_open = 0;
+
+		size_t start = 0;
+		size_t end = 0;
 
 		for(size_t i = 0; i < len; i++) {
 			switch(code[i]) {
@@ -73,11 +77,39 @@ int main(int argc, char **argv) {
 			case ']':
 				brackets_open--;
 				break;
+
+			case '{':
+				if(start) {
+					print_error(NESTED_BRACES);
+					insertion_point = 0;
+					goto loop;
+				}
+
+				start = i + 1;
+				break;
+
+			case '}':
+				if(end) {
+					print_error(NESTED_BRACES);
+					insertion_point = 0;
+					goto loop;
+				}
+
+				if(!brackets_open) end = i;
+
+				else {
+					print_error(BAD_BRACKETS);
+					insertion_point = 0;
+					goto loop;
+				}
+
+				break;
 			}
 		}
 
-		if(!brackets_open) {
+		if(!brackets_open && ((start && end) || (!start && !end))) {
 			run(code, len);
+			putchar('\n');
 			insertion_point = 0;
 		}
 
