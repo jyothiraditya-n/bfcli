@@ -5,7 +5,8 @@ Usage: ./bfcli
 (Don't supply any arguments.)
 
 Interactive Brainfuck interpreter; exit with ^C.
-Line buffer size: 4096 chars Code buffer size: 65536 chars
+Line buffer size: 4096 chars
+Code buffer size: 65536 chars
 Memory size: 655360 chars
 
 Extended Brainfuck commands:
