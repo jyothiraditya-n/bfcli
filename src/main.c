@@ -19,6 +19,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <termios.h>
+#include <unistd.h>
+
 #include "print.h"
 #include "run.h"
 #include "size.h"
@@ -81,6 +84,16 @@ int main(int argc, char **argv) {
 	progname = argv[0];
 	if(argc > 1) print_error(BAD_ARGS);
 
+	struct termios cooked, raw;
+	tcgetattr(0, &cooked);
+	raw = cooked;
+
+	raw.c_lflag &= ~ICANON;
+	raw.c_lflag |= ECHO;
+
+	raw.c_cc[VINTR] = 3;
+	raw.c_lflag |= ISIG;
+
 	static char line[LINE_SIZE];
 	size_t insertion_point = 0;
 
@@ -92,6 +105,8 @@ int main(int argc, char **argv) {
 	puts("  under certain conditions.\n");
 
 	while(!feof(stdin)) {
+		tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
+
 		if(!insertion_point) printf("bfcli@data:%zx$ ", ptr);
 		else printf("code:%zx$ ", insertion_point);
 
@@ -120,7 +135,9 @@ int main(int argc, char **argv) {
 
 		switch(ret) {
 		case CODE_OK:
+			tcsetattr(STDIN_FILENO, TCSANOW, &raw);
 			run(code, len);
+
 			insertion_point = 0;
 			break;
 
