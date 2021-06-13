@@ -29,7 +29,7 @@ $ make
 $ ./bfcli
 ```
 
-Run the following commands to install it locally and run it:
+Or run the following commands to install it locally and run it:
 
 ```
 $ make
@@ -37,7 +37,7 @@ $ make install
 $ bfcli
 ```
 
-Alternatively, specify an installation folder and run it:
+Or specify an installation folder and run it:
 
 ```
 $ make
