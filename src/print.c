@@ -45,6 +45,15 @@ void print_about() {
 	puts("  along with this program. If not, see <https://www.gnu.org/licenses/>.");
 }
 
+void print_banner() {
+	puts("Bfcli: The Interactive Brainfuck Command-Line Interpreter");
+	puts("Copyright (C) 2021 Jyothiraditya Nellakra\n");
+
+	puts("  This program comes with ABSOLUTELY NO WARRANTY; for details type `?'.");
+	puts("  This is free software, and you are welcome to redistribute it");
+	puts("  under certain conditions.\n");
+}
+
 void print_error(int errnum) {
 	switch(errnum) {
 	case BAD_ARGS:

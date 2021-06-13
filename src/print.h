@@ -28,6 +28,7 @@ extern const char *progname;
 extern bool colour;
 
 extern void print_about();
+extern void print_banner();
 extern void print_error(int errnum);
 extern void print_help();
 extern void print_mem();

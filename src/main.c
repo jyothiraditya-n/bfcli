@@ -155,16 +155,10 @@ static void init(int argc, char **argv) {
 
 int main(int argc, char **argv) {
 	init(argc, argv);
+	print_banner();
 
 	static char line[LINE_SIZE];
 	size_t insertion_point = 0;
-
-	puts("Bfcli: The Interactive Brainfuck Command-Line Interpreter");
-	puts("Copyright (C) 2021 Jyothiraditya Nellakra\n");
-
-	puts("  This program comes with ABSOLUTELY NO WARRANTY; for details type `?'.");
-	puts("  This is free software, and you are welcome to redistribute it");
-	puts("  under certain conditions.\n");
 
 	while(!feof(stdin)) {
 		tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
