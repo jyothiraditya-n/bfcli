@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
 
 		char endl;
 
-		int ret = scanf(" %" LINE_SIZE_PRI "[^\n]%c", line, &endl);
+		int ret = scanf(" " LINE_SIZE_SCN "%c", line, &endl);
 
 		if(ret != 2) print_error(UNKNOWN_ERROR);
 

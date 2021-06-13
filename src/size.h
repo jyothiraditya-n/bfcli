@@ -16,7 +16,7 @@
 
 #define CODE_SIZE 65536
 #define MEM_SIZE 655360
-#define MEM_SIZE_PRI "5"
+#define MEM_SIZE_PRI "%05zx"
 
 #define LINE_SIZE 4096
-#define LINE_SIZE_PRI "4095"
+#define LINE_SIZE_SCN "%4095[^\n]"

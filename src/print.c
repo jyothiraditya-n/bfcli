@@ -125,7 +125,7 @@ void print_mem() {
 	for(size_t j = 0; j < 128; j += 8) {
 		if(i + j >= MEM_SIZE) i = -j;
 
-		printf("  %0" MEM_SIZE_PRI "zx:", i + j);
+		printf("  " MEM_SIZE_PRI ":", i + j);
 
 		for(size_t k = 0; k < 8; k++) {
 			printf(" %02x", mem[i + j + k]);
