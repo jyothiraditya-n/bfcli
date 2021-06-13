@@ -1,4 +1,4 @@
-# Bfcli: The Interactive Command-Line Brainfuck Interpreter
+# Bfcli: The Interactive Brainfuck Command-Line Interpreter
 
 ```
 Usage: ./bfcli
