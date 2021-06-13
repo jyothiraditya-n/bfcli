@@ -1,8 +1,14 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 
 ```
-Usage: ./bfcli
-(Don't supply any arguments.)
+Usage: bfcli [ARGS]
+
+Valid arguments are:
+  -a, --about         prints the licence and about dialogue.
+  -h, --help          prints the help dialogue.
+
+  -c, --colour                (default) enables colour output.
+  -m, --monochrome    disables colour output.
 
 Interactive Brainfuck interpreter; exit with ^C.
 Line buffer size: 4096 chars
