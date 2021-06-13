@@ -16,6 +16,7 @@
 
 #define CODE_SIZE 65536
 #define MEM_SIZE 655360
+#define MEM_SIZE_PRIXCH "5"
 
 #define LINE_SIZE 4096
 #define LINE_SIZE_PRI "4095"
