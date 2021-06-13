@@ -22,8 +22,13 @@ CC = gcc
 CPPFLAGS = -std=c99 -O3
 CFLAGS = -std=c99
 
+DESTDIR = ~/.local/bin
+
 build/ :
 	mkdir -p build/
+
+$(DESTDIR) : 
+	mkdir -p $(DESTDIR)/
 
 $(OBJS) : build/%.o : src/%.c build/ $(HEADERS)
 	$(CC) $(CPPFLAGS) -c $< -o $@
@@ -32,12 +37,16 @@ bfcli : $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o bfcli $(LDLIBS)
 
 .DEFAULT_GOAL = all
-.PHONY : all clean deep-clean
+.PHONY : all clean install remove
 
 all : bfcli
 
 clean :
 	-rm -r build/
-
-deep-clean : clean
 	-rm bfcli
+
+install : bfcli $(DESTDIR)/
+	cp bfcli $(DESTDIR)/
+
+remove :
+	-rm $(DESTDIR)/bfcli

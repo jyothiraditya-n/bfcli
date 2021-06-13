@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <inttypes.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -84,25 +85,40 @@ void print_help() {
 	printf("  Code buffer size: %d chars\n", CODE_SIZE);
 	printf("  Memory size: %d chars\n\n", MEM_SIZE);
 
+	printf("  Brainfuck commands:\n");
+	printf("    > Increments the data pointer.\n");
+	printf("    < Decrements the data pointer.\n\n");
+
+	printf("    + Increments the value at the data pointer.\n");
+	printf("    - Decrements the value at the data pointer.\n\n");
+
+	printf("  Note: Data values are modulo-256 unsigned integers, meaning\n");
+	printf("        0 - 1 = 255, and 255 + 1 = 0.\n\n");
+
+	printf("    . Outputs the value at the data pointer as an ASCII character.\n");
+	printf("    , Inputs an ASCII character and stores its value at the data\n");
+	printf("      pointer.\n\n");
+
+	printf("    [ (Open bracket) begins a loop.\n");
+	printf("    ] (Close brace) ends a loop.\n\n");
+
+	printf("  Note: Loops run while the value at the data pointer is non-zero.\n\n");
+
 	printf("  Extended Brainfuck commands:\n");
-	printf("    ?: Prints the help and copyright disclaimer to the console.\n");
-	printf("    /: Clears the memory and moves the pointer to 0.\n");
-	printf("    *: Prints memory values around the current pointer value.\n\n");
+	printf("    ? Prints the help and copyright disclaimer to the console.\n");
+	printf("    / Clears the memory and moves the pointer to 0.\n");
+	printf("    * Prints memory values around the current pointer value.\n\n");
 
-	printf("    {: Begins a block of code.\n");
-	printf("    }: Ends a block of code.\n\n");
+	printf("    { (Open brace) begins a block of code.\n");
+	printf("    } (Close brace) ends a block of code.\n\n");
 
-	printf("  Note, once a block of code has been started, code will not be "
-		"executed until the block has been ended.\n");
+	printf("  Note: Once a block of code has been started, code will not be\n");
+	printf("        executed until the block has been ended.\n");
 }
 
 void print_mem() {
-	size_t i = ptr;
-
-	for(int j = 0; j < 64; j++) {
-		if(i) i--;
-		else i = MEM_SIZE - 1;
-	}
+	intmax_t i = (intmax_t) ptr - 64;
+	if(i < 0) i += MEM_SIZE;
 
 	i -= i % 8;
 

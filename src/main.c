@@ -23,6 +23,60 @@
 #include "run.h"
 #include "size.h"
 
+#define NXOR(A, B) ((A && B) || (!A && !B))
+
+static int check(char *code, size_t len);
+
+#define CODE_OK 1
+#define CODE_INCOMPLETE 2
+#define CODE_ERROR 3
+
+static int check(char *code, size_t len) {
+	int loops_open = 0;
+
+	size_t start = 0;
+	size_t end = 0;
+
+	for(size_t i = 0; i < len; i++) {
+		switch(code[i]) {
+		case '[':
+			loops_open++;
+			break;
+
+		case ']':
+			loops_open--;
+			break;
+
+		case '{':
+			if(start) {
+				print_error(NESTED_BRACES);
+				return CODE_ERROR;
+			}
+
+			start = i + 1;
+			break;
+
+		case '}':
+			if(end) {
+				print_error(NESTED_BRACES);
+				return CODE_ERROR;
+			}
+
+			if(!loops_open) end = i;
+
+			else {
+				print_error(BAD_BRACKETS);
+				return CODE_ERROR;
+			}
+
+			break;
+		}
+	}
+
+	if(!loops_open && NXOR(start, end)) return CODE_OK;
+	else return CODE_INCOMPLETE;
+}
+
 int main(int argc, char **argv) {
 	progname = argv[0];
 	if(argc > 1) print_error(BAD_ARGS);
@@ -37,16 +91,15 @@ int main(int argc, char **argv) {
 	printf("  This is free software, and you are welcome to redistribute it\n");
 	printf("  under certain conditions.\n\n");
 
-loop:
 	while(!feof(stdin)) {
 		if(!insertion_point) printf("bfcli@data:%zx$ ", ptr);
-		else printf("$ ");
+		else printf("code:%zx$ ", insertion_point);
 
 		if(CODE_SIZE - insertion_point < LINE_SIZE) {
 			insertion_point = 0;
 
 			print_error(CODE_TOO_LONG);
-			goto loop;
+			continue;
 		}
 
 		char endl;
@@ -57,63 +110,28 @@ loop:
 
 		if(endl != '\n' && !feof(stdin)) {
 			print_error(LINE_TOO_LONG);
-			goto loop;
+			continue;
 		}
 
 		strcpy(&code[insertion_point], line);
 
 		size_t len = strlen(code);
-		int brackets_open = 0;
+		ret = check(code, len);
 
-		size_t start = 0;
-		size_t end = 0;
-
-		for(size_t i = 0; i < len; i++) {
-			switch(code[i]) {
-			case '[':
-				brackets_open++;
-				break;
-
-			case ']':
-				brackets_open--;
-				break;
-
-			case '{':
-				if(start) {
-					print_error(NESTED_BRACES);
-					insertion_point = 0;
-					goto loop;
-				}
-
-				start = i + 1;
-				break;
-
-			case '}':
-				if(end) {
-					print_error(NESTED_BRACES);
-					insertion_point = 0;
-					goto loop;
-				}
-
-				if(!brackets_open) end = i;
-
-				else {
-					print_error(BAD_BRACKETS);
-					insertion_point = 0;
-					goto loop;
-				}
-
-				break;
-			}
-		}
-
-		if(!brackets_open && ((start && end) || (!start && !end))) {
+		switch(ret) {
+		case CODE_OK:
 			run(code, len);
-			putchar('\n');
 			insertion_point = 0;
-		}
+			break;
 
-		else insertion_point += strlen(line);
+		case CODE_INCOMPLETE:
+			insertion_point += strlen(line);
+			break;
+
+		case CODE_ERROR:
+			insertion_point = 0;
+			break;
+		}
 	}
 
 	exit(0);
