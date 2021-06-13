@@ -19,8 +19,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <signal.h>
 #include <termios.h>
 #include <unistd.h>
+
+#include <LC_args.h>
+#include <LC_vars.h>
 
 #include "print.h"
 #include "run.h"
@@ -33,6 +37,19 @@ static int check(char *code, size_t len);
 #define CODE_OK 1
 #define CODE_INCOMPLETE 2
 #define CODE_ERROR 3
+
+static void about();
+static void help();
+
+static struct termios cooked, raw;
+static void init(int argc, char **argv);
+
+static void about() {
+	putchar('\n');
+	print_about();
+	putchar('\n');
+	exit(0);
+}
 
 static int check(char *code, size_t len) {
 	int loops_open = 0;
@@ -80,11 +97,52 @@ static int check(char *code, size_t len) {
 	else return CODE_INCOMPLETE;
 }
 
-int main(int argc, char **argv) {
-	progname = argv[0];
-	if(argc > 1) print_error(BAD_ARGS);
+static void help() {
+	putchar('\n');
+	print_help();
+	putchar('\n');
+	exit(0);
+}
 
-	struct termios cooked, raw;
+static void init(int argc, char **argv) {
+	progname = argv[0];
+	signal(SIGINT, on_interrupt);
+
+	LCa_t *arg = LCa_new();
+	if(!arg) print_error(UNKNOWN_ERROR);
+	arg -> long_flag = "about";
+	arg -> short_flag = 'a';
+	arg -> pre = about;
+
+	arg = LCa_new();
+	if(!arg) print_error(UNKNOWN_ERROR);
+	arg -> long_flag = "help";
+	arg -> short_flag = 'h';
+	arg -> pre = help;
+
+	LCv_t *var = LCv_new();
+	if(!var) print_error(UNKNOWN_ERROR);
+	var -> id = "colour";
+	var -> data = &colour;
+
+	arg = LCa_new();
+	if(!arg) print_error(UNKNOWN_ERROR);
+	arg -> long_flag = "colour";
+	arg -> short_flag = 'c';
+	arg -> var = var;
+	arg -> value = true;
+
+	arg = LCa_new();
+	if(!arg) print_error(UNKNOWN_ERROR);
+	arg -> long_flag = "monochrome";
+	arg -> short_flag = 'm';
+	arg -> var = var;
+	arg -> value = false;
+
+	int ret = LCa_read(argc, argv);
+	if(ret == LCA_BAD_CMD) print_error(BAD_ARGS);
+	else if(ret != LCA_OK) print_error(UNKNOWN_ERROR);
+	
 	tcgetattr(0, &cooked);
 	raw = cooked;
 
@@ -93,6 +151,10 @@ int main(int argc, char **argv) {
 
 	raw.c_cc[VINTR] = 3;
 	raw.c_lflag |= ISIG;
+}
+
+int main(int argc, char **argv) {
+	init(argc, argv);
 
 	static char line[LINE_SIZE];
 	size_t insertion_point = 0;
@@ -106,9 +168,7 @@ int main(int argc, char **argv) {
 
 	while(!feof(stdin)) {
 		tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
-
-		if(!insertion_point) printf("bfcli@data:%zx$ ", ptr);
-		else printf("code:%zx$ ", insertion_point);
+		print_prompt(insertion_point);
 
 		if(CODE_SIZE - insertion_point < LINE_SIZE) {
 			insertion_point = 0;
@@ -136,9 +196,12 @@ int main(int argc, char **argv) {
 		switch(ret) {
 		case CODE_OK:
 			tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+			running = true;
+
 			run(code, len);
 
 			insertion_point = 0;
+			running = false;
 			break;
 
 		case CODE_INCOMPLETE:

@@ -15,12 +15,17 @@
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
 HEADERS = $(wildcard src/*.h)
+HEADERS += $(wildcard libClame/inc/*.h)
+
 CFILES = $(wildcard src/*.c)
 OBJS = $(patsubst src/%.c,build/%.o,$(CFILES))
+LIBS = libClame/libClame.a
 
 CC = gcc
-CPPFLAGS = -std=c99 -O3
+CPPFLAGS = -Wall -Wextra -Werror -std=c99 -O3 -I libClame/inc/
 CFLAGS = -std=c99
+
+LDLIBS += -L libClame/ -lClame
 
 DESTDIR = ~/.local/bin
 
@@ -33,7 +38,10 @@ $(DESTDIR) :
 $(OBJS) : build/%.o : src/%.c build/ $(HEADERS)
 	$(CC) $(CPPFLAGS) -c $< -o $@
 
-bfcli : $(OBJS)
+libClame/libClame.a :
+	cd libClame; make libClame.a
+
+bfcli : $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(OBJS) -o bfcli $(LDLIBS)
 
 .DEFAULT_GOAL = all
@@ -44,6 +52,7 @@ all : bfcli
 clean :
 	-rm -r build/
 	-rm bfcli
+	cd libClame; make clean;
 
 install : bfcli $(DESTDIR)/
 	cp bfcli $(DESTDIR)/

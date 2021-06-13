@@ -14,8 +14,11 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
+
+#include <signal.h>
 
 #include "print.h"
 #include "run.h"
@@ -25,14 +28,37 @@ char code[CODE_SIZE];
 unsigned char mem[MEM_SIZE];
 size_t ptr;
 
+bool running;
+
 static void clear_mem();
 static void run_sub(char *start, size_t *sub_start, size_t i);
+
+static void clear_mem() {
+	for(size_t j = 0; j < MEM_SIZE; j++) mem[j] = 0;
+}
+
+void on_interrupt(int signum) {
+	if(signum != SIGINT) {
+		signal(signum, SIG_DFL);
+		return;
+	}
+
+	if(running) {
+		signal(SIGINT, on_interrupt);
+		running = false;
+	}
+
+	else {
+		signal(SIGINT, SIG_DFL);
+		raise(SIGINT);
+	}
+}
 
 void run(char *start, size_t len) {
 	int brackets_open = 0;
 	size_t sub_start = 0;
 
-	for(size_t i = 0; i < len; i++) {
+	for(size_t i = 0; i < len && running; i++) {
 		switch(start[i]) {
 		case '[':
 			if(!sub_start) sub_start = i + 1;
@@ -100,11 +126,7 @@ void run(char *start, size_t len) {
 	}
 }
 
-static void clear_mem() {
-	for(size_t j = 0; j < MEM_SIZE; j++) mem[j] = 0;
-}
-
 static void run_sub(char *start, size_t *sub_start, size_t i) {
-	while(mem[ptr]) run(&start[*sub_start], i - *sub_start);
+	while(mem[ptr] && running) run(&start[*sub_start], i - *sub_start);
 	*sub_start = 0;
 }

@@ -14,6 +14,9 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <stdbool.h>
+#include <stddef.h>
+
 #define UNKNOWN_ERROR 0
 #define BAD_ARGS 1
 #define CODE_TOO_LONG 2
@@ -22,8 +25,10 @@
 #define BAD_BRACKETS 5
 
 extern const char *progname;
+extern bool colour;
 
 extern void print_about();
 extern void print_error(int errnum);
 extern void print_help();
 extern void print_mem();
+extern void print_prompt(size_t insertion_point);

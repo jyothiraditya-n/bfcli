@@ -15,6 +15,7 @@
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +25,7 @@
 #include "size.h"
 
 const char *progname;
+bool colour = true;
 
 void print_about() {
 	puts("  Bfcli: The Interactive Brainfuck Command-Line Interpreter");
@@ -46,8 +48,9 @@ void print_about() {
 void print_error(int errnum) {
 	switch(errnum) {
 	case BAD_ARGS:
-		fprintf(stderr, "%s: error: too many args.\n\n", progname);
+		fprintf(stderr, "%s: error: incorrect usage.\n\n", progname);
 		print_help();
+		putchar('\n');
 
 		exit(errnum);
 
@@ -76,8 +79,14 @@ void print_error(int errnum) {
 }
 
 void print_help() {
-	printf("  Usage: %s\n", progname);
-	puts("  (Don't supply any arguments.)\n");
+	printf("  Usage: %s [ARGS]\n\n", progname);
+	
+	puts("  Valid arguments are:");
+	puts("    -a, --about		prints the licence and about dialogue.");
+	puts("    -h, --help		prints the help dialogue.\n");
+
+	puts("    -c, --colour		(default) enables colour output.");
+	puts("    -m, --monochrome	disables colour output.\n");
 
 	puts("  Interactive Brainfuck interpreter; exit with ^C.\n");
 
@@ -113,7 +122,9 @@ void print_help() {
 	puts("    } (Close brace) ends a block of code.\n");
 
 	puts("  Note: Once a block of code has been started, code will not be");
-	puts("        executed until the block has been ended.");
+	puts("        executed until the block has been ended.\n");
+
+	puts("  Happy coding! :)");
 }
 
 void print_mem() {
@@ -128,9 +139,34 @@ void print_mem() {
 		printf("  " MEM_SIZE_PRI ":", i + j);
 
 		for(size_t k = 0; k < 8; k++) {
-			printf(" %02x", mem[i + j + k]);
+			unsigned char byte = mem[i + j + k];
+
+			if(colour) {
+				if(byte) printf("\e[0m");
+				else printf("\e[90m");
+			}
+
+			printf(" %02x", byte);
 		}
 
+		if(colour) printf("\e[0m");
 		putchar('\n');
+	}
+}
+
+void print_prompt(size_t insertion_point) {
+	if(colour) {
+		if(!insertion_point) printf("\e[93m" "bfcli"
+			"\e[0m" "@"
+			"\e[33m" "data:%zx"
+			"\e[0m" "$ ", ptr);
+
+		else printf("\e[36m" "code:%zx"
+			"\e[0m" "$ ", insertion_point);
+	}
+
+	else {
+		if(!insertion_point) printf("bfcli@data:%zx$ ", ptr);
+		else printf("code:%zx$ ", insertion_point);
 	}
 }
