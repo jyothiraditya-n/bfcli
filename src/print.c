@@ -51,7 +51,7 @@ void print_banner() {
 
 	puts("  This program comes with ABSOLUTELY NO WARRANTY; for details type `?'.");
 	puts("  This is free software, and you are welcome to redistribute it");
-	puts("  under certain conditions.\n");
+	puts("  under certain conditions. (Hit ^C to exit.)\n");
 }
 
 void print_error(int errnum) {
