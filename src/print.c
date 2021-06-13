@@ -26,21 +26,21 @@
 const char *progname;
 
 void print_about() {
-	printf("  Bfcli: The Interactive Brainfuck Command-Line Interpreter\n");
-	printf("  Copyright (C) 2021 Jyothiraditya Nellakra\n\n");
+	puts("  Bfcli: The Interactive Brainfuck Command-Line Interpreter");
+	puts("  Copyright (C) 2021 Jyothiraditya Nellakra\n");
 
-	printf("  This program is free software: you can redistribute it and/or modify\n");
-	printf("  it under the terms of the GNU General Public License as published by\n");
-	printf("  the Free Software Foundation, either version 3 of the License, or\n");
-	printf("  (at your option) any later version.\n\n");
+	puts("  This program is free software: you can redistribute it and/or modify");
+	puts("  it under the terms of the GNU General Public License as published by");
+	puts("  the Free Software Foundation, either version 3 of the License, or");
+	puts("  (at your option) any later version.\n");
 
-	printf("  This program is distributed in the hope that it will be useful,\n");
-	printf("  but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
-	printf("  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n");
-	printf("  GNU General Public License for more details.\n\n");
+	puts("  This program is distributed in the hope that it will be useful,");
+	puts("  but WITHOUT ANY WARRANTY; without even the implied warranty of");
+	puts("  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the");
+	puts("  GNU General Public License for more details.\n");
 
-	printf("  You should have received a copy of the GNU General Public License\n");
-	printf("  along with this program. If not, see <https://www.gnu.org/licenses/>.\n");
+	puts("  You should have received a copy of the GNU General Public License");
+	puts("  along with this program. If not, see <https://www.gnu.org/licenses/>.");
 }
 
 void print_error(int errnum) {
@@ -77,43 +77,43 @@ void print_error(int errnum) {
 
 void print_help() {
 	printf("  Usage: %s\n", progname);
-	printf("  (Don't supply any arguments.)\n\n");
+	puts("  (Don't supply any arguments.)\n");
 
-	printf("  Interactive Brainfuck interpreter; exit with ^C.\n\n");
+	puts("  Interactive Brainfuck interpreter; exit with ^C.\n");
 
 	printf("  Line buffer size: %d chars\n", LINE_SIZE);
 	printf("  Code buffer size: %d chars\n", CODE_SIZE);
 	printf("  Memory size: %d chars\n\n", MEM_SIZE);
 
-	printf("  Brainfuck commands:\n");
-	printf("    > Increments the data pointer.\n");
-	printf("    < Decrements the data pointer.\n\n");
+	puts("  Brainfuck commands:");
+	puts("    > Increments the data pointer.");
+	puts("    < Decrements the data pointer.\n");
 
-	printf("    + Increments the value at the data pointer.\n");
-	printf("    - Decrements the value at the data pointer.\n\n");
+	puts("    + Increments the value at the data pointer.");
+	puts("    - Decrements the value at the data pointer.\n");
 
-	printf("  Note: Data values are modulo-256 unsigned integers, meaning\n");
-	printf("        0 - 1 = 255, and 255 + 1 = 0.\n\n");
+	puts("  Note: Data values are modulo-256 unsigned integers, meaning");
+	puts("        0 - 1 = 255, and 255 + 1 = 0.\n");
 
-	printf("    . Outputs the value at the data pointer as an ASCII character.\n");
-	printf("    , Inputs an ASCII character and stores its value at the data\n");
-	printf("      pointer.\n\n");
+	puts("    . Outputs the value at the data pointer as an ASCII character.");
+	puts("    , Inputs an ASCII character and stores its value at the data");
+	puts("      pointer.\n");
 
-	printf("    [ (Open bracket) begins a loop.\n");
-	printf("    ] (Close brace) ends a loop.\n\n");
+	puts("    [ (Open bracket) begins a loop.");
+	puts("    ] (Close brace) ends a loop.\n");
 
-	printf("  Note: Loops run while the value at the data pointer is non-zero.\n\n");
+	puts("  Note: Loops run while the value at the data pointer is non-zero.\n");
 
-	printf("  Extended Brainfuck commands:\n");
-	printf("    ? Prints the help and copyright disclaimer to the console.\n");
-	printf("    / Clears the memory and moves the pointer to 0.\n");
-	printf("    * Prints memory values around the current pointer value.\n\n");
+	puts("  Extended Brainfuck commands:");
+	puts("    ? Prints the help and copyright disclaimer to the console.");
+	puts("    / Clears the memory and moves the pointer to 0.");
+	puts("    * Prints memory values around the current pointer value.\n");
 
-	printf("    { (Open brace) begins a block of code.\n");
-	printf("    } (Close brace) ends a block of code.\n\n");
+	puts("    { (Open brace) begins a block of code.");
+	puts("    } (Close brace) ends a block of code.\n");
 
-	printf("  Note: Once a block of code has been started, code will not be\n");
-	printf("        executed until the block has been ended.\n");
+	puts("  Note: Once a block of code has been started, code will not be");
+	puts("        executed until the block has been ended.");
 }
 
 void print_mem() {
@@ -131,6 +131,6 @@ void print_mem() {
 			printf(" %02x", mem[i + j + k]);
 		}
 
-		printf("\n");
+		putchar('\n');
 	}
 }

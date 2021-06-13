@@ -84,12 +84,12 @@ int main(int argc, char **argv) {
 	static char line[LINE_SIZE];
 	size_t insertion_point = 0;
 
-	printf("Bfcli: The Interactive Brainfuck Command-Line Interpreter\n");
-	printf("Copyright (C) 2021 Jyothiraditya Nellakra\n\n");
+	puts("Bfcli: The Interactive Brainfuck Command-Line Interpreter");
+	puts("Copyright (C) 2021 Jyothiraditya Nellakra\n");
 
-	printf("  This program comes with ABSOLUTELY NO WARRANTY; for details type `?'.\n");
-	printf("  This is free software, and you are welcome to redistribute it\n");
-	printf("  under certain conditions.\n\n");
+	puts("  This program comes with ABSOLUTELY NO WARRANTY; for details type `?'.");
+	puts("  This is free software, and you are welcome to redistribute it");
+	puts("  under certain conditions.\n");
 
 	while(!feof(stdin)) {
 		if(!insertion_point) printf("bfcli@data:%zx$ ", ptr);
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
 
 		int ret = scanf(" %" LINE_SIZE_PRI "[^\n]%c", line, &endl);
 
-		if(ret != 2) print_error(-1);
+		if(ret != 2) print_error(UNKNOWN_ERROR);
 
 		if(endl != '\n' && !feof(stdin)) {
 			print_error(LINE_TOO_LONG);

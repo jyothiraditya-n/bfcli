@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#define UNKNOWN_ERROR 0
 #define BAD_ARGS 1
 #define CODE_TOO_LONG 2
 #define LINE_TOO_LONG 3
