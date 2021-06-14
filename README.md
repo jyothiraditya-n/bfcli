@@ -65,9 +65,9 @@ Usage: ./bfcli [ARGS]
 Valid arguments are:
   -a, --about         prints the licence and about dialogue.
   -h, --help          prints the help dialogue.
-  -v, --version               prints the program version.
+  -v, --version       prints the program version.
 
-  -c, --colour                (default) enables colour output.
+  -c, --colour        (default) enables colour output.
   -m, --monochrome    disables colour output.
 
   -f, --file FILE     loads the file FILE into memory.
