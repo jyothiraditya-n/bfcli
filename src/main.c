@@ -22,9 +22,6 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-
 #include "file.h"
 #include "init.h"
 #include "print.h"
@@ -115,18 +112,12 @@ int main(int argc, char **argv) {
 			continue;
 		}
 
-		if(!insertion_point && !access(line, R_OK)) {
-			struct stat s;
+		strcpy(filename, line);
+		ret = load_file();
 
-			ret = stat(line, &s);
-			if(ret) print_error(UNKNOWN_ERROR);
-
-			if(s.st_mode & S_IFREG) {
-				if(strlen(filecode)) free(filecode);
-				strcpy(filename, line);
-				load_file();
-				continue;
-			}
+		if(ret == FILE_OK) {
+			printf("%s: loaded '%s'.\n", progname, filename);
+			continue;
 		}
 
 		strcpy(&code[insertion_point], line);

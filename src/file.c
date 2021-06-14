@@ -30,10 +30,9 @@
 struct termios cooked, raw;
 
 char filename[FILENAME_SIZE];
-char *filecode = "";
+char *filecode;
 
-static int check_file() {
-	size_t len = strlen(filecode);
+static int check_file(size_t len) {
 	int loops_open = 0;
 
 	for(size_t i = 0; i < len; i++) {
@@ -52,15 +51,21 @@ static int check_file() {
 			continue;
 		}
 
-		if(!isprint(filecode[i])) return -1;
+		if(!isprint(filecode[i])) return BAD_CODE;
 	}
 
-	return loops_open;
+	return loops_open ? BAD_CODE : FILE_OK;
 }
 
 void init_files() {
-	if(!access(filename, R_OK)) load_file();
-	else if(strlen(filename)) print_error(BAD_FILE);
+	if(strlen(filename)) {
+		int ret = load_file();
+		
+		if(ret != FILE_OK) {
+			print_error(ret);
+			exit(ret);
+		}
+	}
 
 	int ret = tcgetattr(STDIN_FILENO, &cooked);
 	if(ret == -1) print_error(UNKNOWN_ERROR);
@@ -74,15 +79,17 @@ void init_files() {
 	raw.c_lflag |= ISIG;
 }
 
-void load_file() {
+int load_file() {
 	FILE *file = fopen(filename, "r");
-	if(!file) print_error(UNKNOWN_ERROR);
+	if(!file) return BAD_FILE;
 	
 	int ret = fseek(file, 0, SEEK_END);
 	if(ret) print_error(UNKNOWN_ERROR);
 
 	size_t size = ftell(file) + 1;
 	rewind(file);
+
+	char *oldcode = filecode;
 
 	filecode = malloc(size);
 	if(!filecode) print_error(UNKNOWN_ERROR);
@@ -93,11 +100,14 @@ void load_file() {
 	ret = fclose(file);
 	if(ret == EOF) print_error(UNKNOWN_ERROR);
 
-	ret = check_file();
+	ret = check_file(size - 1);
 
-	if(ret) {
-		print_error(BAD_CODE);
+	if(ret == BAD_CODE) {
 		free(filecode);
-		filecode = "";
+		filecode = oldcode;
+		return BAD_CODE;
 	}
+
+	if(oldcode) free(oldcode);
+	return FILE_OK;
 }

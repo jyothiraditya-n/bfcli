@@ -23,4 +23,6 @@ extern char *filecode;
 extern struct termios cooked, raw;
 
 extern void init_files();
-extern void load_file();
+extern int load_file();
+
+#define FILE_OK 0

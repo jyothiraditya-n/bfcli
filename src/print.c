@@ -59,7 +59,7 @@ void print_banner() {
 	printf("  Code buffer size: %d chars\n", CODE_SIZE);
 	printf("  Memory size: %d chars\n\n", MEM_SIZE);
 
-	if(strlen(filecode)) printf("  File: %s\n\n", filename);
+	if(filecode) printf("  File: %s\n\n", filename);
 }
 
 void print_error(int errnum) {

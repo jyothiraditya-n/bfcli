@@ -134,11 +134,13 @@ void run(char *start, size_t len, bool isfile) {
 			break;
 
 		case '@':
+			if(!filecode) break;
+			
 			run(filecode, strlen(filecode), true);
 			break;
 
 		case '%':
-			if(!strlen(filecode)) break;
+			if(!filecode) break;
 			
 			putchar('\n');
 			printf("%s\n\n", filecode);
