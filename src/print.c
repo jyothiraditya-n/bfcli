@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "file.h"
+#include "main.h"
 #include "print.h"
 #include "run.h"
 #include "size.h"
@@ -49,7 +50,8 @@ void print_about() {
 
 void print_banner() {
 	puts("Bfcli: The Interactive Brainfuck Command-Line Interpreter");
-	puts("Copyright (C) 2021 Jyothiraditya Nellakra\n");
+	puts("Copyright (C) 2021 Jyothiraditya Nellakra");
+	printf("Version %d.%d\n\n", VERSION, SUBVERSION);
 
 	puts("  This program comes with ABSOLUTELY NO WARRANTY; for details type `?'.");
 	puts("  This is free software, and you are welcome to redistribute it");
@@ -113,7 +115,8 @@ void print_help() {
 	
 	puts("  Valid arguments are:");
 	puts("    -a, --about		prints the licence and about dialogue.");
-	puts("    -h, --help		prints the help dialogue.\n");
+	puts("    -h, --help		prints the help dialogue.");
+	puts("    -v, --version		prints the program version.\n");
 
 	puts("    -c, --colour		(default) enables colour output.");
 	puts("    -m, --monochrome	disables colour output.\n");

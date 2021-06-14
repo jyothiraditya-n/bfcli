@@ -14,13 +14,4 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#include <stdbool.h>
-#include <stddef.h>
-
-extern char code[];
-extern unsigned char mem[];
-extern size_t ptr;
-
-extern bool running;
-
-extern void run(char *start, size_t len, bool isfile);
+extern void on_interrupt(int signum);

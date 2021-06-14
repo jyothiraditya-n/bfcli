@@ -14,13 +14,29 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#include <stdbool.h>
-#include <stddef.h>
+#include <signal.h>
 
-extern char code[];
-extern unsigned char mem[];
-extern size_t ptr;
+#include "main.h"
+#include "run.h"
 
-extern bool running;
+void on_interrupt(int signum) {
+	if(signum != SIGINT) {
+		signal(signum, SIG_DFL);
+		return;
+	}
 
-extern void run(char *start, size_t len, bool isfile);
+	if(running) {
+		signal(SIGINT, on_interrupt);
+		running = false;
+	}
+
+	else if(insertion_point) {
+		signal(SIGINT, on_interrupt);
+		insertion_point = 0;
+	}
+
+	else {
+		signal(SIGINT, SIG_DFL);
+		raise(SIGINT);
+	}
+}

@@ -23,12 +23,15 @@
 
 #include "file.h"
 #include "init.h"
+#include "main.h"
 #include "print.h"
 #include "run.h"
+#include "signal.h"
 #include "size.h"
 
 static void about();
 static void help();
+static void version();
 
 static void about() {
 	putchar('\n');
@@ -59,6 +62,12 @@ void init(int argc, char **argv) {
 	arg -> long_flag = "help";
 	arg -> short_flag = 'h';
 	arg -> pre = help;
+
+	arg = LCa_new();
+	if(!arg) print_error(UNKNOWN_ERROR);
+	arg -> long_flag = "version";
+	arg -> short_flag = 'v';
+	arg -> pre = version;
 
 	LCv_t *var = LCv_new();
 	if(!var) print_error(UNKNOWN_ERROR);
@@ -96,4 +105,9 @@ void init(int argc, char **argv) {
 	else if(ret != LCA_OK) print_error(UNKNOWN_ERROR);
 
 	init_files();
+}
+
+void version() {
+	printf("bfcli version %d.%d\n", VERSION, SUBVERSION);
+	exit(0);
 }

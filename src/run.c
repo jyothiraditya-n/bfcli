@@ -20,8 +20,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <signal.h>
-
 #include "file.h"
 #include "print.h"
 #include "run.h"
@@ -38,23 +36,6 @@ static void run_sub(char *start, size_t *sub_start, size_t i, bool isfile);
 
 static void clear_mem() {
 	for(size_t j = 0; j < MEM_SIZE; j++) mem[j] = 0;
-}
-
-void on_interrupt(int signum) {
-	if(signum != SIGINT) {
-		signal(signum, SIG_DFL);
-		return;
-	}
-
-	if(running) {
-		signal(SIGINT, on_interrupt);
-		running = false;
-	}
-
-	else {
-		signal(SIGINT, SIG_DFL);
-		raise(SIGINT);
-	}
 }
 
 void run(char *start, size_t len, bool isfile) {

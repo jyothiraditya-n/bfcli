@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,11 +25,14 @@
 
 #include "file.h"
 #include "init.h"
+#include "main.h"
 #include "print.h"
 #include "run.h"
 #include "size.h"
 
 #define NXOR(A, B) ((A && B) || (!A && !B))
+
+size_t insertion_point;
 
 static int check(char *code, size_t len);
 
@@ -87,9 +91,10 @@ int main(int argc, char **argv) {
 	print_banner();
 
 	static char line[LINE_SIZE];
-	size_t insertion_point = 0;
 
 	while(!feof(stdin)) {
+		bool interrupt = insertion_point ? true : false;
+
 		int ret = tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
 		if(ret == -1) print_error(UNKNOWN_ERROR);
 
@@ -105,6 +110,12 @@ int main(int argc, char **argv) {
 		char endl;
 
 		ret = scanf(" " LINE_SCN "%c", line, &endl);
+
+		if(interrupt && !insertion_point) {
+			putchar('\n');
+			continue;
+		}
+
 		if(ret != 2) print_error(UNKNOWN_ERROR);
 
 		if(endl != '\n' && !feof(stdin)) {
