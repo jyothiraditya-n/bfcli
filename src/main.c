@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
 		ret = load_file();
 
 		if(ret == FILE_OK) {
-			printf("%s: loaded '%s'.\n", progname, filename);
+			printf("loaded '%s'.\n", filename);
 			continue;
 		}
 
