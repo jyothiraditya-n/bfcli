@@ -19,7 +19,9 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include "file.h"
 #include "print.h"
 #include "run.h"
 #include "size.h"
@@ -52,6 +54,12 @@ void print_banner() {
 	puts("  This program comes with ABSOLUTELY NO WARRANTY; for details type `?'.");
 	puts("  This is free software, and you are welcome to redistribute it");
 	puts("  under certain conditions. (Hit ^C to exit.)\n");
+
+	printf("  Line buffer size: %d chars\n", LINE_SIZE);
+	printf("  Code buffer size: %d chars\n", CODE_SIZE);
+	printf("  Memory size: %d chars\n\n", MEM_SIZE);
+
+	if(strlen(filecode)) printf("  File: %s\n\n", filename);
 }
 
 void print_error(int errnum) {
@@ -79,7 +87,20 @@ void print_error(int errnum) {
 		fprintf(stderr, "%s: error: unpaired brackets.\n", progname);
 		break;
 
+	case BAD_FILE:
+		fprintf(stderr, "%s: error: cannot read file '%s'.\n",
+			progname, filename);
+
+		break;
+
+	case BAD_CODE:
+		fprintf(stderr, "%s: error: '%s': invalid brainfuck.\n",
+			progname, filename);
+
+		break;
+
 	default:
+		perror(progname);
 		fprintf(stderr, "%s: error: unknown error %d\n",
 			progname, errnum);
 
@@ -96,6 +117,8 @@ void print_help() {
 
 	puts("    -c, --colour		(default) enables colour output.");
 	puts("    -m, --monochrome	disables colour output.\n");
+
+	puts("    -f, --file FILE	loads the file FILE into memory.\n");
 
 	puts("  Interactive Brainfuck interpreter; exit with ^C.\n");
 
@@ -132,6 +155,13 @@ void print_help() {
 
 	puts("  Note: Once a block of code has been started, code will not be");
 	puts("        executed until the block has been ended.\n");
+
+	puts("    @ Execute code from the loaded file.");
+	puts("    % Print code from the loaded file.\n");
+
+	puts("  Note: The above two commands perform no action if no file is loaded.");
+	puts("        In order to load a file when Bfcli is running, type the file");
+	puts("        name at the main prompt.\n");
 
 	puts("  Happy coding! :)");
 }

@@ -14,12 +14,4 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#define CODE_SIZE 65536
-#define MEM_SIZE 655360
-#define MEM_SIZE_PRI "%05zx"
-
-#define LINE_SIZE 4096
-#define LINE_SCN "%4095[^\n]"
-
-#define FILENAME_SIZE 4096
-#define FILENAME_SCN "%4095c"
+extern void init(int argc, char **argv);

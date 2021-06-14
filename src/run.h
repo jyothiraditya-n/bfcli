@@ -23,5 +23,5 @@ extern size_t ptr;
 
 extern bool running;
 
-extern void run(char *start, size_t len);
+extern void run(char *start, size_t len, bool isfile);
 extern void on_interrupt(int signum);

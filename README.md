@@ -10,6 +10,8 @@ Valid arguments are:
   -c, --colour                (default) enables colour output.
   -m, --monochrome    disables colour output.
 
+  -f, --file FILE     loads the file FILE into memory.
+
 Interactive Brainfuck interpreter; exit with ^C.
 Line buffer size: 4096 chars
 Code buffer size: 65536 chars
@@ -25,6 +27,15 @@ Extended Brainfuck commands:
 
 Note: Once a block of code has been started, code will not be
       executed until the block has been ended.
+
+  @ Execute code from the loaded file.
+  % Print code from the loaded file.
+
+Note: The above two commands perform no action if no file is loaded.
+      In order to load a file when Bfcli is running, type the file
+      name at the main prompt.
+
+Happy coding! :)
 ```
 
 ## Building / Running It

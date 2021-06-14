@@ -14,12 +14,13 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#define CODE_SIZE 65536
-#define MEM_SIZE 655360
-#define MEM_SIZE_PRI "%05zx"
+#include <termios.h>
+#include <unistd.h>
 
-#define LINE_SIZE 4096
-#define LINE_SCN "%4095[^\n]"
+extern char filename[];
+extern char *filecode;
 
-#define FILENAME_SIZE 4096
-#define FILENAME_SCN "%4095c"
+extern struct termios cooked, raw;
+
+extern void init_files();
+extern void load_file();

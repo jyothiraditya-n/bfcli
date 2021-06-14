@@ -17,9 +17,12 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <signal.h>
 
+#include "file.h"
 #include "print.h"
 #include "run.h"
 #include "size.h"
@@ -31,7 +34,7 @@ size_t ptr;
 bool running;
 
 static void clear_mem();
-static void run_sub(char *start, size_t *sub_start, size_t i);
+static void run_sub(char *start, size_t *sub_start, size_t i, bool isfile);
 
 static void clear_mem() {
 	for(size_t j = 0; j < MEM_SIZE; j++) mem[j] = 0;
@@ -54,7 +57,7 @@ void on_interrupt(int signum) {
 	}
 }
 
-void run(char *start, size_t len) {
+void run(char *start, size_t len, bool isfile) {
 	int brackets_open = 0;
 	size_t sub_start = 0;
 
@@ -67,7 +70,10 @@ void run(char *start, size_t len) {
 
 		case ']':
 			brackets_open--;
-			if(!brackets_open) run_sub(start, &sub_start, i);
+
+			if(!brackets_open)
+				run_sub(start, &sub_start, i, isfile);
+
 			continue;
 		}
 
@@ -78,30 +84,34 @@ void run(char *start, size_t len) {
 			if(ptr < MEM_SIZE - 1) ptr++;
 			else ptr = 0;
 
-			break;
+			continue;
 
 		case '<':
 			if(ptr > 0) ptr--;
 			else ptr = MEM_SIZE - 1;
 
-			break;
+			continue;
 
 		case '+':
 			mem[ptr]++;
-			break;
+			continue;
 
 		case '-':
 			mem[ptr]--;
-			break;
+			continue;
 
 		case '.':
 			putchar(mem[ptr]);
-			break;
+			continue;
 
 		case ',':
 			mem[ptr] = getchar();
-			break;
+			continue;
+		}
 
+		if(isfile) continue;
+
+		switch(start[i]) {
 		case '?':
 			putchar('\n');
 			print_about();
@@ -122,11 +132,24 @@ void run(char *start, size_t len) {
 			print_mem();
 			putchar('\n');
 			break;
+
+		case '@':
+			run(filecode, strlen(filecode), true);
+			break;
+
+		case '%':
+			if(!strlen(filecode)) break;
+			
+			putchar('\n');
+			printf("%s\n\n", filecode);
+			break;
 		}
 	}
 }
 
-static void run_sub(char *start, size_t *sub_start, size_t i) {
-	while(mem[ptr] && running) run(&start[*sub_start], i - *sub_start);
+static void run_sub(char *start, size_t *sub_start, size_t i, bool isfile) {
+	while(mem[ptr] && running)
+		run(&start[*sub_start], i - *sub_start, isfile);
+
 	*sub_start = 0;
 }

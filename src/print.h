@@ -23,6 +23,8 @@
 #define LINE_TOO_LONG 3
 #define NESTED_BRACES 4
 #define BAD_BRACKETS 5
+#define BAD_FILE 6
+#define BAD_CODE 7
 
 extern const char *progname;
 extern bool colour;
