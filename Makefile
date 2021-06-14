@@ -22,8 +22,8 @@ OBJS = $(patsubst src/%.c,build/%.o,$(CFILES))
 LIBS = libClame/libClame.a
 
 CC = gcc
-CPPFLAGS = -Wall -Wextra -Werror -std=gnu99 -O3 -I libClame/inc/
-CFLAGS = -std=gnu99
+CPPFLAGS = -Wall -Wextra -Werror -std=c99 -O3 -I libClame/inc/
+CFLAGS = -std=c99
 
 LDLIBS += -L libClame/ -lClame
 
