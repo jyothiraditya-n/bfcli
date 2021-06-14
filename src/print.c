@@ -163,6 +163,10 @@ void print_help() {
 	puts("        In order to load a file when Bfcli is running, type the file");
 	puts("        name at the main prompt.\n");
 
+	puts("  Note: Extended Brainfuck commands are disabled when executing file");
+	puts("        code, and will simply be ignored. This is done for");
+	puts("        compatibility with vanilla Brainfuck programs.\n");
+
 	puts("  Happy coding! :)");
 }
 
