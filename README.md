@@ -13,6 +13,7 @@ Valid arguments are:
   -f, --file FILE     loads the file FILE into memory.
 
 Interactive Brainfuck interpreter; exit with ^C.
+
 Line buffer size: 4096 chars
 Code buffer size: 65536 chars
 Memory size: 655360 chars
