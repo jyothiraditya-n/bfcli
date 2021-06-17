@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
 			tcsetattr(STDIN_FILENO, TCSANOW, &raw);
 			running = true;
 
-			lastch = 0;
+			lastch = '\n';
 			run(code, len, false);
 			if(lastch != '\n') putchar('\n');
 
