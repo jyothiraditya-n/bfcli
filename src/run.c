@@ -30,6 +30,7 @@ unsigned char mem[MEM_SIZE];
 size_t ptr;
 
 bool running;
+char lastch;
 
 static void clear_mem();
 static void run_sub(char *start, size_t *sub_start, size_t i, bool isfile);
@@ -82,7 +83,8 @@ void run(char *start, size_t len, bool isfile) {
 			continue;
 
 		case '.':
-			putchar(mem[ptr]);
+			lastch = mem[ptr];
+			putchar(lastch);
 			continue;
 
 		case ',':

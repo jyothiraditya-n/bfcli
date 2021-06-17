@@ -102,10 +102,9 @@ void print_error(int errnum) {
 		break;
 
 	default:
-		perror(progname);
-		fprintf(stderr, "%s: error: unknown error %d\n",
-			progname, errnum);
-
+		fprintf(stderr, "%s: error: unknown error\n", progname);
+		perror("cstdlib");
+		
 		exit(errnum);
 	}
 }

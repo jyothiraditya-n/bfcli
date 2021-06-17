@@ -23,6 +23,8 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <LC_lines.h>
+
 #include "file.h"
 #include "init.h"
 #include "main.h"
@@ -91,10 +93,12 @@ int main(int argc, char **argv) {
 	print_banner();
 
 	static char line[LINE_SIZE];
+	LCl_t lcl;
+
+	lcl.data = line;
+	lcl.length = LINE_SIZE - 1;
 
 	while(!feof(stdin)) {
-		bool interrupt = insertion_point ? true : false;
-
 		int ret = tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
 		if(ret == -1) print_error(UNKNOWN_ERROR);
 
@@ -107,20 +111,27 @@ int main(int argc, char **argv) {
 			continue;
 		}
 
-		char endl;
+		ret = LCl_read(stdin, &lcl);
 
-		ret = scanf(" " LINE_SCN "%c", line, &endl);
+		switch(ret) {
+		case LCL_OK:
+			break;
 
-		if(interrupt && !insertion_point) {
-			putchar('\n');
-			continue;
-		}
-
-		if(ret != 2) print_error(UNKNOWN_ERROR);
-
-		if(endl != '\n' && !feof(stdin)) {
+		case LCL_TOO_LONG:
 			print_error(LINE_TOO_LONG);
 			continue;
+
+		case LCL_EOF:
+			puts("EOF");
+			exit(0);
+
+		case LCL_SIGINT:
+			insertion_point = 0;
+			putchar('\n');
+			continue;
+
+		default:
+			print_error(UNKNOWN_ERROR);
 		}
 
 		strcpy(filename, line);
@@ -141,7 +152,9 @@ int main(int argc, char **argv) {
 			tcsetattr(STDIN_FILENO, TCSANOW, &raw);
 			running = true;
 
+			lastch = 0;
 			run(code, len, false);
+			if(lastch != '\n') putchar('\n');
 
 			insertion_point = 0;
 			running = false;

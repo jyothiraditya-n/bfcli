@@ -22,5 +22,6 @@ extern unsigned char mem[];
 extern size_t ptr;
 
 extern bool running;
+extern char lastch;
 
 extern void run(char *start, size_t len, bool isfile);

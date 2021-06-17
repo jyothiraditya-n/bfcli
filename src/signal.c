@@ -15,6 +15,7 @@
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
 #include <signal.h>
+#include <LC_lines.h>
 
 #include "main.h"
 #include "run.h"
@@ -32,7 +33,7 @@ void on_interrupt(int signum) {
 
 	else if(insertion_point) {
 		signal(SIGINT, on_interrupt);
-		insertion_point = 0;
+		LCl_sigint = true;
 	}
 
 	else {
