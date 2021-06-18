@@ -170,10 +170,10 @@ void print_help() {
 }
 
 void print_mem() {
-	intmax_t i = (intmax_t) ptr - 64;
-	if(i < 0) i += MEM_SIZE;
-
+	size_t i =  ptr - 64;
 	i -= i % 8;
+
+	if(i >= MEM_SIZE) i += MEM_SIZE;
 
 	for(size_t j = 0; j < 128; j += 8) {
 		if(i + j >= MEM_SIZE) i = -j;
@@ -184,7 +184,9 @@ void print_mem() {
 			unsigned char byte = mem[i + j + k];
 
 			if(colour) {
-				if(byte) printf("\e[0m");
+				if(i + j + k == ptr) printf("\e[36m");
+				else if(byte > 128) printf("\e[93m");
+				else if(byte) printf("\e[33m");
 				else printf("\e[90m");
 			}
 
