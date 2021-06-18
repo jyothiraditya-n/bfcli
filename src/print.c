@@ -32,7 +32,8 @@ bool colour = true;
 
 void print_about() {
 	puts("  Bfcli: The Interactive Brainfuck Command-Line Interpreter");
-	puts("  Copyright (C) 2021 Jyothiraditya Nellakra\n");
+	puts("  Copyright (C) 2021 Jyothiraditya Nellakra");
+	printf("  Version %d.%d: %s\n\n", VERSION, SUBVERSION, VERNAME);
 
 	puts("  This program is free software: you can redistribute it and/or modify");
 	puts("  it under the terms of the GNU General Public License as published by");
@@ -51,7 +52,7 @@ void print_about() {
 void print_banner() {
 	puts("Bfcli: The Interactive Brainfuck Command-Line Interpreter");
 	puts("Copyright (C) 2021 Jyothiraditya Nellakra");
-	printf("Version %d.%d\n\n", VERSION, SUBVERSION);
+	printf("Version %d.%d: %s\n\n", VERSION, SUBVERSION, VERNAME);
 
 	puts("  This program comes with ABSOLUTELY NO WARRANTY; for details type `?'.");
 	puts("  This is free software, and you are welcome to redistribute it");
@@ -79,14 +80,6 @@ void print_error(int errnum) {
 
 	case LINE_TOO_LONG:
 		fprintf(stderr, "%s: error: line too long.\n", progname);
-		break;
-
-	case NESTED_BRACES:
-		fprintf(stderr, "%s: error: nested braces.\n", progname);
-		break;
-
-	case BAD_BRACKETS:
-		fprintf(stderr, "%s: error: unpaired brackets.\n", progname);
 		break;
 
 	case BAD_FILE:
@@ -152,22 +145,26 @@ void print_help() {
 	puts("    / Clears the memory and moves the pointer to 0.");
 	puts("    * Prints memory values around the current pointer value.\n");
 
-	puts("    { (Open brace) begins a block of code.");
-	puts("    } (Close brace) ends a block of code.\n");
+	puts("  Note: Extended Brainfuck commands are disabled when executing file");
+	puts("        code, and will simply be ignored. This is done for");
+	puts("        compatibility with vanilla Brainfuck programs.\n");
 
-	puts("  Note: Once a block of code has been started, code will not be");
-	puts("        executed until the block has been ended.\n");
+	puts("    ! Indicates to wait for more code before execution.");
+	puts("    ; Indicates to stop waiting for more code before execution.\n");
+
+	puts("  Note: The above two commands can be placed anywhere in a line and");
+	puts("        and will function correctly, but they may prove most useful");
+	puts("        at the ends of lines while typing long sections of code.\n");
+
+	puts("  Note: The interpreter will still wait for more code if the current");
+	puts("        code contains unmatched brackets.\n");
 
 	puts("    @ Execute code from the loaded file.");
 	puts("    % Print code from the loaded file.\n");
 
-	puts("  Note: The above two commands perform no action if no file is loaded.");
+	puts("  Note: The above two commands do nothing when a file isn't loaded.");
 	puts("        In order to load a file when Bfcli is running, type the file");
 	puts("        name at the main prompt.\n");
-
-	puts("  Note: Extended Brainfuck commands are disabled when executing file");
-	puts("        code, and will simply be ignored. This is done for");
-	puts("        compatibility with vanilla Brainfuck programs.\n");
 
 	puts("  Happy coding! :)");
 }

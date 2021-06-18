@@ -29,6 +29,7 @@ void on_interrupt(int signum) {
 	if(running) {
 		signal(SIGINT, on_interrupt);
 		running = false;
+		lastch = 0;
 	}
 
 	else if(insertion_point) {

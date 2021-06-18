@@ -19,7 +19,6 @@
 #define MEM_SIZE_PRI "%05zx"
 
 #define LINE_SIZE 4096
-#define LINE_SCN "%4095[^\n]"
 
 #define FILENAME_SIZE 4096
 #define FILENAME_SCN "%4095c"

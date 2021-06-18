@@ -71,10 +71,8 @@ void init_files() {
 	if(ret == -1) print_error(UNKNOWN_ERROR);
 
 	raw = cooked;
-
 	raw.c_lflag &= ~ICANON;
 	raw.c_lflag |= ECHO;
-
 	raw.c_cc[VINTR] = 3;
 	raw.c_lflag |= ISIG;
 }

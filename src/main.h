@@ -16,7 +16,8 @@
 
 #include <stddef.h>
 
-#define VERSION 5
-#define SUBVERSION 2
+#define VERSION 6
+#define SUBVERSION 0
+#define VERNAME "Cherrywind"
 
 extern size_t insertion_point;

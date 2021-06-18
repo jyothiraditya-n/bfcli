@@ -44,9 +44,7 @@ static int check(char *code, size_t len);
 
 static int check(char *code, size_t len) {
 	int loops_open = 0;
-
-	size_t start = 0;
-	size_t end = 0;
+	bool wait = false;
 
 	for(size_t i = 0; i < len; i++) {
 		switch(code[i]) {
@@ -58,34 +56,18 @@ static int check(char *code, size_t len) {
 			loops_open--;
 			break;
 
-		case '{':
-			if(start) {
-				print_error(NESTED_BRACES);
-				return CODE_ERROR;
-			}
-
-			start = i + 1;
+		case '!':
+			wait = true;
 			break;
 
-		case '}':
-			if(end) {
-				print_error(NESTED_BRACES);
-				return CODE_ERROR;
-			}
-
-			if(!loops_open) end = i;
-
-			else {
-				print_error(BAD_BRACKETS);
-				return CODE_ERROR;
-			}
-
+		case ';':
+			wait = false;
 			break;
 		}
 	}
 
-	if(!loops_open && NXOR(start, end)) return CODE_OK;
-	else return CODE_INCOMPLETE;
+	if(wait || loops_open) return CODE_INCOMPLETE;
+	return CODE_OK;
 }
 
 int main(int argc, char **argv) {
@@ -96,7 +78,7 @@ int main(int argc, char **argv) {
 	LCl_t lcl;
 
 	lcl.data = line;
-	lcl.length = LINE_SIZE - 1;
+	lcl.length = LINE_SIZE;
 
 	while(!feof(stdin)) {
 		int ret = tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
@@ -111,23 +93,34 @@ int main(int argc, char **argv) {
 			continue;
 		}
 
-		ret = LCl_read(stdin, &lcl);
+		ret = LCl_read(&lcl);
 
 		switch(ret) {
 		case LCL_OK:
 			break;
 
-		case LCL_TOO_LONG:
+		case LCL_CUT:
 			print_error(LINE_TOO_LONG);
 			continue;
 
 		case LCL_EOF:
-			puts("EOF");
+			puts("^D");
 			exit(0);
 
-		case LCL_SIGINT:
+		case LCL_INT:
 			insertion_point = 0;
 			putchar('\n');
+			continue;
+
+		case LCL_CUT_EOF:
+			print_error(LINE_TOO_LONG);
+			puts("^D");
+			exit(0);
+
+		case LCL_CUT_INT:
+			insertion_point = 0;
+			putchar('\n');
+			print_error(LINE_TOO_LONG);
 			continue;
 
 		default:
