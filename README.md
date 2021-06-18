@@ -1,5 +1,10 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
+```
 Copyright (C) 2021 Jyothiraditya Nellakra
+Version 6.0: Cherrywind
+
+bfcli@data:0$
+```
 
 ---
 
@@ -21,8 +26,10 @@ The following is a non-exhaustive list of the functionality I added:
 accompanied by a secondary prompt for continuing the line, invoked when the
 original line contained unmatched brackets or an unclosed brace.
 
-- The use of braces to write a block of code which is held for execution until
-the entire block has been written.
+- The use of `!` and `;` to hint to the interpreter that the user is not yet
+finished writing a block of code and that the user is done writing a block of
+code, respectively. (Notably, the block still isn't actually finished until all
+of the matching brackets have been written out.)
 
 - The command `?` to pull up a help dialogue for both the Brainfuck programming
 language as well as the functionality of this program at the main prompt.
@@ -40,7 +47,8 @@ stopping the execution of the running Brainfuck program.
 - Integration with `libClame` to provide command-line argument parsing, which
 is used for providing program information with command line switches,
 specifying if colour output should be enabled, and pre-emptively declaring the
-file to be loaded into memory.
+file to be loaded into memory. This library is also used as the backbone for
+the command-line itself.
 
 - Colour support for highlighting important information on the screen.
 
