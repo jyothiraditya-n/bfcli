@@ -177,17 +177,15 @@ void print_mem() {
 
 	for(size_t j = 0; j < 128; j += 8) {
 		if(i + j >= MEM_SIZE) i = -j;
-
+		
 		printf("  " MEM_SIZE_PRI ":", i + j);
 
 		for(size_t k = 0; k < 8; k++) {
 			unsigned char byte = mem[i + j + k];
 
 			if(colour) {
-				if(i + j + k == ptr) printf("\e[36m");
-				else if(byte > 128) printf("\e[93m");
-				else if(byte) printf("\e[33m");
-				else printf("\e[90m");
+				if(byte) printf("\e[93m");
+				else printf("\e[33m");
 			}
 
 			printf(" %02x", byte);

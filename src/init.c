@@ -108,6 +108,8 @@ void init(int argc, char **argv) {
 }
 
 void version() {
-	printf("Bfcli Version %d.%d: %s\n", VERSION, SUBVERSION, VERNAME);
+	printf("Bfcli Version %d.%d: %s\n",
+		VERSION, SUBVERSION, VERNAME);
+
 	exit(0);
 }
