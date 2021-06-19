@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 6.1: Cherrybreeze
+Version 6.2: Cherrynado
 
 bfcli@data:0$
 ```
@@ -68,7 +68,7 @@ out.
 The following are the command-line arguments that this program accepts:
 
 ```
-Usage: ./bfcli [ARGS]
+Usage: bfcli [ARGS] [FILE]
 
 Valid arguments are:
   -a, --about         prints the licence and about dialogue.
@@ -79,6 +79,12 @@ Valid arguments are:
   -m, --monochrome    disables colour output.
 
   -f, --file FILE     loads the file FILE into memory.
+
+Note: If a file is specified without -f, it is run immediately and
+      the program exits as soon as the execution of the file
+      terminates. Use -f if you want the interactive prompt.
+
+Happy coding!
 ```
 
 Finally, to install the code, you can run `make install`. This will install it

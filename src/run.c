@@ -96,13 +96,15 @@ void run(char *start, size_t len, bool isfile) {
 
 		switch(start[i]) {
 		case '?':
+			if(lastch != '\n') putchar('\n');
+
 			putchar('\n');
 			print_about();
-
 			putchar('\n');
 			print_help();
-
 			putchar('\n');
+
+			lastch = '\n';
 			break;
 
 		case '/':
@@ -111,9 +113,13 @@ void run(char *start, size_t len, bool isfile) {
 			break;
 
 		case '*':
+			if(lastch != '\n') putchar('\n');
+
 			putchar('\n');
 			print_mem();
 			putchar('\n');
+
+			lastch = '\n';
 			break;
 
 		case '@':

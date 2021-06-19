@@ -44,6 +44,8 @@ static void help() {
 	putchar('\n');
 	print_help();
 	putchar('\n');
+	print_usage();
+	putchar('\n');
 	exit(0);
 }
 
@@ -93,6 +95,9 @@ void init(int argc, char **argv) {
 	var -> id = "filename";
 	var -> fmt = FILENAME_SCN;
 	var -> data = filename;
+
+	LCa_noflags = &imm_fname;
+	LCa_max_noflags = 1;
 
 	arg = LCa_new();
 	if(!arg) print_error(UNKNOWN_ERROR);

@@ -17,6 +17,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+extern const char *imm_fname;
 extern char filename[];
 extern char *filecode;
 

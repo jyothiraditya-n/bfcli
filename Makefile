@@ -45,9 +45,13 @@ bfcli : $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(OBJS) -o bfcli $(LDLIBS)
 
 .DEFAULT_GOAL = all
-.PHONY : all clean install remove
+.PHONY : all bf clean install remove
 
 all : bfcli
+
+bf : install
+	sudo rm /bin/bf
+	sudo ln -s $(DESTDIR)/bfcli /bin/bf
 
 clean :
 	-rm -r build/

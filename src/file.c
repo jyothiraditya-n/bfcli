@@ -25,12 +25,17 @@
 
 #include "file.h"
 #include "print.h"
+#include "run.h"
 #include "size.h"
 
 struct termios cooked, raw;
 
+const char *imm_fname;
 char filename[FILENAME_SIZE];
 char *filecode;
+
+static int check_file(size_t len);
+static void get_file();
 
 static int check_file(size_t len) {
 	int loops_open = 0;
@@ -57,16 +62,16 @@ static int check_file(size_t len) {
 	return loops_open ? BAD_CODE : FILE_OK;
 }
 
-void init_files() {
-	if(strlen(filename)) {
-		int ret = load_file();
-		
-		if(ret != FILE_OK) {
-			print_error(ret);
-			exit(ret);
-		}
-	}
+static void get_file() {
+	int ret = load_file();
 
+	if(ret != FILE_OK) {
+		print_error(ret);
+		exit(ret);
+	}
+}
+
+void init_files() {
 	int ret = tcgetattr(STDIN_FILENO, &cooked);
 	if(ret == -1) print_error(UNKNOWN_ERROR);
 
@@ -75,6 +80,33 @@ void init_files() {
 	raw.c_lflag |= ECHO;
 	raw.c_cc[VINTR] = 3;
 	raw.c_lflag |= ISIG;
+
+	if(imm_fname) {
+		if(strlen(filename)) {
+			fprintf(stderr, "%s: error: file supplied both with "
+				"and without -f.\n", progname);
+
+			print_error(BAD_ARGS);
+		}
+
+		strncat(filename, imm_fname, FILENAME_SIZE - 1);
+		get_file();
+
+		ret = tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+		if(ret == -1) print_error(UNKNOWN_ERROR);
+
+		running = true;
+		lastch = '\n';
+		run(filecode, strlen(filecode), true);
+		if(lastch != '\n') putchar('\n');
+
+		ret = tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
+		if(ret == -1) print_error(UNKNOWN_ERROR);
+
+		exit(0);
+	}
+
+	if(strlen(filename)) get_file();
 }
 
 int load_file() {

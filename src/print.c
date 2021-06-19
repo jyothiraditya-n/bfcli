@@ -35,6 +35,10 @@ void print_about() {
 	puts("  Copyright (C) 2021 Jyothiraditya Nellakra");
 	printf("  Version %d.%d: %s\n\n", VERSION, SUBVERSION, VERNAME);
 
+	printf("  Line buffer size: %d chars\n", LINE_SIZE);
+	printf("  Code buffer size: %d chars\n", CODE_SIZE);
+	printf("  Memory size: %d chars\n\n", MEM_SIZE);
+
 	puts("  This program is free software: you can redistribute it and/or modify");
 	puts("  it under the terms of the GNU General Public License as published by");
 	puts("  the Free Software Foundation, either version 3 of the License, or");
@@ -54,9 +58,9 @@ void print_banner() {
 	puts("Copyright (C) 2021 Jyothiraditya Nellakra");
 	printf("Version %d.%d: %s\n\n", VERSION, SUBVERSION, VERNAME);
 
-	puts("  This program comes with ABSOLUTELY NO WARRANTY; for details type `?'.");
-	puts("  This is free software, and you are welcome to redistribute it");
-	puts("  under certain conditions. (Hit ^C to exit.)\n");
+	puts("  This program comes with ABSOLUTELY NO WARRANTY. This is");
+	puts("  free software, and you are welcome to redestribute it");
+	puts("  under certain conditions. For details type '?'.\n");
 
 	printf("  Line buffer size: %d chars\n", LINE_SIZE);
 	printf("  Code buffer size: %d chars\n", CODE_SIZE);
@@ -68,8 +72,8 @@ void print_banner() {
 void print_error(int errnum) {
 	switch(errnum) {
 	case BAD_ARGS:
-		fprintf(stderr, "%s: error: incorrect usage.\n\n", progname);
-		print_help();
+		putchar('\n');
+		print_usage();
 		putchar('\n');
 
 		exit(errnum);
@@ -103,23 +107,7 @@ void print_error(int errnum) {
 }
 
 void print_help() {
-	printf("  Usage: %s [ARGS]\n\n", progname);
-	
-	puts("  Valid arguments are:");
-	puts("    -a, --about		prints the licence and about dialogue.");
-	puts("    -h, --help		prints the help dialogue.");
-	puts("    -v, --version		prints the program version.\n");
-
-	puts("    -c, --colour		(default) enables colour output.");
-	puts("    -m, --monochrome	disables colour output.\n");
-
-	puts("    -f, --file FILE	loads the file FILE into memory.\n");
-
 	puts("  Interactive Brainfuck interpreter; exit with ^C.\n");
-
-	printf("  Line buffer size: %d chars\n", LINE_SIZE);
-	printf("  Code buffer size: %d chars\n", CODE_SIZE);
-	printf("  Memory size: %d chars\n\n", MEM_SIZE);
 
 	puts("  Brainfuck commands:");
 	puts("    > Increments the data pointer.");
@@ -164,9 +152,7 @@ void print_help() {
 
 	puts("  Note: The above two commands do nothing when a file isn't loaded.");
 	puts("        In order to load a file when Bfcli is running, type the file");
-	puts("        name at the main prompt.\n");
-
-	puts("  Happy coding! :)");
+	puts("        name at the main prompt.");
 }
 
 void print_mem() {
@@ -211,4 +197,24 @@ void print_prompt(size_t insertion_point) {
 		if(!insertion_point) printf("bfcli@data:%zx$ ", ptr);
 		else printf("code:%zx$ ", insertion_point);
 	}
+}
+
+void print_usage() {
+	printf("  Usage: %s [ARGS] [FILE]\n\n", progname);
+	
+	puts("  Valid arguments are:");
+	puts("    -a, --about         prints the licence and about dialogue.");
+	puts("    -h, --help          prints the help dialogue.");
+	puts("    -v, --version       prints the program version.\n");
+
+	puts("    -c, --colour        (default) enables colour output.");
+	puts("    -m, --monochrome    disables colour output.\n");
+
+	puts("    -f, --file FILE     loads the file FILE into memory.\n");
+
+	puts("  Note: If a file is specified without -f, it is run immediately and");
+	puts("        the program exits as soon as the execution of the file");
+	puts("        terminates. Use -f if you want the interactive prompt.\n");
+
+	puts("  Happy coding! :)");
 }
