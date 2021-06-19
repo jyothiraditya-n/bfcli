@@ -17,7 +17,7 @@
 #include <stddef.h>
 
 #define VERSION 6
-#define SUBVERSION 2
-#define VERNAME "Cherrynado"
+#define SUBVERSION 1
+#define VERNAME "Cherrybreeze"
 
 extern size_t insertion_point;

@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 6.2: Cherrynado
+Version 6.1: Cherrybreeze
 
 bfcli@data:0$
 ```
@@ -92,6 +92,10 @@ to `~/.local/bin` where `~` is your user's home folder. If you wish to change
 this location, you can specify a new one with `DESTDIR=<location> make install`.
 However, you may need to run the command with elevated privileges if installing
 to a system folder like `/bin`.
+
+Although, if you want to also use this as the default Brainfuck interpreter on
+your system, you can run `make bf` to symlink `(your install location)/bfcli`
+to `/bin/bfcli`.
 
 ## Contributing
 
