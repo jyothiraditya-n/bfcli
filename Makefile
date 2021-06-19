@@ -50,7 +50,7 @@ bfcli : $(OBJS) $(LIBS)
 all : bfcli
 
 bf : install
-	sudo rm /bin/bf
+	-sudo rm /bin/bf
 	sudo ln -s $(DESTDIR)/bfcli /bin/bf
 
 clean :

@@ -142,7 +142,9 @@ int main(int argc, char **argv) {
 
 		switch(ret) {
 		case CODE_OK:
-			tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+			ret = tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+			if(ret == -1) print_error(UNKNOWN_ERROR);
+			
 			running = true;
 
 			lastch = '\n';
