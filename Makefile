@@ -18,7 +18,7 @@ HEADERS = $(wildcard src/*.h)
 HEADERS += $(wildcard libClame/inc/*.h)
 
 CFILES = $(wildcard src/*.c)
-OBJS = $(patsubst src/%.c,build/%.o,$(CFILES))
+OBJS = $(patsubst %.c,%.o,$(CFILES))
 LIBS = libClame/libClame.a
 
 CC = gcc
@@ -29,13 +29,14 @@ LDLIBS += -L libClame/ -lClame
 
 DESTDIR = ~/.local/bin
 
-build/ :
-	mkdir -p build/
+files = $(foreach obj,$(OBJS),$(wildcard $(obj)))
+files += $(wildcard bfcli)
+CLEAN = $(foreach file,$(files),rm $(file);)
 
 $(DESTDIR) : 
 	mkdir -p $(DESTDIR)/
 
-$(OBJS) : build/%.o : src/%.c build/ $(HEADERS)
+$(OBJS) : %.o : %.c $(HEADERS)
 	$(CC) $(CPPFLAGS) -c $< -o $@
 
 libClame/libClame.a :
@@ -54,9 +55,8 @@ bf : install
 	sudo ln -s $(DESTDIR)/bfcli /bin/bf
 
 clean :
-	-rm -r build/
-	-rm bfcli
-	cd libClame; make clean;
+	cd libClame; make clean
+	$(CLEAN)
 
 install : bfcli $(DESTDIR)/
 	cp bfcli $(DESTDIR)/

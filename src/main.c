@@ -103,19 +103,11 @@ int main(int argc, char **argv) {
 			print_error(LINE_TOO_LONG);
 			continue;
 
-		case LCL_EOF:
-			puts("^D");
-			exit(0);
-
 		case LCL_INT:
-			insertion_point = 0;
-			putchar('\n');
-			continue;
+			if(!insertion_point) exit(0);
 
-		case LCL_CUT_EOF:
-			print_error(LINE_TOO_LONG);
-			puts("^D");
-			exit(0);
+			insertion_point = 0;
+			continue;
 
 		case LCL_CUT_INT:
 			insertion_point = 0;

@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 6.1: Cherrybreeze
+Version 6.2: Cherrynado
 
 bfcli@data:0$
 ```

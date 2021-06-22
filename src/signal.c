@@ -31,14 +31,7 @@ void on_interrupt(int signum) {
 		running = false;
 		lastch = 0;
 	}
-
-	else if(insertion_point) {
-		signal(SIGINT, on_interrupt);
-		LCl_sigint = true;
-	}
-
-	else {
-		signal(SIGINT, SIG_DFL);
-		raise(SIGINT);
-	}
+	
+	signal(SIGINT, on_interrupt);
+	LCl_sigint = true;
 }
