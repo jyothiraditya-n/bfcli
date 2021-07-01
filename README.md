@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 6.2: Cherrynado
+Version 7.0: Apples & Oranges
 
 bfcli@data:0$
 ```
@@ -52,8 +52,9 @@ the command-line itself.
 
 - Colour support for highlighting important information on the screen.
 
-- Loading valid Brainfuck files at the prompt, performing a file listing with
-`%` and executing them with `@`.
+- Loading valid Brainfuck files at the prompt, performing code buffer editing
+with `%` and executing them with `@`. (Again, thanks to intergration with
+`libClame`.)
 
 ## Building, Running and Installing the Program from Source
 
@@ -68,7 +69,7 @@ out.
 The following are the command-line arguments that this program accepts:
 
 ```
-Usage: bfcli [ARGS] [FILE]
+Usage: bf [ARGS] [FILE]
 
 Valid arguments are:
   -a, --about         prints the licence and about dialogue.
@@ -77,6 +78,7 @@ Valid arguments are:
 
   -c, --colour        (default) enables colour output.
   -m, --monochrome    disables colour output.
+  -n, --no-ansi       disables the use of ANSI escape sequences.
 
   -f, --file FILE     loads the file FILE into memory.
 
