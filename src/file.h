@@ -19,7 +19,6 @@
 
 extern const char *imm_fname;
 extern char filename[];
-extern char *filecode;
 
 extern struct termios cooked, raw;
 

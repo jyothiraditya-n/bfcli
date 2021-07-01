@@ -32,7 +32,6 @@ struct termios cooked, raw;
 
 const char *imm_fname;
 char filename[FILENAME_SIZE];
-char *filecode;
 
 static int check_file(size_t len);
 static void get_file();
@@ -41,22 +40,15 @@ static int check_file(size_t len) {
 	int loops_open = 0;
 
 	for(size_t i = 0; i < len; i++) {
-		switch(filecode[i]) {
-		case '[':
-			loops_open++;
-			continue;
+		switch(code[i]) {
+		case '[': loops_open++; continue;
+		case ']': loops_open--; continue;
 
-		case ']':
-			loops_open--;
-			continue;
-
-		case '\t':
-		case '\n':
-		case '\r':
+		case '\t': case '\n': case '\r':
 			continue;
 		}
 
-		if(!isprint(filecode[i])) return BAD_CODE;
+		if(!isprint(code[i])) return BAD_CODE;
 	}
 
 	return loops_open ? BAD_CODE : FILE_OK;
@@ -81,14 +73,14 @@ void init_files() {
 	raw.c_cc[VINTR] = 3;
 	raw.c_lflag |= ISIG;
 
+	if(strlen(filename) && imm_fname) {
+		fprintf(stderr, "%s: error: file supplied both with and "
+			"without -f.\n", progname);
+
+		print_error(BAD_ARGS);
+	}
+
 	if(imm_fname) {
-		if(strlen(filename)) {
-			fprintf(stderr, "%s: error: file supplied both with "
-				"and without -f.\n", progname);
-
-			print_error(BAD_ARGS);
-		}
-
 		strncat(filename, imm_fname, FILENAME_SIZE - 1);
 		get_file();
 
@@ -97,7 +89,7 @@ void init_files() {
 
 		running = true;
 		lastch = '\n';
-		run(filecode, strlen(filecode), true);
+		run(code, strlen(code), true);
 		if(lastch != '\n') putchar('\n');
 
 		ret = tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
@@ -119,25 +111,20 @@ int load_file() {
 	size_t size = ftell(file) + 1;
 	rewind(file);
 
-	char *oldcode = filecode;
+	if(size > CODE_SIZE) {
+		ret = fclose(file);
+		if(ret == EOF) print_error(UNKNOWN_ERROR);
+		return FILE_TOO_BIG;
+	}
 
-	filecode = malloc(size);
-	if(!filecode) print_error(UNKNOWN_ERROR);
-
-	for(size_t i = 0; i < size; i++) filecode[i] = fgetc(file);
-	filecode[size - 1] = 0;
+	for(size_t i = 0; i < size; i++) code[i] = fgetc(file);
+	code[size - 1] = 0;
 
 	ret = fclose(file);
 	if(ret == EOF) print_error(UNKNOWN_ERROR);
 
 	ret = check_file(size - 1);
+	if(ret == BAD_CODE) return BAD_CODE;
 
-	if(ret == BAD_CODE) {
-		free(filecode);
-		filecode = oldcode;
-		return BAD_CODE;
-	}
-
-	if(oldcode) free(oldcode);
 	return FILE_OK;
 }

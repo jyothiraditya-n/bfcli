@@ -14,10 +14,12 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <stdbool.h>
 #include <stddef.h>
 
-#define VERSION 6
-#define SUBVERSION 2
-#define VERNAME "Cherrynado"
+#define VERSION 7
+#define SUBVERSION 0
+#define VERNAME "Apples & Oranges"
 
 extern size_t insertion_point;
+extern bool no_ansi;

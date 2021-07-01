@@ -66,7 +66,7 @@ void print_banner() {
 	printf("  Code buffer size: %d chars\n", CODE_SIZE);
 	printf("  Memory size: %d chars\n\n", MEM_SIZE);
 
-	if(filecode) printf("  File: %s\n\n", filename);
+	if(strlen(filename)) printf("  File: %s\n\n", filename);
 }
 
 void print_error(int errnum) {
@@ -94,6 +94,12 @@ void print_error(int errnum) {
 
 	case BAD_CODE:
 		fprintf(stderr, "%s: error: '%s': invalid brainfuck.\n",
+			progname, filename);
+
+		break;
+
+	case FILE_TOO_BIG:
+		fprintf(stderr, "%s: error: '%s': file too big.\n",
 			progname, filename);
 
 		break;
@@ -147,12 +153,16 @@ void print_help() {
 	puts("  Note: The interpreter will still wait for more code if the current");
 	puts("        code contains unmatched brackets.\n");
 
-	puts("    @ Execute code from the loaded file.");
-	puts("    % Print code from the loaded file.\n");
+	puts("    @ Execute code from the code buffer.");
+	puts("    % Edit code in the code buffer.\n");
 
-	puts("  Note: The above two commands do nothing when a file isn't loaded.");
-	puts("        In order to load a file when Bfcli is running, type the file");
-	puts("        name at the main prompt.");
+	puts("  Note: In order to load a file when Bfcli is running, type the file");
+	puts("        name at the main prompt. When files are loaded, they are put");
+	puts("        into the code buffer.");
+
+	puts("  Note: Buffer Editing functionality is disabled when the use of ANSI");
+	puts("        escape sequences is disabled. % will simply print the contents");
+	puts("        of the code buffer in this case.");
 }
 
 void print_mem() {
@@ -208,7 +218,8 @@ void print_usage() {
 	puts("    -v, --version       prints the program version.\n");
 
 	puts("    -c, --colour        (default) enables colour output.");
-	puts("    -m, --monochrome    disables colour output.\n");
+	puts("    -m, --monochrome    disables colour output.");
+	puts("    -n, --no-ansi       disables the use of ANSI escape sequences.\n");
 
 	puts("    -f, --file FILE     loads the file FILE into memory.\n");
 

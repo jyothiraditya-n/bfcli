@@ -19,6 +19,7 @@
 #include <signal.h>
 
 #include <LC_args.h>
+#include <LC_editor.h>
 #include <LC_vars.h>
 
 #include "file.h"
@@ -96,20 +97,37 @@ void init(int argc, char **argv) {
 	var -> fmt = FILENAME_SCN;
 	var -> data = filename;
 
-	LCa_noflags = &imm_fname;
-	LCa_max_noflags = 1;
-
 	arg = LCa_new();
 	if(!arg) print_error(UNKNOWN_ERROR);
 	arg -> long_flag = "file";
 	arg -> short_flag = 'f';
 	arg -> var = var;
 
+	var = LCv_new();
+	if(!var) print_error(UNKNOWN_ERROR);
+	var -> id = "no-ansi";
+	var -> data = &no_ansi;
+
+	arg = LCa_new();
+	if(!arg) print_error(UNKNOWN_ERROR);
+	arg -> long_flag = "no-ansi";
+	arg -> short_flag = 'n';
+	arg -> var = var;
+	arg -> value = true;
+
+	LCa_noflags = &imm_fname;
+	LCa_max_noflags = 1;
+
 	int ret = LCa_read(argc, argv);
 	if(ret == LCA_BAD_CMD) print_error(BAD_ARGS);
 	else if(ret != LCA_OK) print_error(UNKNOWN_ERROR);
 
+	if(no_ansi) colour = false;
 	init_files();
+
+	LCe_banner = "Bfcli: The Interactive Brainfuck Command-Line Interpreter";
+	LCe_buffer = code;
+	LCe_length = CODE_SIZE;
 }
 
 void version() {

@@ -20,7 +20,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <LC_editor.h>
+
 #include "file.h"
+#include "main.h"
 #include "print.h"
 #include "run.h"
 #include "size.h"
@@ -42,6 +45,7 @@ static void clear_mem() {
 void run(char *start, size_t len, bool isfile) {
 	int brackets_open = 0;
 	size_t sub_start = 0;
+	int ret;
 
 	for(size_t i = 0; i < len && running; i++) {
 		switch(start[i]) {
@@ -123,16 +127,28 @@ void run(char *start, size_t len, bool isfile) {
 			break;
 
 		case '@':
-			if(!filecode) break;
-			
-			run(filecode, strlen(filecode), true);
+			run(code, strlen(code), true);
 			break;
 
 		case '%':
-			if(!filecode) break;
-			
-			putchar('\n');
-			printf("%s\n\n", filecode);
+			if(no_ansi) {
+				if(!strlen(code)) break;
+				putchar('\n');
+				printf("%s\n\n", code);
+				break;
+			}
+
+			ret = tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
+			if(ret == -1) print_error(UNKNOWN_ERROR);
+
+			ret = LCe_edit();
+			if(ret != LCE_OK) print_error(UNKNOWN_ERROR);
+
+			ret = tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+			if(ret == -1) print_error(UNKNOWN_ERROR);
+
+			printf("\e[H\e[J");
+			lastch = '\n';
 			break;
 		}
 	}

@@ -16,6 +16,7 @@
 
 #include <signal.h>
 #include <LC_lines.h>
+#include <LC_editor.h>
 
 #include "main.h"
 #include "run.h"
@@ -34,4 +35,5 @@ void on_interrupt(int signum) {
 	
 	signal(SIGINT, on_interrupt);
 	LCl_sigint = true;
+	LCe_sigint = true;
 }

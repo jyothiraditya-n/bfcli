@@ -23,6 +23,7 @@
 #define LINE_TOO_LONG 3
 #define BAD_FILE 6
 #define BAD_CODE 7
+#define FILE_TOO_BIG 8
 
 extern const char *progname;
 extern bool colour;

@@ -35,6 +35,7 @@
 #define NXOR(A, B) ((A && B) || (!A && !B))
 
 size_t insertion_point;
+bool no_ansi;
 
 static int check(char *code, size_t len);
 
@@ -75,25 +76,17 @@ int main(int argc, char **argv) {
 	print_banner();
 
 	static char line[LINE_SIZE];
-	LCl_t lcl;
 
-	lcl.data = line;
-	lcl.length = LINE_SIZE;
-
-	while(!feof(stdin)) {
+	while(true) {
 		int ret = tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
 		if(ret == -1) print_error(UNKNOWN_ERROR);
 
 		print_prompt(insertion_point);
+		LCl_buffer = line + insertion_point;
+		LCl_length = LINE_SIZE - insertion_point;
 
-		if(CODE_SIZE - insertion_point < LINE_SIZE) {
-			insertion_point = 0;
-
-			print_error(CODE_TOO_LONG);
-			continue;
-		}
-
-		ret = LCl_read(&lcl);
+		if(no_ansi) ret = LCl_bread(line, LINE_SIZE);
+		else ret = LCl_read();
 
 		switch(ret) {
 		case LCL_OK:
@@ -127,10 +120,8 @@ int main(int argc, char **argv) {
 			continue;
 		}
 
-		strcpy(&code[insertion_point], line);
-
-		size_t len = strlen(code);
-		ret = check(code, len);
+		size_t len = strlen(line);
+		ret = check(line, len);
 
 		switch(ret) {
 		case CODE_OK:
@@ -140,7 +131,7 @@ int main(int argc, char **argv) {
 			running = true;
 
 			lastch = '\n';
-			run(code, len, false);
+			run(line, len, false);
 			if(lastch != '\n') putchar('\n');
 
 			insertion_point = 0;
@@ -148,7 +139,7 @@ int main(int argc, char **argv) {
 			break;
 
 		case CODE_INCOMPLETE:
-			insertion_point += strlen(line);
+			insertion_point = strlen(line);
 			break;
 
 		case CODE_ERROR:
