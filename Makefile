@@ -21,23 +21,36 @@ CFILES = $(wildcard src/*.c)
 OBJS = $(patsubst %.c,%.o,$(CFILES))
 LIBS = libClame/libClame.a
 
+DBFFILES = $(wildcard demo/*.bf)
+DCFILES = $(patsubst %.bf,%.c,$(DBFFILES))
+DOBJS = $(patsubst %.c,%.o,$(DCFILES))
+DEMOS = $(patsubst demo/%.o,%,$(DOBJS))
+
 CC = gcc
 CPPFLAGS = -Wall -Wextra -Werror -std=c99 -O3 -I libClame/inc/
+DCPPFLAGS = -Wall -Wextra -Werror -std=c99 -O3
 CFLAGS = -std=c99
-
 LDLIBS += -L libClame/ -lClame
 
 DESTDIR = ~/.local/bin
 
-files = $(foreach obj,$(OBJS),$(wildcard $(obj)))
-files += $(wildcard bfcli)
+files = $(foreach cfile,$(DCFILES),$(wildcard $(cfile)))
+files += $(foreach obj,$(OBJS),$(wildcard $(obj)))
+files += $(foreach obj,$(DOBJS),$(wildcard $(obj)))
+files += $(wildcard bfcli) $(foreach demo,$(DEMOS),$(wildcard $(demo)))
 CLEAN = $(foreach file,$(files),rm $(file);)
 
 $(DESTDIR) : 
 	mkdir -p $(DESTDIR)/
 
+$(DCFILES) : %.c : %.bf bfcli
+	./bfcli -t $< -o $@
+
 $(OBJS) : %.o : %.c $(HEADERS)
 	$(CC) $(CPPFLAGS) -c $< -o $@
+
+$(DOBJS) : %.o : %.c
+	$(CC) $(DCPPFLAGS) -c $< -o $@
 
 libClame/libClame.a :
 	cd libClame; make libClame.a
@@ -45,10 +58,13 @@ libClame/libClame.a :
 bfcli : $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(OBJS) -o bfcli $(LDLIBS)
 
+$(DEMOS) : % : demo/%.o
+	$(CC) $(CFLAGS) $< -o $@
+
 .DEFAULT_GOAL = all
 .PHONY : all bf clean install remove
 
-all : bfcli
+all : bfcli $(DEMOS)
 
 bf : install
 	-sudo rm /bin/bf

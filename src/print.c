@@ -104,6 +104,12 @@ void print_error(int errnum) {
 
 		break;
 
+	case BAD_OUTPUT:
+		fprintf(stderr, "%s: error: cannot write file '%s'.\n",
+			progname, outname);
+
+		exit(errnum);
+
 	default:
 		fprintf(stderr, "%s: error: unknown error\n", progname);
 		perror("cstdlib");
@@ -213,19 +219,26 @@ void print_usage() {
 	printf("  Usage: %s [ARGS] [FILE]\n\n", progname);
 	
 	puts("  Valid arguments are:");
-	puts("    -a, --about         prints the licence and about dialogue.");
-	puts("    -h, --help          prints the help dialogue.");
-	puts("    -v, --version       prints the program version.\n");
+	puts("    -a, --about         Prints the licence and about dialogue.");
+	puts("    -h, --help          Prints the help dialogue.");
+	puts("    -v, --version       Prints the program version.\n");
 
-	puts("    -c, --colour        (default) enables colour output.");
-	puts("    -m, --monochrome    disables colour output.");
-	puts("    -n, --no-ansi       disables the use of ANSI escape sequences.\n");
+	puts("    -c, --colour        (Default) Enables colour output.");
+	puts("    -m, --monochrome    Disables colour output.");
+	puts("    -n, --no-ansi       Disables the use of ANSI escape sequences.\n");
 
-	puts("    -f, --file FILE     loads the file FILE into memory.\n");
+	puts("    -f, --file FILE     Loads the file FILE into memory.");
+	puts("    -t, --transpile     Transpiles the file to C source code, ouputs");
+	puts("                        the result to OUT and exits.\n");
+	puts("    -o, --output OUT    Sets the output file for the transpiled C");
+	puts("                        code to OUT.\n");
 
 	puts("  Note: If a file is specified without -f, it is run immediately and");
 	puts("        the program exits as soon as the execution of the file");
 	puts("        terminates. Use -f if you want the interactive prompt.\n");
+
+	puts("  Note: If no output file is specified, the transpiled code is output");
+	puts("        to STDOUT.\n");
 
 	puts("  Happy coding! :)");
 }

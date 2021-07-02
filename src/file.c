@@ -28,15 +28,18 @@
 #include "run.h"
 #include "size.h"
 
-struct termios cooked, raw;
-
+bool transpile;
 const char *imm_fname;
 char filename[FILENAME_SIZE];
+char outname[FILENAME_SIZE];
 
-static int check_file(size_t len);
+struct termios cooked, raw;
+
 static void get_file();
+static void convert();
+static void _convert(size_t i, FILE *file);
 
-static int check_file(size_t len) {
+int check_file(size_t len) {
 	int loops_open = 0;
 
 	for(size_t i = 0; i < len; i++) {
@@ -61,6 +64,8 @@ static void get_file() {
 		print_error(ret);
 		exit(ret);
 	}
+
+	if(transpile) convert();
 }
 
 void init_files() {
@@ -127,4 +132,62 @@ int load_file() {
 	if(ret == BAD_CODE) return BAD_CODE;
 
 	return FILE_OK;
+}
+
+static void convert() {
+	FILE *file = stdout;
+	if(strlen(outname)) {
+		file = fopen(outname, "w");
+		if(!file) print_error(BAD_OUTPUT);
+	}
+
+	fputs("#include <stddef.h>\n", file);
+	fputs("#include <stdio.h>\n", file);
+	fputs("#include <termios.h>\n", file);
+	fputs("#include <unistd.h>\n", file);
+
+	fprintf(file, "char cells[%d];\n", MEM_SIZE);
+	fputs("size_t ptr = 0;\n", file);
+	fputs("struct termios cooked, raw;\n", file);
+
+	fputs("int main() {\n", file);
+	fputs("tcgetattr(STDIN_FILENO, &cooked);\n", file);
+	fputs("raw = cooked;\n", file);
+	fputs("raw.c_lflag &= ~ICANON;\n", file);
+	fputs("raw.c_lflag |= ECHO;\n", file);
+	fputs("raw.c_cc[VINTR] = 3;\n", file);
+	fputs("raw.c_lflag |= ISIG;\n", file);
+	fputs("tcsetattr(STDIN_FILENO, TCSANOW, &raw);\n", file);
+
+	size_t len = strlen(code);
+	for(size_t i = 0; i < len; i++) _convert(i, file);
+
+	fputs("tcsetattr(STDIN_FILENO, TCSANOW, &cooked);\n", file);
+	fputs("}\n", file);
+
+	if(strlen(outname)) {
+		int ret = fclose(file);
+		if(ret == EOF) print_error(UNKNOWN_ERROR);
+	}
+
+	exit(0);
+}
+
+static void _convert(size_t i, FILE *file) {
+	switch(code[i]) {
+	case '<':	fprintf(file, "if(ptr) { ptr--; } else { ptr = %d; }\n",
+			MEM_SIZE - 1); break;
+
+	case '>':	fprintf(file, "ptr++; if(ptr >= %d) { ptr = 0; }\n",
+			MEM_SIZE); break;
+
+	case '+':	fputs("cells[ptr]++;\n", file); break;
+	case '-':	fputs("cells[ptr]--;\n", file); break;
+
+	case '[':	fputs("while(cells[ptr]) {\n", file); break;
+	case ']':	fputs("}\n", file); break;
+
+	case '.':	fputs("putchar(cells[ptr]);\n", file); break;
+	case ',':	fputs("cells[ptr] = getchar();\n", file); break;
+	}
 }

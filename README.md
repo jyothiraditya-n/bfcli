@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 7.0: Apples & Oranges
+Version 7.1: Apple Cider
 
 bfcli@data:0$
 ```
@@ -56,6 +56,9 @@ the command-line itself.
 with `%` and executing them with `@`. (Again, thanks to intergration with
 `libClame`.)
 
+- Transpiling Brainfuck code to C source code with output to either STDOUT or a
+custom output file, as specified on the command line.
+
 ## Building, Running and Installing the Program from Source
 
 You will need to have an up-to-date version of GNU C Compiler and GNU Make. You
@@ -80,11 +83,19 @@ Valid arguments are:
   -m, --monochrome    disables colour output.
   -n, --no-ansi       disables the use of ANSI escape sequences.
 
-  -f, --file FILE     loads the file FILE into memory.
+  -f, --file FILE     Loads the file FILE into memory.
+  -t, --transpile     Transpiles the file to C source code, ouputs
+                      the result to OUT and exits.
+
+  -o, --output OUT    Sets the output file for the transpiled C
+                      code to OUT.
 
 Note: If a file is specified without -f, it is run immediately and
       the program exits as soon as the execution of the file
       terminates. Use -f if you want the interactive prompt.
+
+Note: If no output file is specified, the transpiled code is output
+      to STDOUT.
 
 Happy coding!
 ```

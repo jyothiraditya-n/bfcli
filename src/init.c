@@ -93,6 +93,18 @@ void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) print_error(UNKNOWN_ERROR);
+	var -> id = "no-ansi";
+	var -> data = &no_ansi;
+
+	arg = LCa_new();
+	if(!arg) print_error(UNKNOWN_ERROR);
+	arg -> long_flag = "no-ansi";
+	arg -> short_flag = 'n';
+	arg -> var = var;
+	arg -> value = true;
+
+	var = LCv_new();
+	if(!var) print_error(UNKNOWN_ERROR);
 	var -> id = "filename";
 	var -> fmt = FILENAME_SCN;
 	var -> data = filename;
@@ -105,15 +117,27 @@ void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) print_error(UNKNOWN_ERROR);
-	var -> id = "no-ansi";
-	var -> data = &no_ansi;
+	var -> id = "transpile";
+	var -> data = &transpile;
 
 	arg = LCa_new();
 	if(!arg) print_error(UNKNOWN_ERROR);
-	arg -> long_flag = "no-ansi";
-	arg -> short_flag = 'n';
+	arg -> long_flag = "transpile";
+	arg -> short_flag = 't';
 	arg -> var = var;
 	arg -> value = true;
+
+	var = LCv_new();
+	if(!var) print_error(UNKNOWN_ERROR);
+	var -> id = "output-filename";
+	var -> fmt = FILENAME_SCN;
+	var -> data = outname;
+
+	arg = LCa_new();
+	if(!arg) print_error(UNKNOWN_ERROR);
+	arg -> long_flag = "output";
+	arg -> short_flag = 'o';
+	arg -> var = var;
 
 	LCa_noflags = &imm_fname;
 	LCa_max_noflags = 1;

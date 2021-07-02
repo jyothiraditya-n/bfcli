@@ -14,14 +14,19 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <stdbool.h>
+
 #include <termios.h>
 #include <unistd.h>
 
+extern bool transpile;
 extern const char *imm_fname;
 extern char filename[];
+extern char outname[];
 
 extern struct termios cooked, raw;
 
+extern int check_file(size_t len);
 extern void init_files();
 extern int load_file();
 

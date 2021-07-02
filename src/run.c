@@ -45,6 +45,7 @@ static void clear_mem() {
 void run(char *start, size_t len, bool isfile) {
 	int brackets_open = 0;
 	size_t sub_start = 0;
+	size_t file_len;
 	int ret;
 
 	for(size_t i = 0; i < len && running; i++) {
@@ -127,14 +128,23 @@ void run(char *start, size_t len, bool isfile) {
 			break;
 
 		case '@':
-			run(code, strlen(code), true);
+			file_len = strlen(code);
+			ret = check_file(file_len);
+			if(ret == FILE_OK) run(code, file_len, true);
+			
+			else {
+				if(lastch != '\n') putchar('\n');
+				puts("error: code contains syntax mistakes.");
+				lastch = '\n';
+			}
+
 			break;
 
 		case '%':
 			if(no_ansi) {
 				if(!strlen(code)) break;
-				putchar('\n');
-				printf("%s\n\n", code);
+				printf("\n%s\n\n", code);
+				lastch = '\n';
 				break;
 			}
 
