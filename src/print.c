@@ -148,7 +148,8 @@ void print_help() {
 	puts("  Extended Brainfuck commands:");
 	puts("    ? Prints the help and copyright disclaimer to the console.");
 	puts("    / Clears the memory and moves the pointer to 0.");
-	puts("    * Prints memory values around the current pointer value.\n");
+	puts("    * Prints memory values around the current pointer value.");
+	puts("    & Prints all memory values.\n");
 
 	puts("  Note: Extended Brainfuck commands are disabled when executing file");
 	puts("        code, and will simply be ignored. This is done for");
@@ -210,6 +211,39 @@ void print_mem() {
 			size_t sub_addr = i + j + k;
 			if(sub_addr >= MEM_SIZE) sub_addr -= MEM_SIZE;
 			unsigned char byte = mem[sub_addr];
+
+			if(isprint(byte)) putchar(byte);
+			else putchar('.');
+		}
+
+		puts("|");
+	}
+}
+
+void print_mem_full() {
+	gethw(); size_t cols = (width - MEM_SIZE_DIGITS - 8) / 4;
+
+	for(size_t i = 0; i < MEM_SIZE; i += cols) {
+		printf("  " MEM_SIZE_PRI ":", i);
+
+		for(size_t j = 0; j < cols; j++) {
+			if(i + j >= MEM_SIZE) { printf("   "); continue; }
+			unsigned char byte = mem[i + j];
+
+			if(colour) {
+				if(byte) printf("\e[93m");
+				else printf("\e[33m");
+			}
+
+			printf(" %02x", byte);
+		}
+
+		if(colour) printf("\e[0m |");
+		else printf(" |");
+
+		for(size_t j = 0; j < cols; j++) {
+			if(i + j >= MEM_SIZE) { printf("."); continue; }
+			unsigned char byte = mem[i + j];
 
 			if(isprint(byte)) putchar(byte);
 			else putchar('.');

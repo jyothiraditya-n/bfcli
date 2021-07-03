@@ -122,6 +122,16 @@ void run(char *start, size_t len, bool isfile) {
 			lastch = '\n';
 			break;
 
+		case '&':
+			if(lastch != '\n') putchar('\n');
+
+			putchar('\n');
+			print_mem_full();
+			putchar('\n');
+
+			lastch = '\n';
+			break;
+
 		case '@':
 			file_len = strlen(code);
 			ret = check_file(file_len);
