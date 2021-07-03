@@ -237,7 +237,7 @@ void print_usage() {
 	
 	puts("    -s, --safe-output   Generates code that won't segfault if < or");
 	puts("                        > are used out-of-bounds. (The pointer wraps");
-	puts("                        around.)");
+	puts("                        around.)\n");
 
 	puts("  Note: If a file is specified without -f, it is run immediately and");
 	puts("        the program exits as soon as the execution of the file");
@@ -247,7 +247,7 @@ void print_usage() {
 	puts("        to STDOUT.\n");
 
 	puts("  Note: Code generated with -s may be both slower to compile and");
-	puts("        execute, so only use it when necessary.");
+	puts("        execute, so only use it when necessary.\n");
 
 	puts("  Happy coding! :)");
 }

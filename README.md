@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 7.1: Apple Cider
+Version 7.2: Orange Cheesecake
 
 bfcli@data:0$
 ```
@@ -75,20 +75,25 @@ The following are the command-line arguments that this program accepts:
 Usage: bf [ARGS] [FILE]
 
 Valid arguments are:
-  -a, --about         prints the licence and about dialogue.
-  -h, --help          prints the help dialogue.
-  -v, --version       prints the program version.
+  -a, --about         Prints the licence and about dialogue.
+  -h, --help          Prints the help dialogue.
+  -v, --version       Prints the program version.
 
-  -c, --colour        (default) enables colour output.
-  -m, --monochrome    disables colour output.
-  -n, --no-ansi       disables the use of ANSI escape sequences.
+  -c, --colour        (Default) Enables colour output.
+  -m, --monochrome    Disables colour output.
+  -n, --no-ansi       Disables the use of ANSI escape sequences.
 
   -f, --file FILE     Loads the file FILE into memory.
+
   -t, --transpile     Transpiles the file to C source code, ouputs
                       the result to OUT and exits.
 
   -o, --output OUT    Sets the output file for the transpiled C
                       code to OUT.
+
+  -s, --safe-output   Generates code that won't segfault if < or
+                      > are used out-of-bounds. (The pointer wraps
+                      around.)
 
 Note: If a file is specified without -f, it is run immediately and
       the program exits as soon as the execution of the file
@@ -97,7 +102,10 @@ Note: If a file is specified without -f, it is run immediately and
 Note: If no output file is specified, the transpiled code is output
       to STDOUT.
 
-Happy coding!
+Note: Code generated with -s may be both slower to compile and
+      execute, so only use it when necessary.
+
+Happy coding! :)
 ```
 
 Finally, to install the code, you can run `make install`. This will install it
