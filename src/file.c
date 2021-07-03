@@ -110,8 +110,6 @@ void init_files() {
 }
 
 int load_file() {
-	static char old_code[CODE_SIZE];
-
 	FILE *file = fopen(filename, "r");
 	if(!file) return BAD_FILE;
 	
@@ -128,8 +126,10 @@ int load_file() {
 	}
 
 	size_t old_size = strlen(code);
-	for(size_t i = 0; i <= old_size; i++) old_code[i] = code[i];
+	char *old_code = malloc(old_size * sizeof(char));
+	if(!old_code) print_error(UNKNOWN_ERROR);
 
+	for(size_t i = 0; i <= old_size; i++) old_code[i] = code[i];
 	for(size_t i = 0; i < size; i++) code[i] = fgetc(file);
 	code[size - 1] = 0;
 
@@ -139,9 +139,11 @@ int load_file() {
 	ret = check_file(size - 1);
 	if(ret == BAD_CODE) {
 		for(size_t i = 0; i <= old_size; i++) code[i] = old_code[i];
+		free(old_code);
 		return BAD_CODE;
 	}
 
+	free(old_code);
 	return FILE_OK;
 }
 
