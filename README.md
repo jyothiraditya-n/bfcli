@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 7.2: Orange Cheesecake
+Version 7.3: Apple Crumb
 
 bfcli@data:0$
 ```
