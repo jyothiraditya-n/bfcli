@@ -29,6 +29,8 @@
 extern const char *progname;
 extern bool colour;
 
+extern size_t height, width;
+
 extern void print_about();
 extern void print_banner();
 extern void print_error(int errnum);

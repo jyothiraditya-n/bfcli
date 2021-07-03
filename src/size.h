@@ -15,10 +15,11 @@
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
 #define CODE_SIZE 65536
-#define MEM_SIZE 655360
-#define MEM_SIZE_PRI "%05zx"
-
 #define LINE_SIZE 4096
+
+#define MEM_SIZE 655360
+#define MEM_SIZE_DIGITS 5
+#define MEM_SIZE_PRI "%05zx"
 
 #define FILENAME_SIZE 4096
 #define FILENAME_SCN "%4095c"

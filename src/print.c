@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <ctype.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -22,6 +23,7 @@
 #include <string.h>
 
 #include "file.h"
+#include "init.h"
 #include "main.h"
 #include "print.h"
 #include "run.h"
@@ -29,6 +31,9 @@
 
 const char *progname;
 bool colour = true;
+
+size_t height = 24;
+size_t width = 80;
 
 void print_about() {
 	puts("  Bfcli: The Interactive Brainfuck Command-Line Interpreter");
@@ -172,35 +177,52 @@ void print_help() {
 }
 
 void print_mem() {
-	size_t i =  ptr - 64;
-	i -= i % 8;
+	gethw();
+	size_t rows = (height * 2) / 3;
+	size_t cols = (width - MEM_SIZE_DIGITS - 8) / 4;
 
-	if(i >= MEM_SIZE) i += MEM_SIZE;
+	size_t i = ptr, offset = (rows * cols) / 2;
+	for(size_t j = 0; j < offset; j++) if(--i >= MEM_SIZE) i = MEM_SIZE - 1;
 
-	for(size_t j = 0; j < 128; j += 8) {
-		if(i + j >= MEM_SIZE) i = -j;
-		
-		printf("  " MEM_SIZE_PRI ":", i + j);
+	offset = rows * cols;
+	for(size_t j = 0; j < offset; j += cols) {
+		size_t addr = i + j; if(addr >= MEM_SIZE) addr -= MEM_SIZE;
+		printf("  " MEM_SIZE_PRI ":", addr);
 
-		for(size_t k = 0; k < 8; k++) {
-			unsigned char byte = mem[i + j + k];
+		for(size_t k = 0; k < cols; k++) {
+			size_t sub_addr = i + j + k;
+			if(sub_addr >= MEM_SIZE) sub_addr -= MEM_SIZE;
+			unsigned char byte = mem[sub_addr];
 
 			if(colour) {
-				if(byte) printf("\e[93m");
+				if(sub_addr == ptr) printf("\e[97m");
+				else if(byte) printf("\e[93m");
 				else printf("\e[33m");
 			}
 
 			printf(" %02x", byte);
 		}
 
-		if(colour) printf("\e[0m");
-		putchar('\n');
+		if(colour) printf("\e[0m |");
+		else printf(" |");
+
+		for(size_t k = 0; k < cols; k++) {
+			size_t sub_addr = i + j + k;
+			if(sub_addr >= MEM_SIZE) sub_addr -= MEM_SIZE;
+			unsigned char byte = mem[sub_addr];
+
+			if(isprint(byte)) putchar(byte);
+			else putchar('.');
+		}
+
+		puts("|");
 	}
 }
 
 void print_prompt(size_t insertion_point) {
 	if(colour) {
-		if(!insertion_point) printf("\e[93m" "bfcli"
+		if(!insertion_point)
+			printf("\e[93m" "bfcli"
 			"\e[0m" "@"
 			"\e[33m" "data:%zx"
 			"\e[0m" "$ ", ptr);

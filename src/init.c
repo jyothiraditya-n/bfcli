@@ -41,6 +41,24 @@ static void about() {
 	exit(0);
 }
 
+void gethw() {
+	if(no_ansi) return;
+
+	raw.c_lflag &= ~ECHO;
+	int ret = tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+	if(ret == -1) print_error(UNKNOWN_ERROR);
+	
+	printf("\e[s\e[999;999H\e[6n\e[u");
+	while(getchar() != '\e');
+
+	ret = scanf("[%zu;%zuR", &height, &width);
+	if(ret != 2) print_error(UNKNOWN_ERROR);
+
+	raw.c_lflag |= ECHO;
+	ret = tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
+	if(ret == -1) print_error(UNKNOWN_ERROR);
+}
+
 static void help() {
 	putchar('\n');
 	print_help();
@@ -158,15 +176,15 @@ void init(int argc, char **argv) {
 	if(ret == LCA_BAD_CMD) print_error(BAD_ARGS);
 	else if(ret != LCA_OK) print_error(UNKNOWN_ERROR);
 
-	if(no_ansi) colour = false;
 	init_files();
+	if(no_ansi) colour = false;
 
 	LCe_banner = "Bfcli: The Interactive Brainfuck Command-Line Interpreter";
 	LCe_buffer = code;
 	LCe_length = CODE_SIZE;
 }
 
-void version() {
+static void version() {
 	printf("Bfcli Version %d.%d: %s\n",
 		VERSION, SUBVERSION, VERNAME);
 
