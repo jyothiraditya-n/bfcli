@@ -159,8 +159,8 @@ void print_help() {
 	puts("  Note: The interpreter will still wait for more code if the current");
 	puts("        code contains unmatched brackets.\n");
 
-	puts("    @ Execute code from the code buffer.");
-	puts("    % Edit code in the code buffer.\n");
+	puts("    @ Executes code from the code buffer.");
+	puts("    % Edits code in the code buffer.\n");
 
 	puts("  Note: In order to load a file when Bfcli is running, type the file");
 	puts("        name at the main prompt. When files are loaded, they are put");
@@ -227,11 +227,17 @@ void print_usage() {
 	puts("    -m, --monochrome    Disables colour output.");
 	puts("    -n, --no-ansi       Disables the use of ANSI escape sequences.\n");
 
-	puts("    -f, --file FILE     Loads the file FILE into memory.");
+	puts("    -f, --file FILE     Loads the file FILE into memory.\n");
+
 	puts("    -t, --transpile     Transpiles the file to C source code, ouputs");
 	puts("                        the result to OUT and exits.\n");
+
 	puts("    -o, --output OUT    Sets the output file for the transpiled C");
 	puts("                        code to OUT.\n");
+	
+	puts("    -s, --safe-output   Generates code that won't segfault if < or");
+	puts("                        > are used out-of-bounds. (The pointer wraps");
+	puts("                        around.)");
 
 	puts("  Note: If a file is specified without -f, it is run immediately and");
 	puts("        the program exits as soon as the execution of the file");
@@ -239,6 +245,9 @@ void print_usage() {
 
 	puts("  Note: If no output file is specified, the transpiled code is output");
 	puts("        to STDOUT.\n");
+
+	puts("  Note: Code generated with -s may be both slower to compile and");
+	puts("        execute, so only use it when necessary.");
 
 	puts("  Happy coding! :)");
 }

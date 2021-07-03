@@ -35,12 +35,7 @@ size_t ptr;
 bool running;
 char lastch;
 
-static void clear_mem();
 static void run_sub(char *start, size_t *sub_start, size_t i, bool isfile);
-
-static void clear_mem() {
-	for(size_t j = 0; j < MEM_SIZE; j++) mem[j] = 0;
-}
 
 void run(char *start, size_t len, bool isfile) {
 	int brackets_open = 0;
@@ -113,7 +108,7 @@ void run(char *start, size_t len, bool isfile) {
 			break;
 
 		case '/':
-			clear_mem();
+			for(size_t j = 0; j < MEM_SIZE; j++) mem[j] = 0;
 			ptr = 0;
 			break;
 
@@ -134,7 +129,7 @@ void run(char *start, size_t len, bool isfile) {
 			
 			else {
 				if(lastch != '\n') putchar('\n');
-				puts("error: code contains syntax mistakes.");
+				puts("error: invalid brainfuck.");
 				lastch = '\n';
 			}
 

@@ -20,6 +20,8 @@
 #include <unistd.h>
 
 extern bool transpile;
+extern bool safe_output;
+
 extern const char *imm_fname;
 extern char filename[];
 extern char outname[];

@@ -21,50 +21,40 @@ CFILES = $(wildcard src/*.c)
 OBJS = $(patsubst %.c,%.o,$(CFILES))
 LIBS = libClame/libClame.a
 
-DBFFILES = $(wildcard demo/*.bf)
-DCFILES = $(patsubst %.bf,%.c,$(DBFFILES))
-DOBJS = $(patsubst %.c,%.o,$(DCFILES))
-DEMOS = $(patsubst demo/%.o,%,$(DOBJS))
+BFFILES = $(wildcard demo/*.bf)
+DEMOS = $(patsubst demo/%.bf,%,$(BFFILES))
 
 CC = gcc
 CPPFLAGS = -Wall -Wextra -Werror -std=c99 -O3 -I libClame/inc/
-DCPPFLAGS = -Wall -Wextra -Werror -std=c99 -O3
+DCFLAGS = -Wall -Wextra -Werror -std=c89 -Ofast -xc
 CFLAGS = -std=c99
 LDLIBS += -L libClame/ -lClame
 
 DESTDIR = ~/.local/bin
 
-files = $(foreach cfile,$(DCFILES),$(wildcard $(cfile)))
-files += $(foreach obj,$(OBJS),$(wildcard $(obj)))
-files += $(foreach obj,$(DOBJS),$(wildcard $(obj)))
+files = $(foreach obj,$(OBJS),$(wildcard $(obj)))
 files += $(wildcard bfcli) $(foreach demo,$(DEMOS),$(wildcard $(demo)))
 CLEAN = $(foreach file,$(files),rm $(file);)
 
 $(DESTDIR) : 
 	mkdir -p $(DESTDIR)/
 
-$(DCFILES) : %.c : %.bf bfcli
-	./bfcli -t $< -o $@
-
 $(OBJS) : %.o : %.c $(HEADERS)
 	$(CC) $(CPPFLAGS) -c $< -o $@
 
-$(DOBJS) : %.o : %.c
-	$(CC) $(DCPPFLAGS) -c $< -o $@
-
 libClame/libClame.a :
-	cd libClame; make libClame.a
+	+cd libClame; $(MAKE) libClame.a
 
 bfcli : $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(OBJS) -o bfcli $(LDLIBS)
 
-$(DEMOS) : % : demo/%.o
-	$(CC) $(CFLAGS) $< -o $@
+$(DEMOS) : % : demo/%.bf bfcli
+	./bfcli -t $< | $(CC) $(DCFLAGS) - -o $@
 
 .DEFAULT_GOAL = all
-.PHONY : all bf clean install remove
+.PHONY : all bf clean demos install remove
 
-all : bfcli $(DEMOS)
+all : bfcli
 
 bf : install
 	-sudo rm /bin/bf
@@ -73,6 +63,8 @@ bf : install
 clean :
 	cd libClame; make clean
 	$(CLEAN)
+
+demos : $(DEMOS)
 
 install : bfcli $(DESTDIR)/
 	cp bfcli $(DESTDIR)/

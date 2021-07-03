@@ -139,6 +139,18 @@ void init(int argc, char **argv) {
 	arg -> short_flag = 'o';
 	arg -> var = var;
 
+	var = LCv_new();
+	if(!var) print_error(UNKNOWN_ERROR);
+	var -> id = "safe-output";
+	var -> data = &safe_output;
+
+	arg = LCa_new();
+	if(!arg) print_error(UNKNOWN_ERROR);
+	arg -> long_flag = "safe-output";
+	arg -> short_flag = 's';
+	arg -> var = var;
+	arg -> value = true;
+
 	LCa_noflags = &imm_fname;
 	LCa_max_noflags = 1;
 
