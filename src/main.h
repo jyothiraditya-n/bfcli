@@ -18,8 +18,8 @@
 #include <stddef.h>
 
 #define VERSION 7
-#define SUBVERSION 3
-#define VERNAME "Apple Crumb"
+#define SUBVERSION 4
+#define VERNAME "Crab Apples"
 
 extern size_t insertion_point;
 extern bool no_ansi;
