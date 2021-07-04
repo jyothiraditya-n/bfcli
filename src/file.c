@@ -23,7 +23,11 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <LC_editor.h>
+#include <LC_lines.h>
+
 #include "file.h"
+#include "main.h"
 #include "print.h"
 #include "run.h"
 #include "size.h"
@@ -34,6 +38,7 @@ bool safe_code;
 const char *imm_fname;
 char filename[FILENAME_SIZE];
 char outname[FILENAME_SIZE];
+char savename[LINE_SIZE];
 
 struct termios cooked, raw;
 
@@ -69,6 +74,47 @@ static void get_file() {
 	}
 
 	if(transpile) convert();
+}
+
+void save_file(char *buffer, size_t size) {
+	printf("filename: ");
+	FILE *file = stdin; int ret;
+
+	LCl_buffer = savename;
+	LCl_length = LINE_SIZE;
+
+	while(!file || file == stdin) {
+		if(no_ansi) ret = LCl_bread();
+		else ret = LCl_read();
+
+		switch(ret) {
+		case LCL_OK:
+			break;
+
+		case LCL_CUT:
+			print_error(LINE_TOO_LONG);
+			continue;
+
+		case LCL_INT:
+			return;
+
+		case LCL_CUT_INT:
+			putchar('\n');
+			print_error(LINE_TOO_LONG);
+			return;
+
+		default:
+			print_error(UNKNOWN_ERROR);
+		}
+
+		file = fopen(savename, "w");
+		if(!file) print_error(BAD_SAVEFILE);
+	}
+
+	for(size_t i = 0; i < size; i++) fputc(buffer[i], file);
+
+	ret = fclose(file);
+	if(ret == EOF) print_error(UNKNOWN_ERROR);
 }
 
 void init_files() {
@@ -116,10 +162,16 @@ int load_file() {
 	int ret = fseek(file, 0, SEEK_END);
 	if(ret) print_error(UNKNOWN_ERROR);
 
-	size_t size = ftell(file) + 1;
+	size_t size = (ftell(file) / sizeof(char)) + 1;
 	rewind(file);
 
-	if(size > CODE_SIZE) {
+	if(!code) {
+		code_size += size;
+		code = calloc(code_size, sizeof(char));
+		if(!code) print_error(UNKNOWN_ERROR);
+	}
+
+	else if(size > code_size) {
 		ret = fclose(file);
 		if(ret == EOF) print_error(UNKNOWN_ERROR);
 		return FILE_TOO_BIG;
@@ -143,13 +195,28 @@ int load_file() {
 		return BAD_CODE;
 	}
 
+	if(LCe_dirty && !no_ansi) {
+		printf("save unsaved changes? [Y/n]: ");
+		char ans = LCl_readch();
+		if(ans == LCLCH_ERR) print_error(UNKNOWN_ERROR);
+
+		if(ans == 'Y' || ans == 'y' || ans == '\n')
+			save_file(old_code, old_size);
+	}
+
+	else if(LCe_dirty) {
+		puts("you have unsaved changes.");
+		save_file(old_code, old_size);
+	}
+
 	free(old_code);
+	LCe_dirty = false;
 	return FILE_OK;
 }
 
 void print_mem_file() {
 	FILE *file = fopen(outname, "w");
-	if(!file) print_error(BAD_OUTPUT);
+	if(!file) { print_error(BAD_OUTPUT); return; }
 
 	const size_t cols = (80 - 8 - MEM_SIZE_DIGITS) / 4;
 	for(size_t i = 0; i < MEM_SIZE; i += cols) {
@@ -181,7 +248,7 @@ void print_mem_file() {
 
 static void convert() {
 	FILE *file = strlen(outname) ? fopen(outname, "w") : stdout;
-	if(!file) print_error(BAD_OUTPUT);
+	if(!file) { print_error(BAD_OUTPUT); exit(BAD_OUTPUT); }
 
 	fputs("#include <stddef.h>\n", file);
 	fputs("#include <stdio.h>\n", file);

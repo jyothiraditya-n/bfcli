@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 7.4: Orange Marmalade
+Version 7.5: Honey Apples
 
 bfcli@data:0$
 ```
@@ -85,6 +85,7 @@ Valid arguments are:
   -n, --no-ansi     Disables the use of ANSI escape sequences.
 
   -f, --file FILE   Loads the file FILE into memory.
+  -l, --length LEN  Sets the shell's code buffer length to LEN.
 
   -t, --transpile   Transpiles the file to C source code, ouputs
                     the result to OUT and exits.

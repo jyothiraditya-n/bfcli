@@ -14,12 +14,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#include <stdbool.h>
 #include <stddef.h>
+#include "size.h"
 
-#define VERSION 7
-#define SUBVERSION 5
-#define VERNAME "Honey Apples"
-
-extern size_t insertion_point;
-extern bool no_ansi;
+size_t code_size = DEF_CODE_SIZE;

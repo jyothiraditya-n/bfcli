@@ -25,6 +25,7 @@ extern bool safe_code;
 extern const char *imm_fname;
 extern char filename[];
 extern char outname[];
+extern char savename[];
 
 extern struct termios cooked, raw;
 
@@ -32,5 +33,6 @@ extern int check_file(size_t len);
 extern void init_files();
 extern int load_file();
 extern void print_mem_file();
+extern void save_file(char *buffer, size_t size);
 
 #define FILE_OK 0

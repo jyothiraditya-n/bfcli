@@ -28,8 +28,8 @@
 #include "run.h"
 #include "size.h"
 
-char code[CODE_SIZE];
 unsigned char mem[MEM_SIZE];
+char *code;
 size_t ptr;
 
 bool running;

@@ -25,6 +25,7 @@
 #define BAD_CODE 7
 #define FILE_TOO_BIG 8
 #define BAD_OUTPUT 9
+#define BAD_SAVEFILE 10
 
 extern const char *progname;
 extern bool colour;

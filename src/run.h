@@ -17,8 +17,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-extern char code[];
 extern unsigned char mem[];
+extern char *code;
 extern size_t ptr;
 
 extern bool running;

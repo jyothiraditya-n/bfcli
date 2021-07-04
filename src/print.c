@@ -43,7 +43,7 @@ void print_about() {
 	printf("  Version %d.%d: %s\n\n", VERSION, SUBVERSION, VERNAME);
 
 	printf("  Line buffer size: %d chars\n", LINE_SIZE);
-	printf("  Code buffer size: %d chars\n", CODE_SIZE);
+	printf("  Code buffer size: %zu chars\n", code_size);
 	printf("  Memory size: %d chars\n\n", MEM_SIZE);
 
 	puts("  This program is free software: you can redistribute it and/or modify");
@@ -70,7 +70,7 @@ void print_banner() {
 	puts("  under certain conditions. For details type '?'.\n");
 
 	printf("  Line buffer size: %d chars\n", LINE_SIZE);
-	printf("  Code buffer size: %d chars\n", CODE_SIZE);
+	printf("  Code buffer size: %zu chars\n", code_size);
 	printf("  Memory size: %d chars\n\n", MEM_SIZE);
 
 	if(strlen(filename)) printf("  File: %s\n\n", filename);
@@ -95,32 +95,27 @@ void print_error(int errnum) {
 
 	case BAD_FILE:
 		fprintf(stderr, "%s: error: cannot read file '%s'.\n",
-			progname, filename);
-
-		break;
+			progname, filename); break;
 
 	case BAD_CODE:
 		fprintf(stderr, "%s: error: '%s': invalid brainfuck.\n",
-			progname, filename);
-
-		break;
+			progname, filename); break;
 
 	case FILE_TOO_BIG:
 		fprintf(stderr, "%s: error: '%s': file too big.\n",
-			progname, filename);
-
-		break;
+			progname, filename); break;
 
 	case BAD_OUTPUT:
 		fprintf(stderr, "%s: error: cannot write file '%s'.\n",
-			progname, outname);
+			progname, outname); break;
 
-		exit(errnum);
+	case BAD_SAVEFILE:
+		fprintf(stderr, "%s: error: cannot write file '%s'.\n",
+			progname, savename); break;
 
 	default:
 		fprintf(stderr, "%s: error: unknown error\n", progname);
 		perror("cstdlib");
-		
 		exit(errnum);
 	}
 }
@@ -314,7 +309,8 @@ void print_usage() {
 	puts("    -m, --monochrome  Disables colour output.");
 	puts("    -n, --no-ansi     Disables the use of ANSI escape sequences.\n");
 
-	puts("    -f, --file FILE   Loads the file FILE into memory.\n");
+	puts("    -f, --file FILE   Loads the file FILE into memory.");
+	puts("    -l, --length LEN  Sets the shell's code buffer length to LEN.\n");
 
 	puts("    -t, --transpile   Transpiles the file to C source code, ouputs");
 	puts("                      the result to OUT and exits.\n");

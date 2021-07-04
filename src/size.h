@@ -14,8 +14,10 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#define CODE_SIZE 65536
+#include <stddef.h>
+
 #define LINE_SIZE 4096
+#define DEF_CODE_SIZE 65536
 
 #define MEM_SIZE 32768
 #define MEM_SIZE_DIGITS 4
@@ -23,3 +25,5 @@
 
 #define FILENAME_SIZE 4096
 #define FILENAME_SCN "%4095c"
+
+extern size_t code_size;

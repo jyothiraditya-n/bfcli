@@ -135,6 +135,18 @@ void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) print_error(UNKNOWN_ERROR);
+	var -> id = "length";
+	var -> fmt = "%zu";
+	var -> data = &code_size;
+
+	arg = LCa_new();
+	if(!arg) print_error(UNKNOWN_ERROR);
+	arg -> long_flag = "length";
+	arg -> short_flag = 'l';
+	arg -> var = var;
+
+	var = LCv_new();
+	if(!var) print_error(UNKNOWN_ERROR);
 	var -> id = "transpile";
 	var -> data = &transpile;
 
@@ -179,9 +191,14 @@ void init(int argc, char **argv) {
 	init_files();
 	if(no_ansi) colour = false;
 
+	if(!code) {
+		code = calloc(code_size, sizeof(char));
+		if(!code) print_error(UNKNOWN_ERROR);
+	}
+
 	LCe_banner = "Bfcli: The Interactive Brainfuck Command-Line Interpreter";
 	LCe_buffer = code;
-	LCe_length = CODE_SIZE;
+	LCe_length = code_size;
 }
 
 static void version() {

@@ -23,6 +23,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <LC_editor.h>
 #include <LC_lines.h>
 
 #include "file.h"
@@ -38,6 +39,7 @@ size_t insertion_point;
 bool no_ansi;
 
 static int check(char *code, size_t len);
+static void handle_int();
 
 #define CODE_OK 1
 #define CODE_INCOMPLETE 2
@@ -97,9 +99,7 @@ int main(int argc, char **argv) {
 			continue;
 
 		case LCL_INT:
-			if(!insertion_point) exit(0);
-
-			insertion_point = 0;
+			handle_int(); insertion_point = 0;
 			continue;
 
 		case LCL_CUT_INT:
@@ -149,4 +149,24 @@ int main(int argc, char **argv) {
 	}
 
 	exit(0);
+}
+
+static void handle_int() {
+	if(!insertion_point && LCe_dirty && !no_ansi) {
+		printf("save unsaved changes? [Y/n]: ");
+		char ans = LCl_readch();
+		if(ans == LCLCH_ERR) print_error(UNKNOWN_ERROR);
+		if(ans == 'Y' || ans == 'y' || ans == '\n')
+			save_file(code, strlen(code));
+
+		exit(0);
+	}
+
+	else if(!insertion_point && LCe_dirty && no_ansi) {
+		puts("you have unsaved changes.");
+		save_file(code, strlen(code));
+		exit(0);
+	}
+
+	else if(!insertion_point) exit(0);
 }

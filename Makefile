@@ -21,19 +21,29 @@ CFILES = $(wildcard src/*.c)
 OBJS = $(patsubst %.c,%.o,$(CFILES))
 LIBS = libClame/libClame.a
 
-BFFILES = $(wildcard demo/*.bf)
-DEMOS = $(patsubst demo/%.bf,%,$(BFFILES))
+DBFFILES = $(wildcard demo/*.bf)
+DCFILES = $(patsubst demo/%.bf,%.c,$(DBFFILES))
+DEMOS = $(patsubst %.c,%,$(DCFILES))
+
+EBFFILES = $(wildcard extra/*.bf)
+ECFILES = $(patsubst extra/%.bf,%.c,$(EBFFILES))
+EXTRAS = $(patsubst %.c,%,$(ECFILES))
 
 CC = gcc
 CPPFLAGS = -Wall -Wextra -Werror -std=c99 -O3 -I libClame/inc/
-DCFLAGS = -Wall -Wextra -Werror -std=c89 -Ofast -xc
+DCFLAGS = -Wall -Wextra -Werror -std=c89 -O3
+ECFLAGS = -Wall -Wextra -Werror -std=c89 -O0
 CFLAGS = -std=c99
 LDLIBS += -L libClame/ -lClame
 
 DESTDIR = ~/.local/bin
 
-files = $(foreach obj,$(OBJS),$(wildcard $(obj)))
-files += $(wildcard bfcli) $(foreach demo,$(DEMOS),$(wildcard $(demo)))
+files = $(wildcard bfcli)
+files += $(foreach obj,$(OBJS),$(wildcard $(obj)))
+files += $(foreach file,$(DCFILES),$(wildcard $(file)))
+files += $(foreach demo,$(DEMOS),$(wildcard $(demo)))
+files += $(foreach file,$(ECFILES),$(wildcard $(file)))
+files += $(foreach extra,$(EXTRAS),$(wildcard $(extra)))
 CLEAN = $(foreach file,$(files),rm $(file);)
 
 $(DESTDIR) : 
@@ -48,11 +58,22 @@ libClame/libClame.a :
 bfcli : $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(OBJS) -o bfcli $(LDLIBS)
 
-$(DEMOS) : % : demo/%.bf bfcli
-	./bfcli -t $< | $(CC) $(DCFLAGS) - -o $@
+$(DCFILES) : %.c : demo/%.bf bfcli
+	./bfcli -t $< -o $@
+
+$(DEMOS) : % : %.c
+	$(CC) $(DCFLAGS) $< -o $@
+
+$(ECFILES) : %.c : extra/%.bf bfcli
+	./bfcli -t $< -o $@
+
+$(EXTRAS) : % : %.c
+	$(CC) $(ECFLAGS) $< -o $@
 
 .DEFAULT_GOAL = all
-.PHONY : all bf clean demos install remove
+.PHONY : all bf clean demos extras install remove
+.PHONY : _demos _transpile_demos
+.PHONY : _specials _transpile_specials
 
 all : bfcli
 
@@ -64,10 +85,24 @@ clean :
 	cd libClame; make clean
 	$(CLEAN)
 
-demos : $(DEMOS)
+demos : bfcli
+	+make -j1 _transpile_demos
+	+make _demos
+
+extras : bfcli
+	+make -j1 _transpile_demos _transpile_specials
+	+make _demos _specials
 
 install : bfcli $(DESTDIR)/
 	cp bfcli $(DESTDIR)/
 
 remove :
 	-rm $(DESTDIR)/bfcli
+
+_demos : $(DEMOS)
+
+_transpile_demos : $(DCFILES)
+
+_specials : $(EXTRAS)
+
+_transpile_specials : $(ECFILES)
