@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 7.3: Apple Crumb
+Version 7.4: Orange Marmalade
 
 bfcli@data:0$
 ```
@@ -36,8 +36,9 @@ language as well as the functionality of this program at the main prompt.
 
 - The command `/` to clear the memory and reset the pointer to zero.
 
-- The command `*` to print a memory listing of the values around the current
-pointer to aid with debugging of code.
+- The commands `*` and `&` to print a memory listing of the values around the
+current pointer, and produce a complete memory dump to aid with debugging of
+code.
 
 - The disabling of `STDIN` buffering when running Brainfuck code and
 alternative behaviour for ^C, either exiting the program if called at the main
@@ -75,37 +76,101 @@ The following are the command-line arguments that this program accepts:
 Usage: bf [ARGS] [FILE]
 
 Valid arguments are:
-  -a, --about         Prints the licence and about dialogue.
-  -h, --help          Prints the help dialogue.
-  -v, --version       Prints the program version.
+  -a, --about       Prints the licence and about dialogue.
+  -h, --help        Prints the help dialogue.
+  -v, --version     Prints the program version.
 
-  -c, --colour        (Default) Enables colour output.
-  -m, --monochrome    Disables colour output.
-  -n, --no-ansi       Disables the use of ANSI escape sequences.
+  -c, --colour      (Default) Enables colour output.
+  -m, --monochrome  Disables colour output.
+  -n, --no-ansi     Disables the use of ANSI escape sequences.
 
-  -f, --file FILE     Loads the file FILE into memory.
+  -f, --file FILE   Loads the file FILE into memory.
 
-  -t, --transpile     Transpiles the file to C source code, ouputs
-                      the result to OUT and exits.
+  -t, --transpile   Transpiles the file to C source code, ouputs
+                    the result to OUT and exits.
 
-  -o, --output OUT    Sets the output file for the transpiled C
-                      code to OUT.
+  -o, --output OUT  Sets the output file for the transpiled C
+                    code and the memory dump to OUT.
 
-  -s, --safe-output   Generates code that won't segfault if < or
-                      > are used out-of-bounds. (The pointer wraps
-                      around.)
+  -s, --safe-code   Generates code that won't segfault if < or
+                    > are used out-of-bounds. (The pointer wraps
+                    around.)
 
 Note: If a file is specified without -f, it is run immediately and
       the program exits as soon as the execution of the file
       terminates. Use -f if you want the interactive prompt.
 
 Note: If no output file is specified, the transpiled code is output
-      to STDOUT.
-
-Note: Code generated with -s may be both slower to compile and
-      execute, so only use it when necessary.
+      to STDOUT. Code generated with -s may be both slower to compile
+      and execute, so only use it when necessary.
 
 Happy coding! :)
+```
+
+The following is the help dialogue for the interactive functionality:
+
+```
+Interactive Brainfuck interpreter; exit with ^C.
+
+Brainfuck commands:
+  > Increments the data pointer.
+  < Decrements the data pointer.
+
+  + Increments the value at the data pointer.
+  - Decrements the value at the data pointer.
+
+Note: Data values are modulo-256 unsigned integers, meaning
+      0 - 1 = 255, and 255 + 1 = 0.
+
+  . Outputs the value at the data pointer as an ASCII character.
+  , Inputs an ASCII character and stores its value at the data
+    pointer.
+
+  [ (Open bracket) begins a loop.
+  ] (Close brace) ends a loop.
+
+Note: Loops run while the value at the data pointer is non-zero.
+
+Extended Brainfuck commands:
+  ? Prints the help and copyright disclaimer to the console.
+  / Clears the memory and moves the pointer to 0.
+  * Prints memory values around the current pointer value.
+  & Prints all memory values.
+
+Note: When ANSI support is enabled, & pauses at the end of the
+      first screen of text and displays a the prompt ':'. Here,
+      you can type any key to advance the memory dump by one
+      line, enter to advance it by one page, or tab to complete
+      the rest of the dump without pausing again.
+
+Note: When an output file is specified with -o, the memory dump
+      is redirected to that file instead of being displayed on
+      the console.
+
+Note: Extended Brainfuck commands are disabled when executing file
+      code, and will simply be ignored. This is done for
+      compatibility with vanilla Brainfuck programs.
+
+  ! Indicates to wait for more code before execution.
+  ; Indicates to stop waiting for more code before execution.
+
+Note: The above two commands can be placed anywhere in a line and
+      and will function correctly, but they may prove most useful
+      at the ends of lines while typing long sections of code.
+
+Note: The interpreter will still wait for more code if the current
+      code contains unmatched brackets.
+
+  @ Executes code from the code buffer.
+  % Edits code in the code buffer.
+
+Note: In order to load a file when Bfcli is running, type the file
+      name at the main prompt. When files are loaded, they are put
+      into the code buffer.
+
+Note: Buffer Editing functionality is disabled when the use of ANSI
+      escape sequences is disabled. % will simply print the contents
+      of the code buffer in this case.
 ```
 
 Finally, to install the code, you can run `make install`. This will install it

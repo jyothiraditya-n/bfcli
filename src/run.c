@@ -123,6 +123,7 @@ void run(char *start, size_t len, bool isfile) {
 			break;
 
 		case '&':
+			if(strlen(outname)) { print_mem_file(); break; }
 			if(lastch != '\n') putchar('\n');
 
 			putchar('\n');

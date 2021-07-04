@@ -159,12 +159,12 @@ void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) print_error(UNKNOWN_ERROR);
-	var -> id = "safe-output";
-	var -> data = &safe_output;
+	var -> id = "safe-code";
+	var -> data = &safe_code;
 
 	arg = LCa_new();
 	if(!arg) print_error(UNKNOWN_ERROR);
-	arg -> long_flag = "safe-output";
+	arg -> long_flag = "safe-code";
 	arg -> short_flag = 's';
 	arg -> var = var;
 	arg -> value = true;

@@ -19,7 +19,7 @@
 
 #define VERSION 7
 #define SUBVERSION 4
-#define VERNAME "Crab Apples"
+#define VERNAME "Orange Marmalade"
 
 extern size_t insertion_point;
 extern bool no_ansi;

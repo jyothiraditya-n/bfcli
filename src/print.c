@@ -22,6 +22,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <LC_lines.h>
+
 #include "file.h"
 #include "init.h"
 #include "main.h"
@@ -151,6 +153,16 @@ void print_help() {
 	puts("    * Prints memory values around the current pointer value.");
 	puts("    & Prints all memory values.\n");
 
+	puts("  Note: When ANSI support is enabled, & pauses at the end of the");
+	puts("        first screen of text and displays a the prompt ':'. Here,");
+	puts("        you can type any key to advance the memory dump by one");
+	puts("        line, enter to advance it by one page, or tab to complete");
+	puts("        the rest of the dump without pausing again.\n");
+
+	puts("  Note: When an output file is specified with -o, the memory dump");
+	puts("        is redirected to that file instead of being displayed on");
+	puts("        the console.\n");
+
 	puts("  Note: Extended Brainfuck commands are disabled when executing file");
 	puts("        code, and will simply be ignored. This is done for");
 	puts("        compatibility with vanilla Brainfuck programs.\n");
@@ -170,7 +182,7 @@ void print_help() {
 
 	puts("  Note: In order to load a file when Bfcli is running, type the file");
 	puts("        name at the main prompt. When files are loaded, they are put");
-	puts("        into the code buffer.");
+	puts("        into the code buffer.\n");
 
 	puts("  Note: Buffer Editing functionality is disabled when the use of ANSI");
 	puts("        escape sequences is disabled. % will simply print the contents");
@@ -221,10 +233,29 @@ void print_mem() {
 }
 
 void print_mem_full() {
+	bool no_pause = false;
+	size_t pages = 1;
+
 	gethw(); size_t cols = (width - MEM_SIZE_DIGITS - 8) / 4;
 
 	for(size_t i = 0; i < MEM_SIZE; i += cols) {
-		printf("  " MEM_SIZE_PRI ":", i);
+		if(i >= height * cols * pages && !no_ansi && !no_pause) {
+			printf(":");
+
+			signed char ret = LCl_readch();
+			switch(ret) {
+				case LCLCH_ERR:	print_error(UNKNOWN_ERROR);
+				case LCLCH_INT:	return;
+
+				case '\t':	no_pause = true; break;
+				case '\n':	pages++; break;
+				default:  	break;
+			}
+
+			printf("\e[%zu;1H  " MEM_SIZE_PRI ":", height - 1, i);
+		}
+
+		else printf("  " MEM_SIZE_PRI ":", i);
 
 		for(size_t j = 0; j < cols; j++) {
 			if(i + j >= MEM_SIZE) { printf("   "); continue; }
@@ -275,35 +306,33 @@ void print_usage() {
 	printf("  Usage: %s [ARGS] [FILE]\n\n", progname);
 	
 	puts("  Valid arguments are:");
-	puts("    -a, --about         Prints the licence and about dialogue.");
-	puts("    -h, --help          Prints the help dialogue.");
-	puts("    -v, --version       Prints the program version.\n");
+	puts("    -a, --about       Prints the licence and about dialogue.");
+	puts("    -h, --help        Prints the help dialogue.");
+	puts("    -v, --version     Prints the program version.\n");
 
-	puts("    -c, --colour        (Default) Enables colour output.");
-	puts("    -m, --monochrome    Disables colour output.");
-	puts("    -n, --no-ansi       Disables the use of ANSI escape sequences.\n");
+	puts("    -c, --colour      (Default) Enables colour output.");
+	puts("    -m, --monochrome  Disables colour output.");
+	puts("    -n, --no-ansi     Disables the use of ANSI escape sequences.\n");
 
-	puts("    -f, --file FILE     Loads the file FILE into memory.\n");
+	puts("    -f, --file FILE   Loads the file FILE into memory.\n");
 
-	puts("    -t, --transpile     Transpiles the file to C source code, ouputs");
-	puts("                        the result to OUT and exits.\n");
+	puts("    -t, --transpile   Transpiles the file to C source code, ouputs");
+	puts("                      the result to OUT and exits.\n");
 
-	puts("    -o, --output OUT    Sets the output file for the transpiled C");
-	puts("                        code to OUT.\n");
+	puts("    -o, --output OUT  Sets the output file for the transpiled C");
+	puts("                      code and the memory dump to OUT.\n");
 	
-	puts("    -s, --safe-output   Generates code that won't segfault if < or");
-	puts("                        > are used out-of-bounds. (The pointer wraps");
-	puts("                        around.)\n");
+	puts("    -s, --safe-code   Generates code that won't segfault if < or");
+	puts("                      > are used out-of-bounds. (The pointer wraps");
+	puts("                      around.)\n");
 
 	puts("  Note: If a file is specified without -f, it is run immediately and");
 	puts("        the program exits as soon as the execution of the file");
 	puts("        terminates. Use -f if you want the interactive prompt.\n");
 
 	puts("  Note: If no output file is specified, the transpiled code is output");
-	puts("        to STDOUT.\n");
-
-	puts("  Note: Code generated with -s may be both slower to compile and");
-	puts("        execute, so only use it when necessary.\n");
+	puts("        to STDOUT. Code generated with -s may be both slower to compile");
+	puts("        and execute, so only use it when necessary.\n");
 
 	puts("  Happy coding! :)");
 }

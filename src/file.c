@@ -29,7 +29,7 @@
 #include "size.h"
 
 bool transpile;
-bool safe_output;
+bool safe_code;
 
 const char *imm_fname;
 char filename[FILENAME_SIZE];
@@ -147,6 +147,38 @@ int load_file() {
 	return FILE_OK;
 }
 
+void print_mem_file() {
+	FILE *file = fopen(outname, "w");
+	if(!file) print_error(BAD_OUTPUT);
+
+	const size_t cols = (80 - 8 - MEM_SIZE_DIGITS) / 4;
+	for(size_t i = 0; i < MEM_SIZE; i += cols) {
+		fprintf(file, "  " MEM_SIZE_PRI ":", i);
+
+		for(size_t j = 0; j < cols; j++) {
+			if(i + j >= MEM_SIZE) { printf("   "); continue; }
+			unsigned char byte = mem[i + j];
+
+			fprintf(file, " %02x", byte);
+		}
+		
+		fprintf(file, " |");
+
+		for(size_t j = 0; j < cols; j++) {
+			if(i + j >= MEM_SIZE) { printf("."); continue; }
+			unsigned char byte = mem[i + j];
+
+			if(isprint(byte)) fputc(byte, file);
+			else fputc('.', file);
+		}
+
+		fputs("|\n", file);
+	}
+
+	int ret = fclose(file);
+	if(ret == EOF) print_error(UNKNOWN_ERROR);
+}
+
 static void convert() {
 	FILE *file = strlen(outname) ? fopen(outname, "w") : stdout;
 	if(!file) print_error(BAD_OUTPUT);
@@ -157,7 +189,7 @@ static void convert() {
 	fputs("#include <unistd.h>\n", file);
 
 	fprintf(file, "char cells[%d];\n", MEM_SIZE);
-	if(safe_output) fputs("size_t ptr = 0;\n", file);
+	if(safe_code) fputs("size_t ptr = 0;\n", file);
 	else fputs("char *ptr = &cells[0];\n", file);
 
 	fputs("struct termios cooked, raw;\n", file);
@@ -173,11 +205,11 @@ static void convert() {
 
 	size_t len = strlen(code);
 	for(size_t i = 0; i < len; i++) {
-		if(safe_output) _convert_safe(i, file);
+		if(safe_code) _convert_safe(i, file);
 		else _convert_unsafe(i, file);
 	}
 
-	if(!safe_output) fputc('\n', file);
+	if(!safe_code) fputc('\n', file);
 
 	fputs("tcsetattr(STDIN_FILENO, TCSANOW, &cooked);\n", file);
 	fputs("return 0;\n", file);
