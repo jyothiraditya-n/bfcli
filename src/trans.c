@@ -30,6 +30,8 @@ bool assembly;
 bool transpile;
 bool safe_code;
 
+static size_t label;
+
 static void conv_safe(size_t i, FILE *file);
 static void conv_unsafe(size_t i, FILE *file);
 static void conv_amd64(size_t i, FILE *file);
@@ -266,32 +268,28 @@ static void _minus_amd64(FILE *file, size_t minus) {
 }
 
 static void _next_amd64(FILE *file, size_t next) {
-	static size_t label;
-
 	fputs("\"movb %bl, (%rax, %rdi)\\n\"\n", file);
 	fprintf(file, "\"addq $0x%zx, %%rax\\n\"\n", next);
 
 	if(safe_code) {
 		fprintf(file, "\"cmpq $0x%x, %%rax\\n\"\n", MEM_SIZE);
-		fprintf(file, "\"jl safe_next_%zu\\n\"\n", label);
+		fprintf(file, "\"jl safe_%zu\\n\"\n", label);
 		fprintf(file, "\"subq $0x%x, %%rax\\n\"\n", MEM_SIZE);
-		fprintf(file, "\"safe_next_%zu:\\n\"\n", label++);
+		fprintf(file, "\"safe_%zu:\\n\"\n", label++);
 	}
 
 	fputs("\"movb (%rax, %rdi), %bl\\n\"\n", file);
 }
 
 static void _before_amd64(FILE *file, size_t before) {
-	static size_t label;
-
 	fputs("\"movb %bl, (%rax, %rdi)\\n\"\n", file);
 	fprintf(file, "\"subq $0x%zx, %%rax\\n\"\n", before);
 
 	if(safe_code) {
 		fprintf(file, "\"cmpq $0x%x, %%rax\\n\"\n", MEM_SIZE);
-		fprintf(file, "\"jl safe_before_%zu\\n\"\n", label);
+		fprintf(file, "\"jl safe_%zu\\n\"\n", label);
 		fprintf(file, "\"subq $0x%x, %%rax\\n\"\n", MEM_SIZE);
-		fprintf(file, "\"safe_before_%zu:\\n\"\n", label++);
+		fprintf(file, "\"safe_%zu:\\n\"\n", label++);
 	}
 
 	fputs("\"movb (%rax, %rdi), %bl\\n\"\n", file);
