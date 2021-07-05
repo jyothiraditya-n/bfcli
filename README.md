@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 7.5: Honey Apples
+Version 7.6: Sē Fōda Ġeolurēadra Aeppla
 
 bfcli@data:0$
 ```
@@ -58,7 +58,9 @@ with `%` and executing them with `@`. (Again, thanks to intergration with
 `libClame`.)
 
 - Transpiling Brainfuck code to C source code with output to either STDOUT or a
-custom output file, as specified on the command line.
+custom output file, as specified on the command line, as well as partial
+compilation to Amd64 assembly to boost compilation performance while offering
+similar performance to GCC's `-O3`.
 
 ## Building, Running and Installing the Program from Source
 
@@ -96,6 +98,11 @@ Valid arguments are:
   -s, --safe-code   Generates code that won't segfault if < or
                     > are used out-of-bounds. (The pointer wraps
                     around.)
+
+  -x, --assembly    Generates assembly code intermixed with the C
+                    output. This option affords both high performance
+                    and fast compile times, however it only works on
+                    amd64-based computers.
 
 Note: If a file is specified without -f, it is run immediately and
       the program exits as soon as the execution of the file
