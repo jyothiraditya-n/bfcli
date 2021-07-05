@@ -32,7 +32,7 @@ EXTRAS = $(patsubst %.c,%,$(ECFILES))
 CC = gcc
 CPPFLAGS = -Wall -Wextra -Werror -std=c99 -O3 -I libClame/inc/
 DCFLAGS = -Wall -Wextra -Werror -std=c89 -O3
-ECFLAGS = -Wall -Wextra -Werror -std=c89 -O0
+ECFLAGS = -Wall -Wextra -Werror -std=gnu89 -O0
 CFLAGS = -std=c99
 LDLIBS += -L libClame/ -lClame
 
@@ -65,7 +65,7 @@ $(DEMOS) : % : %.c
 	$(CC) $(DCFLAGS) $< -o $@
 
 $(ECFILES) : %.c : extra/%.bf bfcli
-	./bfcli -t $< -o $@
+	./bfcli -xt $< -o $@
 
 $(EXTRAS) : % : %.c
 	$(CC) $(ECFLAGS) $< -o $@

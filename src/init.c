@@ -29,6 +29,7 @@
 #include "run.h"
 #include "signal.h"
 #include "size.h"
+#include "trans.h"
 
 static void about();
 static void help();
@@ -178,6 +179,19 @@ void init(int argc, char **argv) {
 	if(!arg) print_error(UNKNOWN_ERROR);
 	arg -> long_flag = "safe-code";
 	arg -> short_flag = 's';
+	arg -> var = var;
+	arg -> value = true;
+	arg -> var = var;
+
+	var = LCv_new();
+	if(!var) print_error(UNKNOWN_ERROR);
+	var -> id = "assembly";
+	var -> data = &assembly;
+
+	arg = LCa_new();
+	if(!arg) print_error(UNKNOWN_ERROR);
+	arg -> long_flag = "assembly";
+	arg -> short_flag = 'x';
 	arg -> var = var;
 	arg -> value = true;
 

@@ -30,10 +30,8 @@
 #include "main.h"
 #include "print.h"
 #include "run.h"
+#include "trans.h"
 #include "size.h"
-
-bool transpile;
-bool safe_code;
 
 const char *imm_fname;
 char filename[FILENAME_SIZE];
@@ -43,9 +41,6 @@ char savename[LINE_SIZE];
 struct termios cooked, raw;
 
 static void get_file();
-static void convert();
-static void _convert_safe(size_t i, FILE *file);
-static void _convert_unsafe(size_t i, FILE *file);
 
 int check_file(size_t len) {
 	int loops_open = 0;
@@ -73,7 +68,7 @@ static void get_file() {
 		exit(ret);
 	}
 
-	if(transpile) convert();
+	if(transpile) convert_file();
 }
 
 void save_file(char *buffer, size_t size) {
@@ -244,92 +239,4 @@ void print_mem_file() {
 
 	int ret = fclose(file);
 	if(ret == EOF) print_error(UNKNOWN_ERROR);
-}
-
-static void convert() {
-	FILE *file = strlen(outname) ? fopen(outname, "w") : stdout;
-	if(!file) { print_error(BAD_OUTPUT); exit(BAD_OUTPUT); }
-
-	fputs("#include <stddef.h>\n", file);
-	fputs("#include <stdio.h>\n", file);
-	fputs("#include <termios.h>\n", file);
-	fputs("#include <unistd.h>\n", file);
-
-	fprintf(file, "char cells[%d];\n", MEM_SIZE);
-	if(safe_code) fputs("size_t ptr = 0;\n", file);
-	else fputs("char *ptr = &cells[0];\n", file);
-
-	fputs("struct termios cooked, raw;\n", file);
-
-	fputs("int main() {\n", file);
-	fputs("tcgetattr(STDIN_FILENO, &cooked);\n", file);
-	fputs("raw = cooked;\n", file);
-	fputs("raw.c_lflag &= ~ICANON;\n", file);
-	fputs("raw.c_lflag |= ECHO;\n", file);
-	fputs("raw.c_cc[VINTR] = 3;\n", file);
-	fputs("raw.c_lflag |= ISIG;\n", file);
-	fputs("tcsetattr(STDIN_FILENO, TCSANOW, &raw);\n", file);
-
-	size_t len = strlen(code);
-	for(size_t i = 0; i < len; i++) {
-		if(safe_code) _convert_safe(i, file);
-		else _convert_unsafe(i, file);
-	}
-
-	if(!safe_code) fputc('\n', file);
-
-	fputs("tcsetattr(STDIN_FILENO, TCSANOW, &cooked);\n", file);
-	fputs("return 0;\n", file);
-	fputs("}\n", file);
-
-	if(strlen(outname)) {
-		int ret = fclose(file);
-		if(ret == EOF) print_error(UNKNOWN_ERROR);
-	}
-
-	exit(0);
-}
-
-static void _convert_safe(size_t i, FILE *file) {
-	switch(code[i]) {
-	case '<':	fprintf(file, "if(ptr) { ptr--; } else { ptr = %d; }\n",
-			MEM_SIZE - 1); break;
-
-	case '>':	fprintf(file, "ptr++; if(ptr >= %d) { ptr = 0; }\n",
-			MEM_SIZE); break;
-
-	case '+':	fputs("cells[ptr]++;\n", file); break;
-	case '-':	fputs("cells[ptr]--;\n", file); break;
-
-	case '[':	fputs("while(cells[ptr]) {\n", file); break;
-	case ']':	fputs("}\n", file); break;
-
-	case '.':	fputs("putchar(cells[ptr]);\n", file); break;
-	case ',':	fputs("cells[ptr] = getchar();\n", file); break;
-	}
-}
-
-static void _convert_unsafe(size_t i, FILE *file) {
-	static size_t col = 0;
-	char *instr;
-	size_t length;
-
-	switch(code[i]) {
-	case '<':	instr = "ptr--; "; length = 7; break;
-	case '>':	instr = "ptr++; "; length = 7; break;
-
-	case '+':	instr = "(*ptr)++; "; length = 10; break;
-	case '-':	instr = "(*ptr)--; "; length = 10; break;
-
-	case '[':	instr = "while(*ptr) { "; length = 14; break;
-	case ']':	instr = "} "; length = 1; break;
-
-	case '.':	instr = "putchar(*ptr); "; length = 15; break;
-	case ',':	instr = "*ptr = getchar(); "; length = 18; break;
-
-	default: 	instr = ""; length = 0;
-	}
-
-	if(col + length >= 79) { fputc('\n', file); col = 0; }
-	fputs(instr, file); col += length;
 }

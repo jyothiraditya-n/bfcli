@@ -14,4 +14,9 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#ifndef SIGNAL_H
+#define SIGNAL_H 1
+
 extern void on_interrupt(int signum);
+
+#endif

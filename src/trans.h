@@ -14,10 +14,15 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#ifndef INIT_H
-#define INIT_H 1
+#include <stdbool.h>
 
-extern void gethw();
-extern void init(int argc, char **argv);
+#ifndef TRANS_H
+#define TRANS_H 1
+
+extern bool assembly;
+extern bool transpile;
+extern bool safe_code;
+
+extern void convert_file();
 
 #endif

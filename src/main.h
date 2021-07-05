@@ -17,9 +17,14 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifndef MAIN_H
+#define MAIN_H 1
+
 #define VERSION 7
-#define SUBVERSION 5
-#define VERNAME "Honey Apples"
+#define SUBVERSION 6
+#define VERNAME "Sē Fōda Ġeolurēadra Aeppla"
 
 extern size_t insertion_point;
 extern bool no_ansi;
+
+#endif

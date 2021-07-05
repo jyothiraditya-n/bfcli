@@ -14,13 +14,11 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#include <stdbool.h>
-
 #include <termios.h>
 #include <unistd.h>
 
-extern bool transpile;
-extern bool safe_code;
+#ifndef FILE_H
+#define FILE_H 1
 
 extern const char *imm_fname;
 extern char filename[];
@@ -36,3 +34,5 @@ extern void print_mem_file();
 extern void save_file(char *buffer, size_t size);
 
 #define FILE_OK 0
+
+#endif

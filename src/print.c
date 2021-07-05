@@ -322,6 +322,11 @@ void print_usage() {
 	puts("                      > are used out-of-bounds. (The pointer wraps");
 	puts("                      around.)\n");
 
+	puts("    -x, --assembly    Generates assembly code intermixed with the C");
+	puts("                      output. This option affords both high performance");
+	puts("                      and fast compile times, however it only works on");
+	puts("                      amd64-based computers.\n");
+
 	puts("  Note: If a file is specified without -f, it is run immediately and");
 	puts("        the program exits as soon as the execution of the file");
 	puts("        terminates. Use -f if you want the interactive prompt.\n");

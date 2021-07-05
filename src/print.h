@@ -17,6 +17,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifndef PRINT_H
+#define PRINT_H 1
+
 #define UNKNOWN_ERROR 0
 #define BAD_ARGS 1
 #define CODE_TOO_LONG 2
@@ -40,3 +43,5 @@ extern void print_mem();
 extern void print_mem_full();
 extern void print_prompt(size_t insertion_point);
 extern void print_usage();
+
+#endif

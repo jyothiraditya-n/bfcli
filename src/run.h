@@ -17,6 +17,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifndef RUN_H
+#define RUN_H 1
+
 extern unsigned char mem[];
 extern char *code;
 extern size_t ptr;
@@ -25,3 +28,5 @@ extern bool running;
 extern char lastch;
 
 extern void run(char *start, size_t len, bool isfile);
+
+#endif

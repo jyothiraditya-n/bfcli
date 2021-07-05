@@ -16,6 +16,9 @@
 
 #include <stddef.h>
 
+#ifndef SIZE_H
+#define SIZE_H 1
+
 #define LINE_SIZE 4096
 #define DEF_CODE_SIZE 65536
 
@@ -27,3 +30,5 @@
 #define FILENAME_SCN "%4095c"
 
 extern size_t code_size;
+
+#endif
