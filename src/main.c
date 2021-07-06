@@ -26,12 +26,12 @@
 #include <LC_editor.h>
 #include <LC_lines.h>
 
-#include "file.h"
-#include "init.h"
-#include "main.h"
-#include "print.h"
-#include "run.h"
-#include "size.h"
+#include "../inc/file.h"
+#include "../inc/init.h"
+#include "../inc/main.h"
+#include "../inc/print.h"
+#include "../inc/run.h"
+#include "../inc/size.h"
 
 #define NXOR(A, B) ((A && B) || (!A && !B))
 

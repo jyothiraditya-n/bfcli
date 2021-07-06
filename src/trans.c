@@ -20,15 +20,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "file.h"
-#include "print.h"
-#include "run.h"
-#include "size.h"
-#include "trans.h"
+#include "../inc/file.h"
+#include "../inc/print.h"
+#include "../inc/run.h"
+#include "../inc/size.h"
+#include "../inc/trans.h"
 
 bool assembly;
 bool transpile;
 bool safe_code;
+
+size_t bytes = MEM_SIZE;
 
 static size_t label;
 
@@ -52,7 +54,7 @@ void convert_file() {
 	fputs("#include <termios.h>\n", file);
 	fputs("#include <unistd.h>\n", file);
 
-	fprintf(file, "char cells[%d];\n", MEM_SIZE);
+	fprintf(file, "char cells[%zu];\n", bytes);
 
 	if(!assembly) {
 		if(safe_code) fputs("size_t ptr = 0;\n", file);
@@ -107,11 +109,11 @@ void convert_file() {
 
 static void conv_safe(size_t i, FILE *file) {
 	switch(code[i]) {
-	case '<':	fprintf(file, "if(ptr) { ptr--; } else { ptr = %d; }\n",
-			MEM_SIZE - 1); break;
+	case '<':	fprintf(file, "if(ptr) { ptr--; } else { ptr = %zu; }\n",
+			bytes - 1); break;
 
-	case '>':	fprintf(file, "ptr++; if(ptr >= %d) { ptr = 0; }\n",
-			MEM_SIZE); break;
+	case '>':	fprintf(file, "ptr++; if(ptr >= %zu) { ptr = 0; }\n",
+			bytes); break;
 
 	case '+':	fputs("cells[ptr]++;\n", file); break;
 	case '-':	fputs("cells[ptr]--;\n", file); break;
@@ -130,11 +132,11 @@ static void conv_unsafe(size_t i, FILE *file) {
 	size_t length;
 
 	switch(code[i]) {
-	case '<':	instr = "ptr--; "; length = 7; break;
-	case '>':	instr = "ptr++; "; length = 7; break;
+	case '<':	instr = "--ptr; "; length = 7; break;
+	case '>':	instr = "++ptr; "; length = 7; break;
 
-	case '+':	instr = "(*ptr)++; "; length = 10; break;
-	case '-':	instr = "(*ptr)--; "; length = 10; break;
+	case '+':	instr = "++*ptr; "; length = 8; break;
+	case '-':	instr = "--*ptr; "; length = 8; break;
 
 	case '[':	instr = "while(*ptr) { "; length = 14; break;
 	case ']':	instr = "} "; length = 1; break;
@@ -272,9 +274,9 @@ static void _next_amd64(FILE *file, size_t next) {
 	fprintf(file, "\"addq $0x%zx, %%rax\\n\"\n", next);
 
 	if(safe_code) {
-		fprintf(file, "\"cmpq $0x%x, %%rax\\n\"\n", MEM_SIZE);
+		fprintf(file, "\"cmpq $0x%zx, %%rax\\n\"\n", bytes);
 		fprintf(file, "\"jl safe_%zu\\n\"\n", label);
-		fprintf(file, "\"subq $0x%x, %%rax\\n\"\n", MEM_SIZE);
+		fprintf(file, "\"subq $0x%zx, %%rax\\n\"\n", bytes);
 		fprintf(file, "\"safe_%zu:\\n\"\n", label++);
 	}
 
@@ -286,9 +288,9 @@ static void _before_amd64(FILE *file, size_t before) {
 	fprintf(file, "\"subq $0x%zx, %%rax\\n\"\n", before);
 
 	if(safe_code) {
-		fprintf(file, "\"cmpq $0x%x, %%rax\\n\"\n", MEM_SIZE);
+		fprintf(file, "\"cmpq $0x%zx, %%rax\\n\"\n", bytes);
 		fprintf(file, "\"jl safe_%zu\\n\"\n", label);
-		fprintf(file, "\"subq $0x%x, %%rax\\n\"\n", MEM_SIZE);
+		fprintf(file, "\"subq $0x%zx, %%rax\\n\"\n", bytes);
 		fprintf(file, "\"safe_%zu:\\n\"\n", label++);
 	}
 

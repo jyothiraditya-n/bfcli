@@ -15,6 +15,6 @@
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
 #include <stddef.h>
-#include "size.h"
+#include "../inc/size.h"
 
 size_t code_size = DEF_CODE_SIZE;

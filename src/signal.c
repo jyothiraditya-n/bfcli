@@ -18,22 +18,13 @@
 #include <LC_lines.h>
 #include <LC_editor.h>
 
-#include "main.h"
-#include "run.h"
+#include "../inc/main.h"
+#include "../inc/run.h"
 
 void on_interrupt(int signum) {
-	if(signum != SIGINT) {
-		signal(signum, SIG_DFL);
-		return;
-	}
-
-	if(running) {
-		signal(SIGINT, on_interrupt);
-		running = false;
-		lastch = 0;
-	}
-	
-	signal(SIGINT, on_interrupt);
+	signal(signum, on_interrupt);
 	LCl_sigint = true;
 	LCe_sigint = true;
+	running = false;
+	lastch = 0;
 }

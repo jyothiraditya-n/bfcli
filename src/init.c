@@ -22,14 +22,14 @@
 #include <LC_editor.h>
 #include <LC_vars.h>
 
-#include "file.h"
-#include "init.h"
-#include "main.h"
-#include "print.h"
-#include "run.h"
-#include "signal.h"
-#include "size.h"
-#include "trans.h"
+#include "../inc/file.h"
+#include "../inc/init.h"
+#include "../inc/main.h"
+#include "../inc/print.h"
+#include "../inc/run.h"
+#include "../inc/signal.h"
+#include "../inc/size.h"
+#include "../inc/trans.h"
 
 static void about();
 static void help();
@@ -194,6 +194,18 @@ void init(int argc, char **argv) {
 	arg -> short_flag = 'x';
 	arg -> var = var;
 	arg -> value = true;
+
+	var = LCv_new();
+	if(!var) print_error(UNKNOWN_ERROR);
+	var -> id = "bytes";
+	var -> fmt = "%zu";
+	var -> data = &bytes;
+
+	arg = LCa_new();
+	if(!arg) print_error(UNKNOWN_ERROR);
+	arg -> long_flag = "bytes";
+	arg -> short_flag = 'b';
+	arg -> var = var;
 
 	LCa_noflags = &imm_fname;
 	LCa_max_noflags = 1;

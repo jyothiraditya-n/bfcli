@@ -15,6 +15,7 @@
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #ifndef TRANS_H
 #define TRANS_H 1
@@ -22,6 +23,8 @@
 extern bool assembly;
 extern bool transpile;
 extern bool safe_code;
+
+extern size_t bytes;
 
 extern void convert_file();
 

@@ -21,8 +21,8 @@
 #define MAIN_H 1
 
 #define VERSION 7
-#define SUBVERSION 6
-#define VERNAME "Sē Fōda Ġeolurēadra Aeppla"
+#define SUBVERSION 7
+#define VERNAME "An Orange-Apple Salad"
 
 extern size_t insertion_point;
 extern bool no_ansi;

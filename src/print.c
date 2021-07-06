@@ -24,12 +24,12 @@
 
 #include <LC_lines.h>
 
-#include "file.h"
-#include "init.h"
-#include "main.h"
-#include "print.h"
-#include "run.h"
-#include "size.h"
+#include "../inc/file.h"
+#include "../inc/init.h"
+#include "../inc/main.h"
+#include "../inc/print.h"
+#include "../inc/run.h"
+#include "../inc/size.h"
 
 const char *progname;
 bool colour = true;
@@ -305,31 +305,40 @@ void print_usage() {
 	puts("    -h, --help        Prints the help dialogue.");
 	puts("    -v, --version     Prints the program version.\n");
 
-	puts("    -c, --colour      (Default) Enables colour output.");
+	puts("    -c, --colour      Enables colour output.");
 	puts("    -m, --monochrome  Disables colour output.");
 	puts("    -n, --no-ansi     Disables the use of ANSI escape sequences.\n");
+
+	puts("  Note: Colour support and use of ANSI escape sequences is enabled");
+	puts("        by default.\n");
 
 	puts("    -f, --file FILE   Loads the file FILE into memory.");
 	puts("    -l, --length LEN  Sets the shell's code buffer length to LEN.\n");
 
-	puts("    -t, --transpile   Transpiles the file to C source code, ouputs");
-	puts("                      the result to OUT and exits.\n");
+	puts("  Note: If a file is specified without -f, it is run immediately and");
+	puts("        the program exits as soon as the execution of the file");
+	puts("        terminates. Use -f if you want the interactive prompt.\n");
+
+	puts("  Note: If a file is specified with -f, the code buffer's length is");
+	puts("        set to LEN plus the file's length.\n");
 
 	puts("    -o, --output OUT  Sets the output file for the transpiled C");
 	puts("                      code and the memory dump to OUT.\n");
-	
+
+	puts("    -b, --bytes SIZE  Sets the total memory size for the compiled");
+	puts("                      program to SIZE.\n");
+
 	puts("    -s, --safe-code   Generates code that won't segfault if < or");
 	puts("                      > are used out-of-bounds. (The pointer wraps");
 	puts("                      around.)\n");
 
+	puts("    -t, --transpile   Transpiles the file to C source code, ouputs");
+	puts("                      the result to OUT and exits.\n");
+	
 	puts("    -x, --assembly    Generates assembly code intermixed with the C");
 	puts("                      output. This option affords both high performance");
 	puts("                      and fast compile times, however it only works on");
 	puts("                      amd64-based computers.\n");
-
-	puts("  Note: If a file is specified without -f, it is run immediately and");
-	puts("        the program exits as soon as the execution of the file");
-	puts("        terminates. Use -f if you want the interactive prompt.\n");
 
 	puts("  Note: If no output file is specified, the transpiled code is output");
 	puts("        to STDOUT. Code generated with -s may be both slower to compile");

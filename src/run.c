@@ -22,11 +22,11 @@
 
 #include <LC_editor.h>
 
-#include "file.h"
-#include "main.h"
-#include "print.h"
-#include "run.h"
-#include "size.h"
+#include "../inc/file.h"
+#include "../inc/main.h"
+#include "../inc/print.h"
+#include "../inc/run.h"
+#include "../inc/size.h"
 
 unsigned char mem[MEM_SIZE];
 char *code;
