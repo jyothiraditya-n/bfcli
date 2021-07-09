@@ -78,13 +78,6 @@ void print_banner() {
 
 void print_error(int errnum) {
 	switch(errnum) {
-	case BAD_ARGS:
-		putchar('\n');
-		print_minihelp();
-		putchar('\n');
-
-		exit(errnum);
-
 	case CODE_TOO_LONG:
 		fprintf(stderr, "%s: error: code too long.\n", progname);
 		break;
@@ -304,13 +297,14 @@ void print_usage() {
 	puts("    -c, --colour      Enables colour output.");
 	puts("    -m, --monochrome  Disables colour output.");
 	puts("    -n, --no-ansi     Disables the use of ANSI escape sequences.");
-	puts("    -0, --minimal-ui  Enables a minimalistic UI mode.\n");
+	puts("    -0, --minimal     Disables Brainfuck extensions.\n");
 
 	puts("  Note: Colour support and use of ANSI escape sequences is enabled");
 	puts("        by default.\n");
 
-	puts("  Note: The minimal UI mode is mainly meant to be used if you want");
-	puts("        to print the program output or save it to a text file.\n");
+	puts("  Note: When in Minimal Mode, it's you and the original Brainfuck");
+	puts("        language, and that's it. All of the extensions of interactive");
+	puts("        mode are disabled.\n");
 
 	puts("    -f, --file FILE   Loads the file FILE into memory.");
 	puts("    -l, --length LEN  Sets the shell's code buffer length to LEN.\n");

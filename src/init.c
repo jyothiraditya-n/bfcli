@@ -59,7 +59,7 @@ void gethw() {
 	ret = tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
 	if(ret == -1) print_error(UNKNOWN_ERROR);
 
-	if(minimal_ui && width > 80) width = 80;
+	if(minimal && width > 80) width = 80;
 }
 
 static void help() {
@@ -126,12 +126,12 @@ void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) print_error(UNKNOWN_ERROR);
-	var -> id = "minimal-ui";
-	var -> data = &minimal_ui;
+	var -> id = "minimal";
+	var -> data = &minimal;
 
 	arg = LCa_new();
 	if(!arg) print_error(UNKNOWN_ERROR);
-	arg -> long_flag = "minimal-ui";
+	arg -> long_flag = "minimal";
 	arg -> short_flag = '0';
 	arg -> var = var;
 	arg -> value = true;
@@ -225,10 +225,9 @@ void init(int argc, char **argv) {
 	LCa_max_noflags = 1;
 
 	int ret = LCa_read(argc, argv);
-	if(ret != LCA_OK) print_error(BAD_ARGS);
+	if(ret != LCA_OK) print_minihelp();
 
 	init_files();
-	if(minimal_ui) no_ansi = true;
 	if(no_ansi) colour = false;
 
 	if(!code) {
@@ -244,19 +243,20 @@ void init(int argc, char **argv) {
 }
 
 void print_minihelp() {
-	printf(" Usage: %s [ARGS] [FILE]\n\n", progname);
+	printf("\n Usage: %s [ARGS] [FILE]\n\n", progname);
 	
 	puts("  Valid arguments are:\n");
 
 	puts("    -a, --about      | -h, --help       | -v, --version");
 	puts("    -c, --colour     | -m, --monochrome | -n, --no-ansi");
-	puts("    -0, --minimal-ui |\n");
+	puts("    -0, --minimal |\n");
 
 	puts("    -f, --file FILE  | -l, --length LEN | -o, --output OUT");
 	puts("    -b, --bytes SIZE | -s, --safe-code  | -t, --transpile");
 	puts("    -x, --assembly   |\n");
 
-	puts("  Happy coding! :)");
+	puts("  Happy coding! :)\n");
+	exit(BAD_ARGS);
 }
 
 static void version() {

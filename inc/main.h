@@ -26,6 +26,6 @@
 
 extern size_t insertion_point;
 extern bool no_ansi;
-extern bool minimal_ui;
+extern bool minimal;
 
 #endif

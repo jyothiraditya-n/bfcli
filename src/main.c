@@ -36,7 +36,7 @@
 #define NXOR(A, B) ((A && B) || (!A && !B))
 
 size_t insertion_point;
-bool no_ansi, minimal_ui;
+bool no_ansi, minimal;
 
 static int check(char *code, size_t len);
 static void handle_int();
@@ -65,14 +65,8 @@ static int check(char *code, size_t len) {
 int main(int argc, char **argv) {
 	init(argc, argv);
 
-	if(minimal_ui) {
-		printf("Bfcli Version %d.%d: %s\n",
-			VERSION, SUBVERSION, VERNAME);
-
-		printf("Code Buffer: %zu Chars\n", code_size);
-		printf("Line Buffer: %d Chars\n", LINE_SIZE);
-		printf("Memory Size: %d Chars\n\n", MEM_SIZE);
-	}
+	if(minimal) printf("Bfcli Version %d.%d: %s\n\n",
+		VERSION, SUBVERSION, VERNAME);
 
 	else print_banner();
 
@@ -82,7 +76,7 @@ int main(int argc, char **argv) {
 		int ret = tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
 		if(ret == -1) print_error(UNKNOWN_ERROR);
 
-		if(minimal_ui) printf("bf> "); else print_prompt();
+		if(minimal) printf("%% "); else print_prompt();
 		LCl_buffer = line + insertion_point;
 		LCl_length = LINE_SIZE - insertion_point;
 
@@ -123,7 +117,8 @@ int main(int argc, char **argv) {
 			running = true;
 
 			lastch = '\n';
-			run(line, len, false);
+			if(minimal) run(line, len, true);
+			else run(line, len, false);
 			if(lastch != '\n') putchar('\n');
 
 			insertion_point = 0;
