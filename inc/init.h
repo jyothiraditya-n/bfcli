@@ -19,5 +19,6 @@
 
 extern void gethw();
 extern void init(int argc, char **argv);
+extern void print_minihelp();
 
 #endif

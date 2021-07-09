@@ -41,7 +41,7 @@ extern void print_error(int errnum);
 extern void print_help();
 extern void print_mem();
 extern void print_mem_full();
-extern void print_prompt(size_t insertion_point);
+extern void print_prompt();
 extern void print_usage();
 
 #endif

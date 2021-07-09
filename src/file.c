@@ -38,6 +38,7 @@ char filename[FILENAME_SIZE];
 char outname[FILENAME_SIZE];
 char savename[LINE_SIZE];
 
+const char *code_error;
 struct termios cooked, raw;
 
 static void get_file();
@@ -54,10 +55,16 @@ int check_file(size_t len) {
 			continue;
 		}
 
-		if(!isprint(code[i])) return BAD_CODE;
+		if(!isprint(code[i])) {
+			code_error = "non-ascii characters in file.";
+			return BAD_CODE;
+		}
 	}
 
-	return loops_open ? BAD_CODE : FILE_OK;
+	if(loops_open < 0) { code_error = "extra ']'."; return BAD_CODE; }
+	if(loops_open > 0) { code_error = "extra '['."; return BAD_CODE; }
+
+	return FILE_OK;
 }
 
 static void get_file() {

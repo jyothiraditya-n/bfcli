@@ -36,7 +36,7 @@
 #define NXOR(A, B) ((A && B) || (!A && !B))
 
 size_t insertion_point;
-bool no_ansi;
+bool no_ansi, minimal_ui;
 
 static int check(char *code, size_t len);
 static void handle_int();
@@ -49,24 +49,13 @@ static int check(char *code, size_t len) {
 	int loops_open = 0;
 	bool wait = false;
 
-	for(size_t i = 0; i < len; i++) {
-		switch(code[i]) {
-		case '[':
-			loops_open++;
-			break;
-
-		case ']':
-			loops_open--;
-			break;
-
-		case '!':
-			wait = true;
-			break;
-
-		case ';':
-			wait = false;
-			break;
-		}
+	for(size_t i = 0; i < len; i++)
+		switch(code[i])
+	{
+		case '[': loops_open++; break;
+		case ']': loops_open--; break;
+		case '!': wait = true; break;
+		case ';': wait = false; break;
 	}
 
 	if(wait || loops_open) return CODE_INCOMPLETE;
@@ -75,7 +64,17 @@ static int check(char *code, size_t len) {
 
 int main(int argc, char **argv) {
 	init(argc, argv);
-	print_banner();
+
+	if(minimal_ui) {
+		printf("Bfcli Version %d.%d: %s\n",
+			VERSION, SUBVERSION, VERNAME);
+
+		printf("Code Buffer: %zu Chars\n", code_size);
+		printf("Line Buffer: %d Chars\n", LINE_SIZE);
+		printf("Memory Size: %d Chars\n\n", MEM_SIZE);
+	}
+
+	else print_banner();
 
 	static char line[LINE_SIZE];
 
@@ -83,7 +82,7 @@ int main(int argc, char **argv) {
 		int ret = tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
 		if(ret == -1) print_error(UNKNOWN_ERROR);
 
-		print_prompt(insertion_point);
+		if(minimal_ui) printf("bf> "); else print_prompt();
 		LCl_buffer = line + insertion_point;
 		LCl_length = LINE_SIZE - insertion_point;
 
@@ -91,16 +90,9 @@ int main(int argc, char **argv) {
 		else ret = LCl_read();
 
 		switch(ret) {
-		case LCL_OK:
-			break;
-
-		case LCL_CUT:
-			print_error(LINE_TOO_LONG);
-			continue;
-
-		case LCL_INT:
-			handle_int(); insertion_point = 0;
-			continue;
+		case LCL_OK: 	break;
+		case LCL_CUT: 	print_error(LINE_TOO_LONG); continue;
+		case LCL_INT: 	handle_int(); insertion_point = 0; continue;
 
 		case LCL_CUT_INT:
 			insertion_point = 0;

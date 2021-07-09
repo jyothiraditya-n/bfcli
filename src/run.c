@@ -140,7 +140,8 @@ void run(char *start, size_t len, bool isfile) {
 			
 			else {
 				if(lastch != '\n') putchar('\n');
-				puts("error: invalid brainfuck.");
+				printf("error: invalid brainfuck: ");
+				puts(code_error);
 				lastch = '\n';
 			}
 

@@ -25,6 +25,7 @@ extern char filename[];
 extern char outname[];
 extern char savename[];
 
+extern const char *code_error;
 extern struct termios cooked, raw;
 
 extern int check_file(size_t len);

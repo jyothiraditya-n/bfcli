@@ -80,7 +80,7 @@ void print_error(int errnum) {
 	switch(errnum) {
 	case BAD_ARGS:
 		putchar('\n');
-		print_usage();
+		print_minihelp();
 		putchar('\n');
 
 		exit(errnum);
@@ -98,8 +98,8 @@ void print_error(int errnum) {
 			progname, filename); break;
 
 	case BAD_CODE:
-		fprintf(stderr, "%s: error: '%s': invalid brainfuck.\n",
-			progname, filename); break;
+		fprintf(stderr, "%s: error: '%s': %s\n", progname,
+			filename, code_error); break;
 
 	case FILE_TOO_BIG:
 		fprintf(stderr, "%s: error: '%s': file too big.\n",
@@ -279,21 +279,17 @@ void print_mem_full() {
 	}
 }
 
-void print_prompt(size_t insertion_point) {
+void print_prompt() {
 	if(colour) {
-		if(!insertion_point)
-			printf("\e[93m" "bfcli"
-			"\e[0m" "@"
-			"\e[33m" "data:%zx"
-			"\e[0m" "$ ", ptr);
+		if(!insertion_point) printf("\e[93m" "bfcli" "\e[0m" ":"
+			"\e[33m" "%zx" "\e[0m" "%% ", ptr);
 
-		else printf("\e[36m" "code:%zx"
-			"\e[0m" "$ ", insertion_point);
+		else printf("> ");
 	}
 
 	else {
-		if(!insertion_point) printf("bfcli@data:%zx$ ", ptr);
-		else printf("code:%zx$ ", insertion_point);
+		if(!insertion_point) printf("bfcli:%zx%% ", ptr);
+		else printf("> ");
 	}
 }
 
@@ -307,10 +303,14 @@ void print_usage() {
 
 	puts("    -c, --colour      Enables colour output.");
 	puts("    -m, --monochrome  Disables colour output.");
-	puts("    -n, --no-ansi     Disables the use of ANSI escape sequences.\n");
+	puts("    -n, --no-ansi     Disables the use of ANSI escape sequences.");
+	puts("    -0, --minimal-ui  Enables a minimalistic UI mode.\n");
 
 	puts("  Note: Colour support and use of ANSI escape sequences is enabled");
 	puts("        by default.\n");
+
+	puts("  Note: The minimal UI mode is mainly meant to be used if you want");
+	puts("        to print the program output or save it to a text file.\n");
 
 	puts("    -f, --file FILE   Loads the file FILE into memory.");
 	puts("    -l, --length LEN  Sets the shell's code buffer length to LEN.\n");
