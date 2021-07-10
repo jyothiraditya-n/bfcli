@@ -65,8 +65,10 @@ static int check(char *code, size_t len) {
 int main(int argc, char **argv) {
 	init(argc, argv);
 
-	if(minimal) printf("Bfcli Version %d.%d: %s\n\n",
-		VERSION, SUBVERSION, VERNAME);
+	if(minimal) {
+		printf("Bfcli Version %d.%d: %s\n", VERSION, SUBVERSION, VERNAME);
+		printf("Memory Size: %d Chars\n\n", MEM_SIZE);
+	}
 
 	else print_banner();
 
