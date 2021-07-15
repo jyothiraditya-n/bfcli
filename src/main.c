@@ -49,13 +49,15 @@ static int check(char *code, size_t len) {
 	int loops_open = 0;
 	bool wait = false;
 
-	for(size_t i = 0; i < len; i++)
-		switch(code[i])
-	{
-		case '[': loops_open++; break;
-		case ']': loops_open--; break;
-		case '!': wait = true; break;
-		case ';': wait = false; break;
+	for(size_t i = 0; i < len; i++) {
+		switch(code[i]) {
+			case '[': loops_open++; break;
+			case ']': loops_open--; break;
+			case '!': wait = true; break;
+			case ';': wait = false; break;
+		}
+
+		if(loops_open < 0) return CODE_ERROR;
 	}
 
 	if(wait || loops_open) return CODE_INCOMPLETE;
@@ -132,6 +134,7 @@ int main(int argc, char **argv) {
 			break;
 
 		case CODE_ERROR:
+			fprintf(stderr, "error: unmatched ']'\n");
 			insertion_point = 0;
 			break;
 		}

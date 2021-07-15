@@ -48,21 +48,30 @@ int check_file(size_t len) {
 
 	for(size_t i = 0; i < len; i++) {
 		switch(code[i]) {
-		case '[': loops_open++; continue;
-		case ']': loops_open--; continue;
+		case '[': loops_open++; break;
+		case ']': loops_open--; break;
 
-		case '\t': case '\n': case '\r':
-			continue;
+		case '\t': break;
+		case '\n': break;
+		case '\r': break;
+
+		default:
+			if(!isprint(code[i])) {
+				code_error = "non-ascii characters in file.";
+				return BAD_CODE;
+			}
 		}
 
-		if(!isprint(code[i])) {
-			code_error = "non-ascii characters in file.";
+		if(loops_open < 0) {
+			code_error = "unmatched ']'.";
 			return BAD_CODE;
 		}
 	}
 
-	if(loops_open < 0) { code_error = "extra ']'."; return BAD_CODE; }
-	if(loops_open > 0) { code_error = "extra '['."; return BAD_CODE; }
+	if(loops_open > 0) {
+		code_error = "unmatched '['.";
+		return BAD_CODE;
+	}
 
 	return FILE_OK;
 }
