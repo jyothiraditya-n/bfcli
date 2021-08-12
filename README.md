@@ -1,9 +1,9 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 7.6: Sē Fōda Ġeolurēadra Aeppla
+Version 7.7: An Orange-Apple Salad
 
-bfcli@data:0$
+bfcli:0%
 ```
 
 ---
@@ -51,7 +51,8 @@ specifying if colour output should be enabled, and pre-emptively declaring the
 file to be loaded into memory. This library is also used as the backbone for
 the command-line itself.
 
-- Colour support for highlighting important information on the screen.
+- Colour support for highlighting important information on the screen, as well
+- as a monochrome, non-ANSI, and printer-friendly 'minimal' mode.
 
 - Loading valid Brainfuck files at the prompt, performing code buffer editing
 with `%` and executing them with `@`. (Again, thanks to intergration with
@@ -82,35 +83,67 @@ Valid arguments are:
   -h, --help        Prints the help dialogue.
   -v, --version     Prints the program version.
 
-  -c, --colour      (Default) Enables colour output.
+  -c, --colour      Enables colour output.
   -m, --monochrome  Disables colour output.
   -n, --no-ansi     Disables the use of ANSI escape sequences.
+  -0, --minimal     Disables Brainfuck extensions.
+
+Note: Colour support and use of ANSI escape sequences is enabled
+      by default.
+
+Note: When in Minimal Mode, it's you and the original Brainfuck
+      language, and that's it. All of the extensions of interactive
+      mode are disabled.
 
   -f, --file FILE   Loads the file FILE into memory.
   -l, --length LEN  Sets the shell's code buffer length to LEN.
 
-  -t, --transpile   Transpiles the file to C source code, ouputs
-                    the result to OUT and exits.
+Note: If a file is specified without -f, it is run immediately and
+      the program exits as soon as the execution of the file
+      terminates. Use -f if you want the interactive prompt.
+
+Note: If a file is specified with -f, the code buffer's length is
+      set to LEN plus the file's length.
 
   -o, --output OUT  Sets the output file for the transpiled C
                     code and the memory dump to OUT.
 
+  -b, --bytes SIZE  Sets the total memory size for the compiled
+                    program to SIZE.
+
   -s, --safe-code   Generates code that won't segfault if < or
                     > are used out-of-bounds. (The pointer wraps
                     around.)
+
+  -t, --transpile   Transpiles the file to C source code, ouputs
+                    the result to OUT and exits.
 
   -x, --assembly    Generates assembly code intermixed with the C
                     output. This option affords both high performance
                     and fast compile times, however it only works on
                     amd64-based computers.
 
-Note: If a file is specified without -f, it is run immediately and
-      the program exits as soon as the execution of the file
-      terminates. Use -f if you want the interactive prompt.
-
 Note: If no output file is specified, the transpiled code is output
       to STDOUT. Code generated with -s may be both slower to compile
       and execute, so only use it when necessary.
+
+Happy coding! :)
+```
+
+TL;DR:
+
+```
+Usage: bf [ARGS] [FILE]
+
+Valid arguments are:
+
+  -a, --about      | -h, --help       | -v, --version
+  -c, --colour     | -m, --monochrome | -n, --no-ansi
+  -0, --minimal    |
+
+  -f, --file FILE  | -l, --length LEN | -o, --output OUT
+  -b, --bytes SIZE | -s, --safe-code  | -t, --transpile
+  -x, --assembly   |
 
 Happy coding! :)
 ```

@@ -249,7 +249,7 @@ void print_minihelp() {
 
 	puts("    -a, --about      | -h, --help       | -v, --version");
 	puts("    -c, --colour     | -m, --monochrome | -n, --no-ansi");
-	puts("    -0, --minimal |\n");
+	puts("    -0, --minimal    |\n");
 
 	puts("    -f, --file FILE  | -l, --length LEN | -o, --output OUT");
 	puts("    -b, --bytes SIZE | -s, --safe-code  | -t, --transpile");
