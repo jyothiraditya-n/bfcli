@@ -334,6 +334,9 @@ void print_usage() {
 	puts("                      and fast compile times, however it only works on");
 	puts("                      amd64-based computers.\n");
 
+	puts("    -d, --direct-inp  Don't buffer the standard input. Send characters");
+	puts("                      to Brainfuck code without waiting for a newline.\n");
+
 	puts("  Note: If no output file is specified, the transpiled code is output");
 	puts("        to STDOUT. Code generated with -s may be both slower to compile");
 	puts("        and execute, so only use it when necessary.\n");

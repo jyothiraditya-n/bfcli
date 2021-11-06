@@ -36,7 +36,7 @@
 #define NXOR(A, B) ((A && B) || (!A && !B))
 
 size_t insertion_point;
-bool no_ansi, minimal;
+bool no_ansi, direct_inp, minimal;
 
 static int check(char *code, size_t len);
 static void handle_int();

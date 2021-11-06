@@ -221,6 +221,18 @@ void init(int argc, char **argv) {
 	arg -> short_flag = 'b';
 	arg -> var = var;
 
+	var = LCv_new();
+	if(!var) print_error(UNKNOWN_ERROR);
+	var -> id = "direct_inp";
+	var -> data = &direct_inp;
+
+	arg = LCa_new();
+	if(!arg) print_error(UNKNOWN_ERROR);
+	arg -> long_flag = "direct-inp";
+	arg -> short_flag = 'd';
+	arg -> var = var;
+	arg -> value = true;
+
 	LCa_noflags = &imm_fname;
 	LCa_max_noflags = 1;
 
@@ -253,7 +265,7 @@ void print_minihelp() {
 
 	puts("    -f, --file FILE  | -l, --length LEN | -o, --output OUT");
 	puts("    -b, --bytes SIZE | -s, --safe-code  | -t, --transpile");
-	puts("    -x, --assembly   |\n");
+	puts("    -x, --assembly   | -d, --direct-inp |\n");
 
 	puts("  Happy coding! :)\n");
 	exit(BAD_ARGS);

@@ -21,11 +21,12 @@
 #define MAIN_H 1
 
 #define VERSION 7
-#define SUBVERSION 7
-#define VERNAME "An Orange-Apple Salad"
+#define SUBVERSION 8
+#define VERNAME "A Mixed-Fruit Salad"
 
 extern size_t insertion_point;
 extern bool no_ansi;
+extern bool direct_inp;
 extern bool minimal;
 
 #endif

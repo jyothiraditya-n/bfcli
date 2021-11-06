@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 7.7: An Orange-Apple Salad
+Version 7.8: A Mixed-Fruit Salad
 
 bfcli:0%
 ```
@@ -52,7 +52,7 @@ file to be loaded into memory. This library is also used as the backbone for
 the command-line itself.
 
 - Colour support for highlighting important information on the screen, as well
-- as a monochrome, non-ANSI, and printer-friendly 'minimal' mode.
+as a monochrome, non-ANSI, and printer-friendly 'minimal' mode.
 
 - Loading valid Brainfuck files at the prompt, performing code buffer editing
 with `%` and executing them with `@`. (Again, thanks to intergration with
@@ -62,6 +62,9 @@ with `%` and executing them with `@`. (Again, thanks to intergration with
 custom output file, as specified on the command line, as well as partial
 compilation to Amd64 assembly to boost compilation performance while offering
 similar performance to GCC's `-O3`.
+
+- Configurable buffering of the Standard Input as per the needs of the
+individual program.
 
 ## Building, Running and Installing the Program from Source
 
@@ -123,6 +126,9 @@ Note: If a file is specified with -f, the code buffer's length is
                     and fast compile times, however it only works on
                     amd64-based computers.
 
+  -d, --direct-inp  Don't buffer the standard input. Send characters
+                    to Brainfuck code without waiting for a newline.
+
 Note: If no output file is specified, the transpiled code is output
       to STDOUT. Code generated with -s may be both slower to compile
       and execute, so only use it when necessary.
@@ -143,7 +149,7 @@ Valid arguments are:
 
   -f, --file FILE  | -l, --length LEN | -o, --output OUT
   -b, --bytes SIZE | -s, --safe-code  | -t, --transpile
-  -x, --assembly   |
+  -x, --assembly   | -d, --direct-inp |
 
 Happy coding! :)
 ```

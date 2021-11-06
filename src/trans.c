@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "../inc/file.h"
+#include "../inc/main.h"
 #include "../inc/print.h"
 #include "../inc/run.h"
 #include "../inc/size.h"
@@ -47,56 +48,76 @@ void convert_file() {
 	FILE *file = strlen(outname) ? fopen(outname, "w") : stdout;
 	if(!file) { print_error(BAD_OUTPUT); exit(BAD_OUTPUT); }
 
-	if(safe_code && !assembly)
-		fputs("#include <stddef.h>\n", file);
+	if(safe_code && !assembly) fputs("#include <stddef.h>\n", file);
+	if(!assembly) fputs("#include <stdio.h>\n\n", file);
 
-	if(!assembly) fputs("#include <stdio.h>\n", file);
-	fputs("#include <termios.h>\n", file);
-	fputs("#include <unistd.h>\n", file);
+	if(direct_inp) {
+		fputs("#include <termios.h>\n", file);
+		fputs("#include <unistd.h>\n\n", file);
 
-	fprintf(file, "char cells[%zu];\n", bytes);
-
-	if(!assembly) {
-		if(safe_code) fputs("size_t ptr = 0;\n", file);
-		else fputs("char *ptr = &cells[0];\n", file);
+		fputs("struct termios cooked, raw;\n", file);
 	}
 
-	fputs("struct termios cooked, raw;\n", file);
-	if(assembly) fputs("void assembly(char *);\n", file);
+	fprintf(file, "char cells[%zu];\n\n", bytes);
+	
+	if(assembly) fputs("void assembly(char *);\n\n", file);
+	
+	else {
+		fputs("void brainfuck();\n\n", file);
+
+		if(safe_code) fputs("size_t ptr = 0;\n", file);
+		else fputs("char *ptr = &cells[0];\n\n", file);
+	}
 
 	fputs("int main() {\n", file);
-	fputs("tcgetattr(STDIN_FILENO, &cooked);\n", file);
-	fputs("raw = cooked;\n", file);
-	fputs("raw.c_lflag &= ~ICANON;\n", file);
-	fputs("raw.c_lflag |= ECHO;\n", file);
-	fputs("raw.c_cc[VINTR] = 3;\n", file);
-	fputs("raw.c_lflag |= ISIG;\n", file);
-	fputs("tcsetattr(STDIN_FILENO, TCSANOW, &raw);\n", file);
+
+	if(direct_inp) {
+		fputs("\ttcgetattr(STDIN_FILENO, &cooked);\n", file);
+		fputs("\traw = cooked;\n", file);
+		fputs("\traw.c_lflag &= ~ICANON;\n", file);
+		fputs("\traw.c_lflag |= ECHO;\n", file);
+		fputs("\traw.c_cc[VINTR] = 3;\n", file);
+		fputs("\traw.c_lflag |= ISIG;\n", file);
+		fputs("\ttcsetattr(STDIN_FILENO, TCSANOW, &raw);\n\n", file);
+	}
 
 	size_t len = strlen(code);
 
-	if(assembly) fputs("assembly(&cells[0]);\n", file);
+	if(assembly) fputs("\tassembly(&cells[0]);\n", file);
+	else fputs("\tbrainfuck();\n", file);
 
-	else if(!safe_code) {
-		for(size_t i = 0; i < len; i++) conv_unsafe(i, file);
-		fputc('\n', file);
-	}
+	if(direct_inp)
+		fputs("\ttcsetattr(STDIN_FILENO, TCSANOW, &cooked);\n", file);
 
-	else for(size_t i = 0; i < len; i++) conv_safe(i, file);
-
-	fputs("tcsetattr(STDIN_FILENO, TCSANOW, &cooked);\n", file);
-	fputs("return 0;\n", file);
-	fputs("}\n", file);
+	fputs("\treturn 0;\n", file);
+	fputs("}\n\n", file);
 
 	if(assembly) {
 		fputs("asm (\n", file);
 		fputs("\"assembly:\\n\"\n", file);
-		fputs("\"movq $0x0, %rax\\n\"\n", file);
-		fputs("\"movb $0x0, %bl\\n\"\n", file);
+		fputs("\"\tmovq $0x0, %rax\\n\"\n", file);
+		fputs("\"\tmovb $0x0, %bl\\n\"\n", file);
 
 		for(size_t i = 0; i < len; i++) conv_amd64(i, file);
-		fputs("\"ret\\n\"\n", file);
+		fputs("\"\tret\\n\"\n", file);
 		fputs(");\n", file);
+	}
+
+	else {
+		fputs("void brainfuck() {\n", file);
+
+		if(!safe_code) {
+			fputc('\t', file);
+			for(size_t i = 0; i < len; i++)
+				conv_unsafe(i, file);
+
+			fputc('\n', file);
+		}
+
+		else for(size_t i = 0; i < len; i++) 
+			conv_safe(i, file);
+
+		fputs("}\n", file);
 	}
 
 	if(strlen(outname)) {
@@ -109,20 +130,20 @@ void convert_file() {
 
 static void conv_safe(size_t i, FILE *file) {
 	switch(code[i]) {
-	case '<':	fprintf(file, "if(ptr) { ptr--; } else { ptr = %zu; }\n",
+	case '<':	fprintf(file, "\tif(ptr) { ptr--; } else { ptr = %zu; }\n",
 			bytes - 1); break;
 
-	case '>':	fprintf(file, "ptr++; if(ptr >= %zu) { ptr = 0; }\n",
+	case '>':	fprintf(file, "\tptr++; if(ptr >= %zu) { ptr = 0; }\n",
 			bytes); break;
 
-	case '+':	fputs("cells[ptr]++;\n", file); break;
-	case '-':	fputs("cells[ptr]--;\n", file); break;
+	case '+':	fputs("\tcells[ptr]++;\n", file); break;
+	case '-':	fputs("\tcells[ptr]--;\n", file); break;
 
-	case '[':	fputs("while(cells[ptr]) {\n", file); break;
-	case ']':	fputs("}\n", file); break;
+	case '[':	fputs("\twhile(cells[ptr]) {\n", file); break;
+	case ']':	fputs("\t}\n", file); break;
 
-	case '.':	fputs("putchar(cells[ptr]);\n", file); break;
-	case ',':	fputs("cells[ptr] = getchar();\n", file); break;
+	case '.':	fputs("\tputchar(cells[ptr]);\n", file); break;
+	case ',':	fputs("\tcells[ptr] = getchar();\n", file); break;
 	}
 }
 
@@ -147,7 +168,7 @@ static void conv_unsafe(size_t i, FILE *file) {
 	default: 	instr = ""; length = 0;
 	}
 
-	if(col + length >= 79) { fputc('\n', file); col = 0; }
+	if(col + length >= 71) { fputs("\n\t", file); col = 0; }
 	fputs(instr, file); col += length;
 }
 
@@ -200,9 +221,9 @@ static void conv_amd64(size_t i, FILE *file) {
 		if(next) { _next_amd64(file, next); next = 0; }
 		if(before) { _before_amd64(file, before); before = 0; }
 
-		fprintf(file, "\"open_%zu:\\n\"\n", bracket);
-		fputs("\"testb %bl, %bl\\n\"\n", file);
-		fprintf(file, "\"jz close_%zu\\n\"\n", bracket);
+		fprintf(file, "\"\\n\"\n\"open_%zu:\\n\"\n", bracket);
+		fputs("\"\ttestb %bl, %bl\\n\"\n", file);
+		fprintf(file, "\"\tjz close_%zu\\n\"\n", bracket);
 
 		stack[indent++] = bracket++;
 		break;
@@ -213,8 +234,8 @@ static void conv_amd64(size_t i, FILE *file) {
 		if(next) { _next_amd64(file, next); next = 0; }
 		if(before) { _before_amd64(file, before); before = 0; }
 
-		fprintf(file, "\"jmp open_%zu\\n\"\n", stack[--indent]);
-		fprintf(file, "\"close_%zu:\\n\"\n", stack[indent]);
+		fprintf(file, "\"\tjmp open_%zu\\n\"\n", stack[--indent]);
+		fprintf(file, "\"\\n\"\n\"close_%zu:\\n\"\n", stack[indent]);
 		break;
 
 	case '.':
@@ -223,20 +244,20 @@ static void conv_amd64(size_t i, FILE *file) {
 		if(next) { _next_amd64(file, next); next = 0; }
 		if(before) { _before_amd64(file, before); before = 0; }
 
-		fputs("\"pushq %rax\\n\"\n", file);
-		fputs("\"pushq %rbx\\n\"\n", file);
-		fputs("\"pushq %rdi\\n\"\n", file);
+		fputs("\"\tpushq %rax\\n\"\n", file);
+		fputs("\"\tpushq %rbx\\n\"\n", file);
+		fputs("\"\tpushq %rdi\\n\"\n", file);
 
-		fputs("\"movb %bl, (%rax, %rdi)\\n\"\n", file);
-		fputs("\"leaq (%rax, %rdi), %rsi\\n\"\n", file);
-		fputs("\"movq $0x1, %rax\\n\"\n", file);
-		fputs("\"movq $0x1, %rdi\\n\"\n", file);
-		fputs("\"movq $0x1, %rdx\\n\"\n", file);
-		fputs("\"syscall\\n\"\n", file);
+		fputs("\"\tmovb %bl, (%rax, %rdi)\\n\"\n", file);
+		fputs("\"\tleaq (%rax, %rdi), %rsi\\n\"\n", file);
+		fputs("\"\tmovq $0x1, %rax\\n\"\n", file);
+		fputs("\"\tmovq $0x1, %rdi\\n\"\n", file);
+		fputs("\"\tmovq $0x1, %rdx\\n\"\n", file);
+		fputs("\"\tsyscall\\n\"\n", file);
 
-		fputs("\"popq %rdi\\n\"\n", file);
-		fputs("\"popq %rbx\\n\"\n", file);
-		fputs("\"popq %rax\\n\"\n", file);
+		fputs("\"\tpopq %rdi\\n\"\n", file);
+		fputs("\"\tpopq %rbx\\n\"\n", file);
+		fputs("\"\tpopq %rax\\n\"\n", file);
 		break;
 
 	case ',':
@@ -245,54 +266,54 @@ static void conv_amd64(size_t i, FILE *file) {
 		if(next) { _next_amd64(file, next); next = 0; }
 		if(before) { _before_amd64(file, before); before = 0; }
 
-		fputs("\"pushq %rax\\n\"\n", file);
-		fputs("\"pushq %rdi\\n\"\n", file);
+		fputs("\"\tpushq %rax\\n\"\n", file);
+		fputs("\"\tpushq %rdi\\n\"\n", file);
 
-		fputs("\"leaq (%rax, %rdi), %rsi\\n\"\n", file);
-		fputs("\"movq $0x0, %rax\\n\"\n", file);
-		fputs("\"movq $0x0, %rdi\\n\"\n", file);
-		fputs("\"movq $0x1, %rdx\\n\"\n", file);
-		fputs("\"syscall\\n\"\n", file);
+		fputs("\"\tleaq (%rax, %rdi), %rsi\\n\"\n", file);
+		fputs("\"\tmovq $0x0, %rax\\n\"\n", file);
+		fputs("\"\tmovq $0x0, %rdi\\n\"\n", file);
+		fputs("\"\tmovq $0x1, %rdx\\n\"\n", file);
+		fputs("\"\tsyscall\\n\"\n", file);
 
-		fputs("\"popq %rdi\\n\"\n", file);
-		fputs("\"popq %rax\\n\"\n", file);
-		fputs("\"movb (%rax, %rdi), %bl\\n\"\n", file);
+		fputs("\"\tpopq %rdi\\n\"\n", file);
+		fputs("\"\tpopq %rax\\n\"\n", file);
+		fputs("\"\tmovb (%rax, %rdi), %bl\\n\"\n", file);
 		break;
 	}
 }
 
 static void _plus_amd64(FILE *file, size_t plus) {
-	fprintf(file, "\"addb $0x%zx, %%bl\\n\"\n", plus);
+	fprintf(file, "\"\taddb $0x%zx, %%bl\\n\"\n", plus);
 }
 
 static void _minus_amd64(FILE *file, size_t minus) {
-	fprintf(file, "\"subb $0x%zx, %%bl\\n\"\n", minus);
+	fprintf(file, "\"\tsubb $0x%zx, %%bl\\n\"\n", minus);
 }
 
 static void _next_amd64(FILE *file, size_t next) {
-	fputs("\"movb %bl, (%rax, %rdi)\\n\"\n", file);
-	fprintf(file, "\"addq $0x%zx, %%rax\\n\"\n", next);
+	fputs("\"\tmovb %bl, (%rax, %rdi)\\n\"\n", file);
+	fprintf(file, "\"\taddq $0x%zx, %%rax\\n\"\n", next);
 
 	if(safe_code) {
-		fprintf(file, "\"cmpq $0x%zx, %%rax\\n\"\n", bytes);
-		fprintf(file, "\"jl safe_%zu\\n\"\n", label);
-		fprintf(file, "\"subq $0x%zx, %%rax\\n\"\n", bytes);
-		fprintf(file, "\"safe_%zu:\\n\"\n", label++);
+		fprintf(file, "\"\tcmpq $0x%zx, %%rax\\n\"\n", bytes);
+		fprintf(file, "\"\tjl safe_%zu\\n\"\n", label);
+		fprintf(file, "\"\tsubq $0x%zx, %%rax\\n\"\n", bytes);
+		fprintf(file, "\"\\n\"\n\"safe_%zu:\\n\"\n", label++);
 	}
 
-	fputs("\"movb (%rax, %rdi), %bl\\n\"\n", file);
+	fputs("\"\tmovb (%rax, %rdi), %bl\\n\"\n", file);
 }
 
 static void _before_amd64(FILE *file, size_t before) {
-	fputs("\"movb %bl, (%rax, %rdi)\\n\"\n", file);
-	fprintf(file, "\"subq $0x%zx, %%rax\\n\"\n", before);
+	fputs("\"\tmovb %bl, (%rax, %rdi)\\n\"\n", file);
+	fprintf(file, "\"\tsubq $0x%zx, %%rax\\n\"\n", before);
 
 	if(safe_code) {
-		fprintf(file, "\"cmpq $0x%zx, %%rax\\n\"\n", bytes);
-		fprintf(file, "\"jl safe_%zu\\n\"\n", label);
-		fprintf(file, "\"subq $0x%zx, %%rax\\n\"\n", bytes);
-		fprintf(file, "\"safe_%zu:\\n\"\n", label++);
+		fprintf(file, "\"\tcmpq $0x%zx, %%rax\\n\"\n", bytes);
+		fprintf(file, "\"\tjl safe_%zu\\n\"\n", label);
+		fprintf(file, "\"\tsubq $0x%zx, %%rax\\n\"\n", bytes);
+		fprintf(file, "\"\\n\"\n\"safe_%zu:\\n\"\n", label++);
 	}
 
-	fputs("\"movb (%rax, %rdi), %bl\\n\"\n", file);
+	fputs("\"\tmovb (%rax, %rdi), %bl\\n\"\n", file);
 }

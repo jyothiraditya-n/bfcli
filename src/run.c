@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include <LC_editor.h>
+#include <LC_lines.h>
 
 #include "../inc/file.h"
 #include "../inc/main.h"
@@ -36,6 +37,7 @@ bool running;
 char lastch;
 
 static void run_sub(char *start, size_t *sub_start, size_t i, bool isfile);
+static char get_input();
 
 void run(char *start, size_t len, bool isfile) {
 	int brackets_open = 0;
@@ -88,7 +90,7 @@ void run(char *start, size_t len, bool isfile) {
 			continue;
 
 		case ',':
-			mem[ptr] = getchar();
+			mem[ptr] = get_input();
 			continue;
 		}
 
@@ -176,4 +178,51 @@ static void run_sub(char *start, size_t *sub_start, size_t i, bool isfile) {
 		run(&start[*sub_start], i - *sub_start, isfile);
 
 	*sub_start = 0;
+}
+
+static char get_input() {
+	static char input[LINE_SIZE];
+	static size_t length = 0;
+
+	if(direct_inp) return getchar();
+
+	while(!strlen(input)) {
+		int ret = tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
+		if(ret == -1) print_error(UNKNOWN_ERROR);
+
+		LCl_buffer = input;
+		LCl_length = LINE_SIZE - 1;
+
+		if(no_ansi) ret = LCl_bread(input, LINE_SIZE - 1);
+		else ret = LCl_read();
+
+		switch(ret) {
+		case LCL_OK: 	break;
+		case LCL_CUT: 	print_error(LINE_TOO_LONG); continue;
+		case LCL_INT: 	break;
+
+		case LCL_CUT_INT:
+			putchar('\n');
+			print_error(LINE_TOO_LONG);
+			break;
+
+		default:
+			print_error(UNKNOWN_ERROR);
+		}
+
+		ret = tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+		if(ret == -1) print_error(UNKNOWN_ERROR);
+
+		length = strlen(input);
+		input[length + 1] = 0;
+		input[length] = '\n';
+		length++;
+	}
+
+	char ret = input[0];
+	for(size_t i = 1; i <= length; i++)
+		input[i - 1] = input[i];
+
+	length--;
+	return ret;
 }
