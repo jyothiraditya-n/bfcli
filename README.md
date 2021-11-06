@@ -40,9 +40,9 @@ language as well as the functionality of this program at the main prompt.
 current pointer, and produce a complete memory dump to aid with debugging of
 code.
 
-- The disabling of `STDIN` buffering when running Brainfuck code and
-alternative behaviour for ^C, either exiting the program if called at the main
-prompt, clearing the line of code if called at the secondary prompt, or
+- The configurable disabling of `STDIN` buffering when running Brainfuck code
+and alternative behaviour for ^C, either exiting the program if called at the
+main prompt, clearing the line of code if called at the secondary prompt, or
 stopping the execution of the running Brainfuck program.
 
 - Integration with `libClame` to provide command-line argument parsing, which
@@ -62,9 +62,6 @@ with `%` and executing them with `@`. (Again, thanks to intergration with
 custom output file, as specified on the command line, as well as partial
 compilation to Amd64 assembly to boost compilation performance while offering
 similar performance to GCC's `-O3`.
-
-- Configurable buffering of the Standard Input as per the needs of the
-individual program.
 
 ## Building, Running and Installing the Program from Source
 
