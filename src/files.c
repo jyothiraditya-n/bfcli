@@ -83,13 +83,14 @@ static void get_file() {
 }
 
 void BFf_save_file(char *buffer, size_t size) {
-	printf("BFf_mainfile_name: ");
-	FILE *file = stdin; int ret;
-
+	FILE *file = stdin;
+	int ret;
+	
 	LCl_buffer = BFf_savefile_name;
 	LCl_length = BF_LINE_SIZE;
 
 	while(!file || file == stdin) {
+		printf("BFf_mainfile_name: ");
 		if(BFc_no_ansi) ret = LCl_bread();
 		else ret = LCl_read();
 
