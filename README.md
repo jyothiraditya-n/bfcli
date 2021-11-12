@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 8.0: The Purpose of Life
+Version 8.1: The Pursuit of Esotericism
 
 bfcli:0%
 ```
