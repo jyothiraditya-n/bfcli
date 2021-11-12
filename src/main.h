@@ -17,31 +17,23 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#ifndef PRINT_H
-#define PRINT_H 1
+#ifndef BF_MAIN_H
+#define BF_MAIN_H 1
 
-#define UNKNOWN_ERROR 0
-#define BAD_ARGS 1
-#define CODE_TOO_LONG 2
-#define LINE_TOO_LONG 3
-#define BAD_FILE 6
-#define BAD_CODE 7
-#define FILE_TOO_BIG 8
-#define BAD_OUTPUT 9
-#define BAD_SAVEFILE 10
+#define BF_VERSION 8
+#define BF_SUBVERSION 0
+#define BF_VERNAME "The Purpose of Life"
 
-extern const char *progname;
-extern bool colour;
+#define BF_LINE_SIZE 4096
+#define BF_CODE_SIZE 65536
 
-extern size_t height, width;
+#define BF_MEM_SIZE 32768
+#define BF_MEM_SIZE_DIGITS 8
+#define BF_MEM_SIZE_PRI "%08zx"
 
-extern void print_about();
-extern void print_banner();
-extern void print_error(int errnum);
-extern void print_help();
-extern void print_mem();
-extern void print_mem_full();
-extern void print_prompt();
-extern void print_usage();
+#define BF_FILENAME_SIZE 4096
+#define BF_FILENAME_SCN "%4095c"
+
+extern size_t BFm_insertion_point;
 
 #endif

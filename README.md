@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 7.8: A Mixed-Fruit Salad
+Version 8.0: The Purpose of Life
 
 bfcli:0%
 ```
@@ -39,6 +39,11 @@ language as well as the functionality of this program at the main prompt.
 - The commands `*` and `&` to print a memory listing of the values around the
 current pointer, and produce a complete memory dump to aid with debugging of
 code.
+
+- The command `$` compiles the program to object code and then disassembles it.
+This makes it easier to read the logic than pure brainfuck since it replaces
+the endless stream of pluses, minuses and arrows with opcodes and numeric
+values.
 
 - The configurable disabling of `STDIN` buffering when running Brainfuck code
 and alternative behaviour for ^C, either exiting the program if called at the
@@ -84,9 +89,8 @@ Valid arguments are:
   -v, --version     Prints the program version.
 
   -c, --colour      Enables colour output.
-  -m, --monochrome  Disables colour output.
   -n, --no-ansi     Disables the use of ANSI escape sequences.
-  -0, --minimal     Disables Brainfuck extensions.
+  -m, --minimal     Disables Brainfuck extensions.
 
 Note: Colour support and use of ANSI escape sequences is enabled
       by default.
@@ -108,7 +112,7 @@ Note: If a file is specified with -f, the code buffer's length is
   -o, --output OUT  Sets the output file for the transpiled C
                     code and the memory dump to OUT.
 
-  -b, --bytes SIZE  Sets the total memory size for the compiled
+  -r, --ram SIZE    Sets the total memory size for the compiled
                     program to SIZE.
 
   -s, --safe-code   Generates code that won't segfault if < or
@@ -141,12 +145,12 @@ Usage: bf [ARGS] [FILE]
 Valid arguments are:
 
   -a, --about      | -h, --help       | -v, --version
-  -c, --colour     | -m, --monochrome | -n, --no-ansi
-  -0, --minimal    |
+  -c, --colour     | -m, --minimal    | -n, --no-ansi
+  -d, --direct-inp |
 
-  -f, --file FILE  | -l, --length LEN | -o, --output OUT
-  -b, --bytes SIZE | -s, --safe-code  | -t, --transpile
-  -x, --assembly   | -d, --direct-inp |
+  -f, --file FILE  | -l, --length LEN | -r, --ram SIZE
+  -x, --assemble   | -s, --safe-code  | -t, --transpile
+  -o, --output OUT |
 
 Happy coding! :)
 ```
@@ -207,6 +211,7 @@ Note: The interpreter will still wait for more code if the current
 
   @ Executes code from the code buffer.
   % Edits code in the code buffer.
+  $ Disassembles the object code generated for the code buffer.
 
 Note: In order to load a file when Bfcli is running, type the file
       name at the main prompt. When files are loaded, they are put

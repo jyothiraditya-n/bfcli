@@ -20,18 +20,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../inc/file.h"
-#include "../inc/main.h"
-#include "../inc/print.h"
-#include "../inc/run.h"
-#include "../inc/size.h"
-#include "../inc/trans.h"
+#include "clidata.h"
+#include "errors.h"
+#include "files.h"
+#include "interpreter.h"
+#include "main.h"
+#include "printing.h"
+#include "translator.h"
 
-bool assembly;
-bool transpile;
-bool safe_code;
-
-size_t bytes = MEM_SIZE;
+bool BFt_assemble;
+bool BFt_compile;
+bool BFt_use_safe_code;
 
 static size_t label;
 
@@ -44,34 +43,43 @@ static void _minus_amd64(FILE *file, size_t minus);
 static void _next_amd64(FILE *file, size_t next);
 static void _before_amd64(FILE *file, size_t before);
 
-void convert_file() {
-	FILE *file = strlen(outname) ? fopen(outname, "w") : stdout;
-	if(!file) { print_error(BAD_OUTPUT); exit(BAD_OUTPUT); }
+void BFt_convert_file() {
+	FILE *file = strlen(BFf_outfile_name)
+		? fopen(BFf_outfile_name, "w")
+		: stdout;
 
-	if(safe_code && !assembly) fputs("#include <stddef.h>\n", file);
-	if(!assembly) fputs("#include <stdio.h>\n\n", file);
+	if(!file) {
+		BFe_file_name = BFf_outfile_name;
+		BFe_report_err(BFE_FILE_UNWRITABLE);
+		exit(BFE_FILE_UNWRITABLE);
+	}
 
-	if(direct_inp) {
+	if(BFt_use_safe_code && !BFt_assemble)
+		fputs("#include <stddef.h>\n", file);
+
+	if(!BFt_assemble) fputs("#include <stdio.h>\n\n", file);
+
+	if(BFc_direct_inp) {
 		fputs("#include <termios.h>\n", file);
 		fputs("#include <unistd.h>\n\n", file);
 
 		fputs("struct termios cooked, raw;\n", file);
 	}
 
-	fprintf(file, "char cells[%zu];\n\n", bytes);
+	fprintf(file, "char cells[%zu];\n\n", BFi_mem_size);
 	
-	if(assembly) fputs("void assembly(char *);\n\n", file);
+	if(BFt_assemble) fputs("void assembly(char *);\n\n", file);
 	
 	else {
 		fputs("void brainfuck();\n\n", file);
 
-		if(safe_code) fputs("size_t ptr = 0;\n", file);
+		if(BFt_use_safe_code) fputs("size_t ptr = 0;\n", file);
 		else fputs("char *ptr = &cells[0];\n\n", file);
 	}
 
 	fputs("int main() {\n", file);
 
-	if(direct_inp) {
+	if(BFc_direct_inp) {
 		fputs("\ttcgetattr(STDIN_FILENO, &cooked);\n", file);
 		fputs("\traw = cooked;\n", file);
 		fputs("\traw.c_lflag &= ~ICANON;\n", file);
@@ -81,18 +89,18 @@ void convert_file() {
 		fputs("\ttcsetattr(STDIN_FILENO, TCSANOW, &raw);\n\n", file);
 	}
 
-	size_t len = strlen(code);
+	size_t len = strlen(BFi_program_str);
 
-	if(assembly) fputs("\tassembly(&cells[0]);\n", file);
+	if(BFt_assemble) fputs("\tassembly(&cells[0]);\n", file);
 	else fputs("\tbrainfuck();\n", file);
 
-	if(direct_inp)
+	if(BFc_direct_inp)
 		fputs("\ttcsetattr(STDIN_FILENO, TCSANOW, &cooked);\n", file);
 
 	fputs("\treturn 0;\n", file);
 	fputs("}\n\n", file);
 
-	if(assembly) {
+	if(BFt_assemble) {
 		fputs("asm (\n", file);
 		fputs("\"assembly:\\n\"\n", file);
 		fputs("\"\tmovq $0x0, %rax\\n\"\n", file);
@@ -106,7 +114,7 @@ void convert_file() {
 	else {
 		fputs("void brainfuck() {\n", file);
 
-		if(!safe_code) {
+		if(!BFt_use_safe_code) {
 			fputc('\t', file);
 			for(size_t i = 0; i < len; i++)
 				conv_unsafe(i, file);
@@ -120,30 +128,30 @@ void convert_file() {
 		fputs("}\n", file);
 	}
 
-	if(strlen(outname)) {
+	if(strlen(BFf_outfile_name)) {
 		int ret = fclose(file);
-		if(ret == EOF) print_error(UNKNOWN_ERROR);
+		if(ret == EOF) BFe_report_err(BFE_UNKNOWN_ERROR);
 	}
 
 	exit(0);
 }
 
 static void conv_safe(size_t i, FILE *file) {
-	switch(code[i]) {
-	case '<':	fprintf(file, "\tif(ptr) { ptr--; } else { ptr = %zu; }\n",
-			bytes - 1); break;
+	switch(BFi_program_str[i]) {
+	case '<': fprintf(file, "\tif(ptr) { ptr--; } else { ptr = %zu; }\n",
+		  BFi_mem_size - 1); break;
 
-	case '>':	fprintf(file, "\tptr++; if(ptr >= %zu) { ptr = 0; }\n",
-			bytes); break;
+	case '>': fprintf(file, "\tptr++; if(ptr >= %zu) { ptr = 0; }\n",
+		  BFi_mem_size); break;
 
-	case '+':	fputs("\tcells[ptr]++;\n", file); break;
-	case '-':	fputs("\tcells[ptr]--;\n", file); break;
+	case '+': fputs("\tcells[ptr]++;\n", file); break;
+	case '-': fputs("\tcells[ptr]--;\n", file); break;
 
-	case '[':	fputs("\twhile(cells[ptr]) {\n", file); break;
-	case ']':	fputs("\t}\n", file); break;
+	case '[': fputs("\twhile(cells[ptr]) {\n", file); break;
+	case ']': fputs("\t}\n", file); break;
 
-	case '.':	fputs("\tputchar(cells[ptr]);\n", file); break;
-	case ',':	fputs("\tcells[ptr] = getchar();\n", file); break;
+	case '.': fputs("\tputchar(cells[ptr]);\n", file); break;
+	case ',': fputs("\tcells[ptr] = getchar();\n", file); break;
 	}
 }
 
@@ -152,7 +160,7 @@ static void conv_unsafe(size_t i, FILE *file) {
 	char *instr;
 	size_t length;
 
-	switch(code[i]) {
+	switch(BFi_program_str[i]) {
 	case '<':	instr = "--ptr; "; length = 7; break;
 	case '>':	instr = "++ptr; "; length = 7; break;
 
@@ -178,11 +186,11 @@ static void conv_amd64(size_t i, FILE *file) {
 	static size_t next, before;
 
 	if(!stack) {
-		stack = malloc(strlen(code) * sizeof(size_t));
-		if(!stack) print_error(UNKNOWN_ERROR);
+		stack = malloc(strlen(BFi_program_str) * sizeof(size_t));
+		if(!stack) BFe_report_err(BFE_UNKNOWN_ERROR);
 	}
 
-	switch(code[i]) {
+	switch(BFi_program_str[i]) {
 	case '+':
 		if(minus) { _minus_amd64(file, minus); minus = 0; }
 		if(next) { _next_amd64(file, next); next = 0; }
@@ -294,10 +302,10 @@ static void _next_amd64(FILE *file, size_t next) {
 	fputs("\"\tmovb %bl, (%rax, %rdi)\\n\"\n", file);
 	fprintf(file, "\"\taddq $0x%zx, %%rax\\n\"\n", next);
 
-	if(safe_code) {
-		fprintf(file, "\"\tcmpq $0x%zx, %%rax\\n\"\n", bytes);
+	if(BFt_use_safe_code) {
+		fprintf(file, "\"\tcmpq $0x%zx, %%rax\\n\"\n", BFi_mem_size);
 		fprintf(file, "\"\tjl safe_%zu\\n\"\n", label);
-		fprintf(file, "\"\tsubq $0x%zx, %%rax\\n\"\n", bytes);
+		fprintf(file, "\"\tsubq $0x%zx, %%rax\\n\"\n", BFi_mem_size);
 		fprintf(file, "\"\\n\"\n\"safe_%zu:\\n\"\n", label++);
 	}
 
@@ -308,10 +316,10 @@ static void _before_amd64(FILE *file, size_t before) {
 	fputs("\"\tmovb %bl, (%rax, %rdi)\\n\"\n", file);
 	fprintf(file, "\"\tsubq $0x%zx, %%rax\\n\"\n", before);
 
-	if(safe_code) {
-		fprintf(file, "\"\tcmpq $0x%zx, %%rax\\n\"\n", bytes);
+	if(BFt_use_safe_code) {
+		fprintf(file, "\"\tcmpq $0x%zx, %%rax\\n\"\n", BFi_mem_size);
 		fprintf(file, "\"\tjl safe_%zu\\n\"\n", label);
-		fprintf(file, "\"\tsubq $0x%zx, %%rax\\n\"\n", bytes);
+		fprintf(file, "\"\tsubq $0x%zx, %%rax\\n\"\n", BFi_mem_size);
 		fprintf(file, "\"\\n\"\n\"safe_%zu:\\n\"\n", label++);
 	}
 

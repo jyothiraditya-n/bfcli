@@ -14,18 +14,18 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#include <stdbool.h>
-#include <stddef.h>
+#ifndef BF_PRINTING_H
+#define BF_PRINTING_H 1
 
-#ifndef TRANS_H
-#define TRANS_H 1
+extern void BFp_print_about();
+extern void BFp_print_banner();
+extern void BFp_print_help();
+extern void BFp_print_minihelp();
+extern void BFp_print_prompt();
+extern void BFp_print_usage();
 
-extern bool assembly;
-extern bool transpile;
-extern bool safe_code;
-
-extern size_t bytes;
-
-extern void convert_file();
+extern void BFp_print_bytecode();
+extern void BFp_peek_at_mem();
+extern void BFp_dump_mem();
 
 #endif

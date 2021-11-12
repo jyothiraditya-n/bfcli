@@ -14,19 +14,16 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#include <stdbool.h>
-#include <stddef.h>
+#include <signal.h>
+#include <LC_lines.h>
+#include <LC_editor.h>
 
-#ifndef MAIN_H
-#define MAIN_H 1
+#include "interpreter.h"
 
-#define VERSION 7
-#define SUBVERSION 8
-#define VERNAME "A Mixed-Fruit Salad"
-
-extern size_t insertion_point;
-extern bool no_ansi;
-extern bool direct_inp;
-extern bool minimal;
-
-#endif
+void BFs_handle_int(int signum) {
+	signal(signum, BFs_handle_int);
+	LCl_sigint = true;
+	LCe_sigint = true;
+	BFi_is_running = false;
+	BFi_last_output = 0;
+}

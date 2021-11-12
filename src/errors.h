@@ -14,17 +14,21 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#include <signal.h>
-#include <LC_lines.h>
-#include <LC_editor.h>
+#ifndef BF_ERRORS_H
+#define BF_ERRORS_H 1
 
-#include "../inc/main.h"
-#include "../inc/run.h"
+#define BFE_UNKNOWN_ERROR 0
+#define BFE_BAD_ARGS 1
+#define BFE_CODE_TOO_LONG 2
+#define BFE_LINE_TOO_LONG 3
+#define BFE_FILE_UNREADABLE 6
+#define BFE_BAD_CODE 7
+#define BFE_FILE_TOO_BIG 8
+#define BFE_FILE_UNWRITABLE 9
 
-void on_interrupt(int signum) {
-	signal(signum, on_interrupt);
-	LCl_sigint = true;
-	LCe_sigint = true;
-	running = false;
-	lastch = 0;
-}
+extern char *BFe_code_error;
+extern char *BFe_file_name;
+
+extern void BFe_report_err(int errnum);
+
+#endif

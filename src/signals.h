@@ -14,19 +14,9 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#include <stdbool.h>
-#include <stddef.h>
+#ifndef BF_SIGNALS_H
+#define BF_SIGNALS_H 1
 
-#ifndef RUN_H
-#define RUN_H 1
-
-extern unsigned char mem[];
-extern char *code;
-extern size_t ptr;
-
-extern bool running;
-extern char lastch;
-
-extern void run(char *start, size_t len, bool isfile);
+extern void BFs_handle_int(int signum);
 
 #endif

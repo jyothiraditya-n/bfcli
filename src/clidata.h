@@ -14,26 +14,29 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <stdbool.h>
+#include <stddef.h>
+
 #include <termios.h>
 #include <unistd.h>
 
-#ifndef FILE_H
-#define FILE_H 1
+#ifndef BF_CLIDATA_H
+#define BF_CLIDATA_H 1
 
-extern const char *imm_fname;
-extern char filename[];
-extern char outname[];
-extern char savename[];
+extern const char *BFc_cmd_name;
+extern const char *BFc_immediate;
 
-extern const char *code_error;
-extern struct termios cooked, raw;
+extern bool BFc_use_colour;
+extern size_t BFc_height;
+extern size_t BFc_width;
 
-extern int check_file(size_t len);
-extern void init_files();
-extern int load_file();
-extern void print_mem_file();
-extern void save_file(char *buffer, size_t size);
+extern bool BFc_no_ansi;
+extern bool BFc_direct_inp;
+extern bool BFc_minimal_mode;
 
-#define FILE_OK 0
+extern struct termios BFc_cooked, BFc_raw;
+
+extern void BFc_init();
+extern void BFc_get_dimensions();
 
 #endif

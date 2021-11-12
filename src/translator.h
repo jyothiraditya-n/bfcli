@@ -14,7 +14,16 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <stdbool.h>
 #include <stddef.h>
-#include "../inc/size.h"
 
-size_t code_size = DEF_CODE_SIZE;
+#ifndef BF_TRANSLATOR_H
+#define BF_TRANSLATOR_H 1
+
+extern bool BFt_assemble;
+extern bool BFt_compile;
+extern bool BFt_use_safe_code;
+
+extern void BFt_convert_file();
+
+#endif

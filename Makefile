@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <https://www.gnu.org/licenses/>.
 
-HEADERS = $(wildcard inc/*.h)
+HEADERS = $(wildcard src/*.h)
 HEADERS += $(wildcard libClame/inc/*.h)
 
 CFILES = $(wildcard src/*.c)

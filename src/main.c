@@ -22,35 +22,129 @@
 
 #include <termios.h>
 #include <unistd.h>
+#include <signal.h>
 
+#include <LC_args.h>
 #include <LC_editor.h>
 #include <LC_lines.h>
 
-#include "../inc/file.h"
-#include "../inc/init.h"
-#include "../inc/main.h"
-#include "../inc/print.h"
-#include "../inc/run.h"
-#include "../inc/size.h"
+#include "clidata.h"
+#include "errors.h"
+#include "files.h"
+#include "interpreter.h"
+#include "main.h"
+#include "printing.h"
+#include "signals.h"
+#include "translator.h"
 
 #define NXOR(A, B) ((A && B) || (!A && !B))
 
-size_t insertion_point;
-bool no_ansi, direct_inp, minimal;
+size_t BFm_insertion_point;
 
-static int check(char *code, size_t len);
+static int check(char *BFi_program_str, size_t len);
 static void handle_int();
 
 #define CODE_OK 1
 #define CODE_INCOMPLETE 2
 #define CODE_ERROR 3
 
-static int check(char *code, size_t len) {
+static void init(int argc, char **argv);
+
+static void about();
+static void help();
+static void version();
+
+int main(int argc, char **argv) {
+	init(argc, argv);
+
+	if(BFc_minimal_mode) {
+		printf("Bfcli Version %d.%d: %s\n",
+			BF_VERSION, BF_SUBVERSION, BF_VERNAME);
+
+		printf("Memory Size: %zu Chars\n\n", BFi_mem_size);
+	}
+
+	else BFp_print_banner();
+
+	static char line[BF_LINE_SIZE];
+
+	while(true) {
+		int ret = tcsetattr(STDIN_FILENO, TCSANOW, &BFc_cooked);
+		if(ret == -1) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+		if(BFc_minimal_mode) printf("%% "); else BFp_print_prompt();
+		LCl_buffer = line + BFm_insertion_point;
+		LCl_length = BF_LINE_SIZE - BFm_insertion_point;
+
+		if(BFc_no_ansi) ret = LCl_bread(line, BF_LINE_SIZE);
+		else ret = LCl_read();
+
+		switch(ret) {
+		case LCL_OK: 	break;
+		case LCL_CUT: 	BFe_report_err(BFE_LINE_TOO_LONG); continue;
+
+		case LCL_INT:
+			handle_int();
+			BFm_insertion_point = 0;
+			continue;
+
+		case LCL_CUT_INT:
+			BFm_insertion_point = 0;
+			putchar('\n');
+			BFe_report_err(BFE_LINE_TOO_LONG);
+			continue;
+
+		default:
+			BFe_report_err(BFE_UNKNOWN_ERROR);
+		}
+
+		strcpy(BFf_mainfile_name, line);
+		ret = BFf_load_file();
+
+		if(ret == FILE_OK) {
+			printf("loaded '%s'.\n", BFf_mainfile_name);
+			continue;
+		}
+
+		size_t len = strlen(line);
+		ret = check(line, len);
+
+		switch(ret) {
+		case CODE_OK:
+			ret = tcsetattr(STDIN_FILENO, TCSANOW, &BFc_raw);
+			if(ret == -1) BFe_report_err(BFE_UNKNOWN_ERROR);
+			
+			BFi_is_running = true;
+
+			BFi_last_output = '\n';
+			if(BFc_minimal_mode) BFi_main(line);
+			else BFi_main(line);
+			if(BFi_last_output != '\n') putchar('\n');
+
+			BFm_insertion_point = 0;
+			BFi_is_running = false;
+			break;
+
+		case CODE_INCOMPLETE:
+			BFm_insertion_point = strlen(line);
+			break;
+
+		case CODE_ERROR:
+			fprintf(stderr, "error: unmatched ']'\n");
+			BFm_insertion_point = 0;
+			break;
+		}
+	}
+
+	exit(0);
+}
+
+static int check(char *BFi_program_str, size_t len) {
 	int loops_open = 0;
 	bool wait = false;
 
 	for(size_t i = 0; i < len; i++) {
-		switch(code[i]) {
+		switch(BFi_program_str[i]) {
 			case '[': loops_open++; break;
 			case ']': loops_open--; break;
 			case '!': wait = true; break;
@@ -64,101 +158,222 @@ static int check(char *code, size_t len) {
 	return CODE_OK;
 }
 
-int main(int argc, char **argv) {
-	init(argc, argv);
+static void handle_int() {
+	if(!BFm_insertion_point && LCe_dirty && !BFc_no_ansi) {
+		printf("save unsaved changes? [Y/n]: ");
 
-	if(minimal) {
-		printf("Bfcli Version %d.%d: %s\n", VERSION, SUBVERSION, VERNAME);
-		printf("Memory Size: %d Chars\n\n", MEM_SIZE);
+		char ans = LCl_readch();
+		if(ans == LCLCH_ERR) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+		if(ans == 'Y' || ans == 'y' || ans == '\n')
+			BFf_save_file(BFi_program_str,
+				strlen(BFi_program_str));
+
+		exit(0);
 	}
 
-	else print_banner();
-
-	static char line[LINE_SIZE];
-
-	while(true) {
-		int ret = tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
-		if(ret == -1) print_error(UNKNOWN_ERROR);
-
-		if(minimal) printf("%% "); else print_prompt();
-		LCl_buffer = line + insertion_point;
-		LCl_length = LINE_SIZE - insertion_point;
-
-		if(no_ansi) ret = LCl_bread(line, LINE_SIZE);
-		else ret = LCl_read();
-
-		switch(ret) {
-		case LCL_OK: 	break;
-		case LCL_CUT: 	print_error(LINE_TOO_LONG); continue;
-		case LCL_INT: 	handle_int(); insertion_point = 0; continue;
-
-		case LCL_CUT_INT:
-			insertion_point = 0;
-			putchar('\n');
-			print_error(LINE_TOO_LONG);
-			continue;
-
-		default:
-			print_error(UNKNOWN_ERROR);
-		}
-
-		strcpy(filename, line);
-		ret = load_file();
-
-		if(ret == FILE_OK) {
-			printf("loaded '%s'.\n", filename);
-			continue;
-		}
-
-		size_t len = strlen(line);
-		ret = check(line, len);
-
-		switch(ret) {
-		case CODE_OK:
-			ret = tcsetattr(STDIN_FILENO, TCSANOW, &raw);
-			if(ret == -1) print_error(UNKNOWN_ERROR);
-			
-			running = true;
-
-			lastch = '\n';
-			if(minimal) run(line, len, true);
-			else run(line, len, false);
-			if(lastch != '\n') putchar('\n');
-
-			insertion_point = 0;
-			running = false;
-			break;
-
-		case CODE_INCOMPLETE:
-			insertion_point = strlen(line);
-			break;
-
-		case CODE_ERROR:
-			fprintf(stderr, "error: unmatched ']'\n");
-			insertion_point = 0;
-			break;
-		}
+	else if(!BFm_insertion_point && LCe_dirty && BFc_no_ansi) {
+		puts("you have unsaved changes.");
+		BFf_save_file(BFi_program_str, strlen(BFi_program_str));
+		exit(0);
 	}
 
+	else if(!BFm_insertion_point) exit(0);
+}
+
+static void init(int argc, char **argv) {
+	BFc_cmd_name = argv[0];
+	signal(SIGINT, BFs_handle_int);
+
+	LCa_t *arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "about";
+	arg -> short_flag = 'a';
+	arg -> pre = about;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "help";
+	arg -> short_flag = 'h';
+	arg -> pre = help;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "version";
+	arg -> short_flag = 'v';
+	arg -> pre = version;
+
+	LCv_t *var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "colour";
+	var -> data = &BFc_use_colour;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "colour";
+	arg -> short_flag = 'c';
+	arg -> var = var;
+	arg -> value = true;
+
+	var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "no-ansi";
+	var -> data = &BFc_no_ansi;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "no-ansi";
+	arg -> short_flag = 'n';
+	arg -> var = var;
+	arg -> value = true;
+
+	var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "minimal";
+	var -> data = &BFc_minimal_mode;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "minimal";
+	arg -> short_flag = 'm';
+	arg -> var = var;
+	arg -> value = true;
+
+	var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "BFf_mainfile_name";
+	var -> fmt = BF_FILENAME_SCN;
+	var -> data = BFf_mainfile_name;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "file";
+	arg -> short_flag = 'f';
+	arg -> var = var;
+
+	var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "length";
+	var -> fmt = "%zu";
+	var -> data = &BFi_code_size;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "length";
+	arg -> short_flag = 'l';
+	arg -> var = var;
+
+	var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "transpile";
+	var -> data = &BFt_compile;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "transpile";
+	arg -> short_flag = 't';
+	arg -> var = var;
+	arg -> value = true;
+
+	var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "BFf_outfile_name";
+	var -> fmt = BF_FILENAME_SCN;
+	var -> data = BFf_outfile_name;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "output";
+	arg -> short_flag = 'o';
+	arg -> var = var;
+
+	var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "BFt_use_safe_code";
+	var -> data = &BFt_use_safe_code;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "safe-code";
+	arg -> short_flag = 's';
+	arg -> var = var;
+	arg -> value = true;
+	arg -> var = var;
+
+	var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "assemble";
+	var -> data = &BFt_assemble;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "assemble";
+	arg -> short_flag = 'x';
+	arg -> var = var;
+	arg -> value = true;
+
+	var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "ram";
+	var -> fmt = "%zu";
+	var -> data = &BFi_mem_size;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "ram";
+	arg -> short_flag = 'r';
+	arg -> var = var;
+
+	var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "BFc_direct_inp";
+	var -> data = &BFc_direct_inp;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "direct-inp";
+	arg -> short_flag = 'd';
+	arg -> var = var;
+	arg -> value = true;
+
+	LCa_noflags = &BFc_immediate;
+	LCa_max_noflags = 1;
+
+	int ret = LCa_read(argc, argv);
+	if(ret != LCA_OK) BFp_print_minihelp();
+
+	BFc_init(); BFi_init(); BFf_init();
+	if(BFc_no_ansi) BFc_use_colour = false;
+
+	if(!BFi_program_str) {
+		BFi_program_str = calloc(BFi_code_size, sizeof(char));
+		if(!BFi_program_str) BFe_report_err(BFE_UNKNOWN_ERROR);
+	}
+
+	LCe_banner = "Bfcli: The Interactive Brainfuck "
+		"Command-Line Interpreter";
+
+	LCe_buffer = BFi_program_str;
+	LCe_length = BFi_code_size;
+}
+static void about() {
+	putchar('\n');
+	BFp_print_about();
+	putchar('\n');
 	exit(0);
 }
 
-static void handle_int() {
-	if(!insertion_point && LCe_dirty && !no_ansi) {
-		printf("save unsaved changes? [Y/n]: ");
-		char ans = LCl_readch();
-		if(ans == LCLCH_ERR) print_error(UNKNOWN_ERROR);
-		if(ans == 'Y' || ans == 'y' || ans == '\n')
-			save_file(code, strlen(code));
+static void help() {
+	putchar('\n');
+	BFp_print_help();
+	putchar('\n');
+	BFp_print_usage();
+	putchar('\n');
+	exit(0);
+}
 
-		exit(0);
-	}
-
-	else if(!insertion_point && LCe_dirty && no_ansi) {
-		puts("you have unsaved changes.");
-		save_file(code, strlen(code));
-		exit(0);
-	}
-
-	else if(!insertion_point) exit(0);
+static void version() {
+	printf("Bfcli Version %d.%d: %s\n",
+		BF_VERSION, BF_SUBVERSION, BF_VERNAME);
+	exit(0);
 }
