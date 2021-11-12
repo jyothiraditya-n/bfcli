@@ -78,25 +78,25 @@ void BFp_print_help() {
 	puts("    > Increments the data pointer.");
 	puts("    < Decrements the data pointer.\n");
 
-	puts("    + Increments the value at the data pointer.");
-	puts("    - Decrements the value at the data pointer.\n");
+	puts("    + Increments the val at the data pointer.");
+	puts("    - Decrements the val at the data pointer.\n");
 
 	puts("  Note: Data values are modulo-256 unsigned integers, meaning");
 	puts("        0 - 1 = 255, and 255 + 1 = 0.\n");
 
-	puts("    . Outputs the value at the data pointer as an ASCII character.");
-	puts("    , Inputs an ASCII character and stores its value at the data");
+	puts("    . Outputs the val at the data pointer as an ASCII character.");
+	puts("    , Inputs an ASCII character and stores its val at the data");
 	puts("      pointer.\n");
 
 	puts("    [ (Open bracket) begins a loop.");
 	puts("    ] (Close brace) ends a loop.\n");
 
-	puts("  Note: Loops run while the value at the data pointer is non-zero.\n");
+	puts("  Note: Loops run while the val at the data pointer is non-zero.\n");
 
 	puts("  Extended Brainfuck commands:");
 	puts("    ? Prints the help and copyright disclaimer to the console.");
 	puts("    / Clears the memory and moves the pointer to 0.");
-	puts("    * Prints memory values around the current pointer value.");
+	puts("    * Prints memory values around the current pointer val.");
 	puts("    & Prints all memory values.\n");
 
 	puts("  Note: When ANSI support is enabled, & pauses at the end of the");
@@ -124,7 +124,7 @@ void BFp_print_help() {
 	puts("        code contains unmatched brackets.\n");
 
 	puts("    @ Executes code from the code buffer.");
-	puts("    % Edits code in the code buffer.\n");
+	puts("    % Edits code in the code buffer.");
 	puts("    $ Disassembles the object code generated for the code buffer.\n");
 
 	puts("  Note: In order to load a file when Bfcli is running, type the file");
@@ -217,40 +217,60 @@ void BFp_print_usage() {
 }
 
 void BFp_print_bytecode() {
+	bool no_pause = false;
+	size_t pages = 1;
+
+	BFc_get_dimensions();
 	BFi_compile();
 
 	BFi_instr_t *instr = BFi_program_code;
 	BFi_instr_t *first = instr;
 
-	for(size_t i = 0; instr; i++) {
-		size_t value = instr -> operand.value;
+	for(size_t i = 0; BFi_is_running && instr; i++) {
+		if(i >= BFc_height * pages && !BFc_no_ansi && !no_pause) {
+			printf(":");
+
+			signed char ret = LCl_readch();
+			switch(ret) {
+				case LCLCH_ERR:	BFe_report_err(BFE_UNKNOWN_ERROR);
+				case LCLCH_INT:	return;
+
+				case '\t':	no_pause = true; break;
+				case '\n':	pages++; break;
+				default:  	break;
+			}
+
+			printf("\e[%zu;1H", BFc_height - 1);
+		}
+
+		size_t val = instr -> operand.value;
 		switch(instr -> opcode) {
 		case BFI_INSTR_NOP:
-			printf("0x%zx: nop\n", i);
+			printf("  %zx  nop\n", i);
 			break;
 		
 		case BFI_INSTR_INP:
-			printf("0x%zx: inp\n", i);
+			printf("  %zx  inp\e[23G| , |\n", i);
 			break;
 		
 		case BFI_INSTR_OUT:
-			printf("0x%zx: out\n", i);
+			printf("  %zx  out\e[23G| . |\n", i);
 			break;
 		
 		case BFI_INSTR_INC:
-			printf("0x%zx: inc $0x%zx\n", i, value);
+			printf("  %zx  inc %zx\e[23G| + | %zu\n", i, val, val);
 			break;
 		
 		case BFI_INSTR_DEC:
-			printf("0x%zx: inc $0x%zx\n", i, value);
+			printf("  %zx  dec %zx\e[23G| - | %zu\n", i, val, val);
 			break;
 		
 		case BFI_INSTR_FWD:
-			printf("0x%zx: fwd $0x%zx\n", i, value);
+			printf("  %zx  fwd %zx\e[23G| > | %zu\n", i, val, val);
 			break;
 		
 		case BFI_INSTR_BCK:
-			printf("0x%zx: bck $0x%zx\n", i, value);
+			printf("  %zx  bck %zx\e[23G| < | %zu\n", i, val, val);
 			break;
 		}
 		
@@ -262,11 +282,11 @@ void BFp_print_bytecode() {
 
 		switch(instr -> opcode) {
 		case BFI_INSTR_JMP:
-			printf("0x%zx: jmp $0x%zx\n", i, count);
+			printf("  %zx  jmp %zx\e[23G| ] |\n", i, count);
 			break;
 		
 		case BFI_INSTR_JZ:
-			printf("0x%zx: jz  $0x%zx\n", i, count);
+			printf("  %zx  jz  %zx\e[23G| [ |\n", i, count);
 			break;
 		}
 
@@ -328,7 +348,7 @@ void BFp_dump_mem() {
 	BFc_get_dimensions();
 	size_t cols = (BFc_width - BF_MEM_SIZE_DIGITS - 8) / 4;
 
-	for(size_t i = 0; i < BFi_mem_size; i += cols) {
+	for(size_t i = 0; BFi_is_running && i < BFi_mem_size; i += cols) {
 		if(i >= BFc_height * cols * pages && !BFc_no_ansi && !no_pause) {
 			printf(":");
 

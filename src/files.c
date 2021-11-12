@@ -90,7 +90,7 @@ void BFf_save_file(char *buffer, size_t size) {
 	LCl_length = BF_LINE_SIZE;
 
 	while(!file || file == stdin) {
-		printf("BFf_mainfile_name: ");
+		printf("Savefile name: ");
 		if(BFc_no_ansi) ret = LCl_bread();
 		else ret = LCl_read();
 

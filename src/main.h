@@ -21,13 +21,13 @@
 #define BF_MAIN_H 1
 
 #define BF_VERSION 8
-#define BF_SUBVERSION 0
-#define BF_VERNAME "The Purpose of Life"
+#define BF_SUBVERSION 1
+#define BF_VERNAME "The Pursuit of Esotericism"
 
 #define BF_LINE_SIZE 4096
 #define BF_CODE_SIZE 65536
-
 #define BF_MEM_SIZE 32768
+
 #define BF_MEM_SIZE_DIGITS 8
 #define BF_MEM_SIZE_PRI "%08zx"
 
