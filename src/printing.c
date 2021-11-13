@@ -125,7 +125,7 @@ void BFp_print_help() {
 
 	puts("    @ Executes code from the code buffer.");
 	puts("    % Edits code in the code buffer.");
-	puts("    $ Disassembles the object code generated for the code buffer.\n");
+	puts("    $ Disassemblys the object code generated for the code buffer.\n");
 
 	puts("  Note: In order to load a file when Bfcli is running, type the file");
 	puts("        name at the main prompt. When files are loaded, they are put");
@@ -146,7 +146,7 @@ void BFp_print_minihelp() {
 	puts("    -d, --direct-inp |\n");
 
 	puts("    -f, --file FILE  | -l, --length LEN | -r, --ram SIZE");
-	puts("    -x, --assemble   | -s, --safe-code  | -t, --transpile");
+	puts("    -t, --translate  | -s, --safe-code  | -x, --compile");
 	puts("    -o, --output OUT |\n");
 
 	puts("  Happy coding! :)\n");
@@ -188,7 +188,7 @@ void BFp_print_usage() {
 	puts("  Note: If a file is specified with -f, the code buffer's length is");
 	puts("        set to LEN plus the file's length.\n");
 
-	puts("    -o, --output OUT  Sets the output file for the transpiled C");
+	puts("    -o, --output OUT  Sets the output file for the translated C");
 	puts("                      code and the memory dump to OUT.\n");
 
 	puts("    -r, --ram SIZE   Sets the total memory size for the compiled");
@@ -198,10 +198,10 @@ void BFp_print_usage() {
 	puts("                      > are used out-of-bounds. (The pointer wraps");
 	puts("                      around.)\n");
 
-	puts("    -t, --transpile   Transpiles the file to C source code, ouputs");
+	puts("    -t, --translate   Translates the file to C source code, ouputs");
 	puts("                      the result to OUT and exits.\n");
 	
-	puts("    -x, --assemble    Generates assembly code intermixed with the C");
+	puts("    -x, --compile    Generates assembly code intermixed with the C");
 	puts("                      output. This option affords both high performance");
 	puts("                      and fast compile times, however it only works on");
 	puts("                      amd64-based computers.\n");
@@ -209,7 +209,7 @@ void BFp_print_usage() {
 	puts("    -d, --direct-inp  Don't buffer the standard input. Send characters");
 	puts("                      to Brainfuck code without waiting for a newline.\n");
 
-	puts("  Note: If no output file is specified, the transpiled code is output");
+	puts("  Note: If no output file is specified, the translated code is output");
 	puts("        to STDOUT. Code generated with -s may be both slower to compile");
 	puts("        and execute, so only use it when necessary.\n");
 
@@ -246,7 +246,7 @@ void BFp_print_bytecode() {
 		size_t val = instr -> operand.value;
 		switch(instr -> opcode) {
 		case BFI_INSTR_NOP:
-			printf("  %zx  nop\n", i);
+			printf("  %zx  nop\e[23G|   |\n", i);
 			break;
 		
 		case BFI_INSTR_INP:

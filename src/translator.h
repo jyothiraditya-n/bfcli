@@ -20,8 +20,8 @@
 #ifndef BF_TRANSLATOR_H
 #define BF_TRANSLATOR_H 1
 
-extern bool BFt_assemble;
 extern bool BFt_compile;
+extern bool BFt_translate;
 extern bool BFt_use_safe_code;
 
 extern void BFt_convert_file();

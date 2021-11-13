@@ -22,9 +22,8 @@
 #define BFE_CODE_TOO_LONG 2
 #define BFE_LINE_TOO_LONG 3
 #define BFE_FILE_UNREADABLE 6
-#define BFE_BAD_CODE 7
-#define BFE_FILE_TOO_BIG 8
-#define BFE_FILE_UNWRITABLE 9
+#define BFE_FILE_UNWRITABLE 7
+#define BFE_BAD_CODE 8
 
 extern char *BFe_code_error;
 extern char *BFe_file_name;

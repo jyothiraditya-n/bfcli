@@ -28,8 +28,8 @@
 #include "printing.h"
 #include "translator.h"
 
-bool BFt_assemble;
 bool BFt_compile;
+bool BFt_translate;
 bool BFt_use_safe_code;
 
 static size_t label;
@@ -54,10 +54,10 @@ void BFt_convert_file() {
 		exit(BFE_FILE_UNWRITABLE);
 	}
 
-	if(BFt_use_safe_code && !BFt_assemble)
+	if(BFt_use_safe_code && !BFt_compile)
 		fputs("#include <stddef.h>\n", file);
 
-	if(!BFt_assemble) fputs("#include <stdio.h>\n\n", file);
+	if(!BFt_compile) fputs("#include <stdio.h>\n\n", file);
 
 	if(BFc_direct_inp) {
 		fputs("#include <termios.h>\n", file);
@@ -68,7 +68,7 @@ void BFt_convert_file() {
 
 	fprintf(file, "char cells[%zu];\n\n", BFi_mem_size);
 	
-	if(BFt_assemble) fputs("void assembly(char *);\n\n", file);
+	if(BFt_compile) fputs("void compile(char *);\n\n", file);
 	
 	else {
 		fputs("void brainfuck();\n\n", file);
@@ -91,7 +91,7 @@ void BFt_convert_file() {
 
 	size_t len = strlen(BFi_program_str);
 
-	if(BFt_assemble) fputs("\tassembly(&cells[0]);\n", file);
+	if(BFt_compile) fputs("\tcompile(&cells[0]);\n", file);
 	else fputs("\tbrainfuck();\n", file);
 
 	if(BFc_direct_inp)
@@ -100,9 +100,9 @@ void BFt_convert_file() {
 	fputs("\treturn 0;\n", file);
 	fputs("}\n\n", file);
 
-	if(BFt_assemble) {
+	if(BFt_compile) {
 		fputs("asm (\n", file);
-		fputs("\"assembly:\\n\"\n", file);
+		fputs("\"compile:\\n\"\n", file);
 		fputs("\"\tmovq $0x0, %rax\\n\"\n", file);
 		fputs("\"\tmovb $0x0, %bl\\n\"\n", file);
 

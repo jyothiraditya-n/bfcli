@@ -170,6 +170,9 @@ int BFf_load_file() {
 	size_t size = (ftell(file) / sizeof(char)) + 1;
 	rewind(file);
 
+	size_t old_size = BF_CODE_SIZE;
+	char *old_code = NULL;
+
 	if(!BFi_program_str) {
 		BFi_code_size += size;
 		BFi_program_str = calloc(BFi_code_size, sizeof(char));
@@ -177,16 +180,28 @@ int BFf_load_file() {
 	}
 
 	else if(size > BFi_code_size) {
-		ret = fclose(file);
-		if(ret == EOF) BFe_report_err(BFE_UNKNOWN_ERROR);
-		return BFE_FILE_TOO_BIG;
+		old_size = BFi_code_size;
+
+		BFi_code_size = size + BF_CODE_SIZE;
+		LCe_length = BFi_code_size;
+
+		old_code = BFi_program_str;
+
+		BFi_program_str = calloc(BFi_code_size, sizeof(char));
+		if(!BFi_program_str) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+		LCe_buffer = BFi_program_str;
 	}
 
-	size_t old_size = strlen(BFi_program_str);
-	char *old_code = malloc(old_size * sizeof(char));
-	if(!old_code) BFe_report_err(BFE_UNKNOWN_ERROR);
+	else {
+		old_size = strlen(BFi_program_str);
 
-	for(size_t i = 0; i <= old_size; i++) old_code[i] = BFi_program_str[i];
+		old_code = calloc(old_size, sizeof(char));
+		if(!old_code) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+		for(size_t i = 0; i <= old_size; i++) old_code[i] = BFi_program_str[i];
+	}
+
 	for(size_t i = 0; i < size; i++) BFi_program_str[i] = fgetc(file);
 	BFi_program_str[size - 1] = 0;
 
@@ -195,6 +210,9 @@ int BFf_load_file() {
 
 	ret = check_file(size - 1);
 	if(ret == BFE_BAD_CODE) {
+		BFi_code_size = old_size;
+		LCe_length = BFi_code_size;
+
 		for(size_t i = 0; i <= old_size; i++)
 			BFi_program_str[i] = old_code[i];
 
@@ -204,6 +222,7 @@ int BFf_load_file() {
 
 	if(LCe_dirty && !BFc_no_ansi) {
 		printf("save unsaved changes? [Y/n]: ");
+
 		char ans = LCl_readch();
 		if(ans == LCLCH_ERR) BFe_report_err(BFE_UNKNOWN_ERROR);
 

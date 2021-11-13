@@ -34,7 +34,6 @@
 #include "interpreter.h"
 #include "main.h"
 #include "printing.h"
-#include "signals.h"
 #include "translator.h"
 
 #define NXOR(A, B) ((A && B) || (!A && !B))
@@ -49,6 +48,7 @@ static void handle_int();
 #define CODE_ERROR 3
 
 static void init(int argc, char **argv);
+static void handle_sig(int signum);
 
 static void about();
 static void help();
@@ -183,7 +183,7 @@ static void handle_int() {
 
 static void init(int argc, char **argv) {
 	BFc_cmd_name = argv[0];
-	signal(SIGINT, BFs_handle_int);
+	signal(SIGINT, handle_sig);
 
 	LCa_t *arg = LCa_new();
 	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
@@ -265,12 +265,12 @@ static void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
-	var -> id = "transpile";
-	var -> data = &BFt_compile;
+	var -> id = "translate";
+	var -> data = &BFt_translate;
 
 	arg = LCa_new();
 	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
-	arg -> long_flag = "transpile";
+	arg -> long_flag = "translate";
 	arg -> short_flag = 't';
 	arg -> var = var;
 	arg -> value = true;
@@ -302,12 +302,12 @@ static void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
-	var -> id = "assemble";
-	var -> data = &BFt_assemble;
+	var -> id = "compile";
+	var -> data = &BFt_compile;
 
 	arg = LCa_new();
 	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
-	arg -> long_flag = "assemble";
+	arg -> long_flag = "compile";
 	arg -> short_flag = 'x';
 	arg -> var = var;
 	arg -> value = true;
@@ -356,6 +356,15 @@ static void init(int argc, char **argv) {
 	LCe_buffer = BFi_program_str;
 	LCe_length = BFi_code_size;
 }
+
+static void handle_sig(int signum) {
+	signal(signum, handle_sig);
+	LCl_sigint = true;
+	LCe_sigint = true;
+	BFi_is_running = false;
+	BFi_last_output = 0;
+}
+
 static void about() {
 	putchar('\n');
 	BFp_print_about();

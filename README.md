@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 8.1: The Pursuit of Esotericism
+Version 8.2: The Optimisation of Nonsense
 
 bfcli:0%
 ```
@@ -119,10 +119,10 @@ Note: If a file is specified with -f, the code buffer's length is
                     > are used out-of-bounds. (The pointer wraps
                     around.)
 
-  -t, --transpile   Transpiles the file to C source code, ouputs
+  -t, --translate   Translates the file to C source code, ouputs
                     the result to OUT and exits.
 
-  -x, --assembly    Generates assembly code intermixed with the C
+  -x, --compile     Generates assembly code intermixed with the C
                     output. This option affords both high performance
                     and fast compile times, however it only works on
                     amd64-based computers.
@@ -149,7 +149,7 @@ Valid arguments are:
   -d, --direct-inp |
 
   -f, --file FILE  | -l, --length LEN | -r, --ram SIZE
-  -x, --assemble   | -s, --safe-code  | -t, --transpile
+  -t, --translate  | -s, --safe-code  | -x, --compile
   -o, --output OUT |
 
 Happy coding! :)

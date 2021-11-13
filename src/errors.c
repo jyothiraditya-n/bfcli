@@ -37,17 +37,13 @@ void BFe_report_err(int errnum) {
 		fprintf(stderr, "%s: error: cannot read file '%s'.\n",
 			BFc_cmd_name, BFe_file_name); break;
 
-	case BFE_BAD_CODE:
-		fprintf(stderr, "%s: error: '%s': %s\n", BFc_cmd_name,
-			BFe_file_name, BFe_code_error); break;
-
-	case BFE_FILE_TOO_BIG:
-		fprintf(stderr, "%s: error: '%s': file too big.\n",
-			BFc_cmd_name, BFe_file_name); break;
-
 	case BFE_FILE_UNWRITABLE:
 		fprintf(stderr, "%s: error: cannot write file '%s'.\n",
 			BFc_cmd_name, BFe_file_name); break;
+
+	case BFE_BAD_CODE:
+		fprintf(stderr, "%s: error: '%s': %s\n", BFc_cmd_name,
+			BFe_file_name, BFe_code_error); break;
 
 	default:
 		fprintf(stderr, "%s: error: unknown error\n", BFc_cmd_name);
