@@ -38,94 +38,10 @@ char BFf_mainfile_name[BF_FILENAME_SIZE];
 char BFf_outfile_name[BF_FILENAME_SIZE];
 char BFf_savefile_name[BF_LINE_SIZE];
 
+static int check_file(size_t len);
 static void get_file();
 
-static int check_file(size_t len) {
-	int loops_open = 0;
-
-	for(size_t i = 0; i < len; i++) {
-		switch(BFi_program_str[i]) {
-		case '[': loops_open++; break;
-		case ']': loops_open--; break;
-
-		case '\t': break;
-		case '\n': break;
-		case '\r': break;
-
-		default: if(!isprint(BFi_program_str[i])) {
-			BFe_code_error = "non-ascii characters in file.";
-			return BFE_BAD_CODE;
-		}}
-
-		if(loops_open < 0) {
-			BFe_code_error = "unmatched ']'.";
-			return BFE_BAD_CODE;
-		}
-	}
-
-	if(loops_open > 0) {
-		BFe_code_error = "unmatched '['.";
-		return BFE_BAD_CODE;
-	}
-
-	return FILE_OK;
-}
-
-static void get_file() {
-	int ret = BFf_load_file();
-
-	if(ret != FILE_OK) {
-		BFe_report_err(ret);
-		exit(ret);
-	}
-
-	if(BFt_compile) BFt_convert_file();
-}
-
-void BFf_save_file(char *buffer, size_t size) {
-	FILE *file = stdin;
-	int ret;
-	
-	LCl_buffer = BFf_savefile_name;
-	LCl_length = BF_LINE_SIZE;
-
-	while(!file || file == stdin) {
-		printf("Savefile name: ");
-		if(BFc_no_ansi) ret = LCl_bread();
-		else ret = LCl_read();
-
-		switch(ret) {
-		case LCL_OK:
-			break;
-
-		case LCL_CUT:
-			BFe_report_err(BFE_LINE_TOO_LONG);
-			continue;
-
-		case LCL_INT:
-			return;
-
-		case LCL_CUT_INT:
-			putchar('\n');
-			BFe_report_err(BFE_LINE_TOO_LONG);
-			return;
-
-		default:
-			BFe_report_err(BFE_UNKNOWN_ERROR);
-		}
-
-		file = fopen(BFf_savefile_name, "w");
-		if(!file) {
-			BFe_file_name = BFf_savefile_name;
-			BFe_report_err(BFE_FILE_UNWRITABLE);
-		}
-	}
-
-	for(size_t i = 0; i < size; i++) fputc(buffer[i], file);
-
-	ret = fclose(file);
-	if(ret == EOF) BFe_report_err(BFE_UNKNOWN_ERROR);
-}
+static int hex_digits();
 
 void BFf_init() {
 	if(strlen(BFf_mainfile_name) && BFc_immediate) {
@@ -240,6 +156,51 @@ int BFf_load_file() {
 	return FILE_OK;
 }
 
+void BFf_save_file(char *buffer, size_t size) {
+	FILE *file = stdin;
+	int ret;
+	
+	LCl_buffer = BFf_savefile_name;
+	LCl_length = BF_LINE_SIZE;
+
+	while(!file || file == stdin) {
+		printf("Savefile name: ");
+		if(BFc_no_ansi) ret = LCl_bread();
+		else ret = LCl_read();
+
+		switch(ret) {
+		case LCL_OK:
+			break;
+
+		case LCL_CUT:
+			BFe_report_err(BFE_LINE_TOO_LONG);
+			continue;
+
+		case LCL_INT:
+			return;
+
+		case LCL_CUT_INT:
+			putchar('\n');
+			BFe_report_err(BFE_LINE_TOO_LONG);
+			return;
+
+		default:
+			BFe_report_err(BFE_UNKNOWN_ERROR);
+		}
+
+		file = fopen(BFf_savefile_name, "w");
+		if(!file) {
+			BFe_file_name = BFf_savefile_name;
+			BFe_report_err(BFE_FILE_UNWRITABLE);
+		}
+	}
+
+	for(size_t i = 0; i < size; i++) fputc(buffer[i], file);
+
+	ret = fclose(file);
+	if(ret == EOF) BFe_report_err(BFE_UNKNOWN_ERROR);
+}
+
 void BFf_dump_mem() {
 	FILE *file = fopen(BFf_outfile_name, "w");
 	if(!file) {
@@ -248,9 +209,11 @@ void BFf_dump_mem() {
 		return;
 	}
 
-	const size_t cols = (80 - 8 - BF_MEM_SIZE_DIGITS) / 4;
+	int width = hex_digits(BFi_mem_size);
+	size_t cols = (80 - 8 - width) / 4;
+
 	for(size_t i = 0; i < BFi_mem_size; i += cols) {
-		fprintf(file, "  " BF_MEM_SIZE_PRI ":", i);
+		fprintf(file, "  %0*zx:", width, i);
 
 		for(size_t j = 0; j < cols; j++) {
 			if(i + j >= BFi_mem_size) { printf("   "); continue; }
@@ -274,4 +237,52 @@ void BFf_dump_mem() {
 
 	int ret = fclose(file);
 	if(ret == EOF) BFe_report_err(BFE_UNKNOWN_ERROR);
+}
+
+static int check_file(size_t len) {
+	int loops_open = 0;
+
+	for(size_t i = 0; i < len; i++) {
+		switch(BFi_program_str[i]) {
+		case '[': loops_open++; break;
+		case ']': loops_open--; break;
+
+		case '\t': break;
+		case '\n': break;
+		case '\r': break;
+
+		default: if(!isprint(BFi_program_str[i])) {
+			BFe_code_error = "non-ascii characters in file.";
+			return BFE_BAD_CODE;
+		}}
+
+		if(loops_open < 0) {
+			BFe_code_error = "unmatched ']'.";
+			return BFE_BAD_CODE;
+		}
+	}
+
+	if(loops_open > 0) {
+		BFe_code_error = "unmatched '['.";
+		return BFE_BAD_CODE;
+	}
+
+	return FILE_OK;
+}
+
+static void get_file() {
+	int ret = BFf_load_file();
+
+	if(ret != FILE_OK) {
+		BFe_report_err(ret);
+		exit(ret);
+	}
+
+	if(BFt_compile) BFt_convert_file();
+}
+
+static int hex_digits(size_t n) {
+	int ret = 0;
+	while(n) { n /= 16; ret++; }
+	return ret;
 }

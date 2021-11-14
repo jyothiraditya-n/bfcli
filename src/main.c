@@ -40,6 +40,8 @@
 
 size_t BFm_insertion_point;
 
+static void init(int argc, char **argv);
+
 static int check(char *BFi_program_str, size_t len);
 static void handle_int();
 
@@ -47,7 +49,7 @@ static void handle_int();
 #define CODE_INCOMPLETE 2
 #define CODE_ERROR 3
 
-static void init(int argc, char **argv);
+
 static void handle_sig(int signum);
 
 static void about();
@@ -137,48 +139,6 @@ int main(int argc, char **argv) {
 	}
 
 	exit(0);
-}
-
-static int check(char *BFi_program_str, size_t len) {
-	int loops_open = 0;
-	bool wait = false;
-
-	for(size_t i = 0; i < len; i++) {
-		switch(BFi_program_str[i]) {
-			case '[': loops_open++; break;
-			case ']': loops_open--; break;
-			case '!': wait = true; break;
-			case ';': wait = false; break;
-		}
-
-		if(loops_open < 0) return CODE_ERROR;
-	}
-
-	if(wait || loops_open) return CODE_INCOMPLETE;
-	return CODE_OK;
-}
-
-static void handle_int() {
-	if(!BFm_insertion_point && LCe_dirty && !BFc_no_ansi) {
-		printf("save unsaved changes? [Y/n]: ");
-
-		char ans = LCl_readch();
-		if(ans == LCLCH_ERR) BFe_report_err(BFE_UNKNOWN_ERROR);
-
-		if(ans == 'Y' || ans == 'y' || ans == '\n')
-			BFf_save_file(BFi_program_str,
-				strlen(BFi_program_str));
-
-		exit(0);
-	}
-
-	else if(!BFm_insertion_point && LCe_dirty && BFc_no_ansi) {
-		puts("you have unsaved changes.");
-		BFf_save_file(BFi_program_str, strlen(BFi_program_str));
-		exit(0);
-	}
-
-	else if(!BFm_insertion_point) exit(0);
 }
 
 static void init(int argc, char **argv) {
@@ -355,6 +315,48 @@ static void init(int argc, char **argv) {
 
 	LCe_buffer = BFi_program_str;
 	LCe_length = BFi_code_size;
+}
+
+static int check(char *BFi_program_str, size_t len) {
+	int loops_open = 0;
+	bool wait = false;
+
+	for(size_t i = 0; i < len; i++) {
+		switch(BFi_program_str[i]) {
+			case '[': loops_open++; break;
+			case ']': loops_open--; break;
+			case '!': wait = true; break;
+			case ';': wait = false; break;
+		}
+
+		if(loops_open < 0) return CODE_ERROR;
+	}
+
+	if(wait || loops_open) return CODE_INCOMPLETE;
+	return CODE_OK;
+}
+
+static void handle_int() {
+	if(!BFm_insertion_point && LCe_dirty && !BFc_no_ansi) {
+		printf("save unsaved changes? [Y/n]: ");
+
+		char ans = LCl_readch();
+		if(ans == LCLCH_ERR) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+		if(ans == 'Y' || ans == 'y' || ans == '\n')
+			BFf_save_file(BFi_program_str,
+				strlen(BFi_program_str));
+
+		exit(0);
+	}
+
+	else if(!BFm_insertion_point && LCe_dirty && BFc_no_ansi) {
+		puts("you have unsaved changes.");
+		BFf_save_file(BFi_program_str, strlen(BFi_program_str));
+		exit(0);
+	}
+
+	else if(!BFm_insertion_point) exit(0);
 }
 
 static void handle_sig(int signum) {

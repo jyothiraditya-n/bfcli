@@ -21,15 +21,12 @@
 #define BF_MAIN_H 1
 
 #define BF_VERSION 8
-#define BF_SUBVERSION 2
-#define BF_VERNAME "The Optimisation of Nonsense"
+#define BF_SUBVERSION 3
+#define BF_VERNAME "The Serialisation of Code"
 
 #define BF_LINE_SIZE 4096
 #define BF_CODE_SIZE 65536
 #define BF_MEM_SIZE 32768
-
-#define BF_MEM_SIZE_DIGITS 8
-#define BF_MEM_SIZE_PRI "%08zx"
 
 #define BF_FILENAME_SIZE 4096
 #define BF_FILENAME_SCN "%4095c"

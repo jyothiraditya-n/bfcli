@@ -31,6 +31,8 @@
 #include "main.h"
 #include "printing.h"
 
+static int hex_digits(size_t n);
+
 void BFp_print_about() {
 	puts("  Bfcli: The Interactive Brainfuck Command-Line Interpreter");
 	puts("  Copyright (C) 2021 Jyothiraditya Nellakra");
@@ -225,9 +227,17 @@ void BFp_print_bytecode() {
 
 	BFi_instr_t *instr = BFi_program_code;
 	BFi_instr_t *first = instr;
+	size_t total = 0;
+
+	while(first) { first = first -> next; total++; }
+	int width = hex_digits(total);
+
+	size_t column = 0, rows = 0;
+	BFc_width -= width + 5;
+	first = instr;
 
 	for(size_t i = 0; BFi_is_running && instr; i++) {
-		if(i >= BFc_height * pages && !BFc_no_ansi && !no_pause) {
+		if(rows >= BFc_height * pages && !BFc_no_ansi && !no_pause) {
 			printf(":");
 
 			signed char ret = LCl_readch();
@@ -246,58 +256,92 @@ void BFp_print_bytecode() {
 		size_t val = instr -> operand.value;
 		switch(instr -> opcode) {
 		case BFI_INSTR_NOP:
-			printf("  %zx  nop\e[23G|   |\n", i);
+			if(!column) column += printf("  %0*zx: nop %*s",
+				width, i, width, "");
+			else column += printf(" | nop %*s", width, "");
 			break;
 		
 		case BFI_INSTR_INP:
-			printf("  %zx  inp\e[23G| , |\n", i);
+			if(!column) column += printf("  %0*zx: inp %*s",
+				width, i, width, "");
+			else column += printf(" | inp %*s", width, "");
 			break;
 		
 		case BFI_INSTR_OUT:
-			printf("  %zx  out\e[23G| . |\n", i);
+			if(!column) column += printf("  %0*zx: out %*s",
+				width, i, width, "");
+			else column += printf(" | out %*s", width, "");
 			break;
 		
 		case BFI_INSTR_INC:
-			printf("  %zx  inc %zx\e[23G| + | %zu\n", i, val, val);
+			if(!column) column += printf("  %0*zx: inc %*zx",
+				width, i, width, val);
+			else column += printf(" | inc %*zx", width, val);
 			break;
 		
 		case BFI_INSTR_DEC:
-			printf("  %zx  dec %zx\e[23G| - | %zu\n", i, val, val);
+			if(!column) column += printf("  %0*zx: dec %*zx",
+				width, i, width, val);
+			else column += printf(" | dec %*zx", width, val);
 			break;
 		
 		case BFI_INSTR_FWD:
-			printf("  %zx  fwd %zx\e[23G| > | %zu\n", i, val, val);
+			if(!column) column += printf("  %0*zx: fwd %*zx",
+				width, i, width, val);
+			else column += printf(" | fwd %*zx", width, val);
 			break;
 		
 		case BFI_INSTR_BCK:
-			printf("  %zx  bck %zx\e[23G| < | %zu\n", i, val, val);
+			if(!column) column += printf("  %0*zx: bck %*zx",
+				width, i, width, val);
+			else column += printf(" | bck %*zx", width, val);
 			break;
 		}
 		
-		size_t count = 0;
-		for(BFi_instr_t *j = first; j; j = j -> next) {
-			if(j == instr -> operand.ptr) break;
-			else count++; 
-		}
+		size_t index = i;
 
 		switch(instr -> opcode) {
 		case BFI_INSTR_JMP:
-			printf("  %zx  jmp %zx\e[23G| ] |\n", i, count);
+			for(BFi_instr_t *j = instr; j; j = j -> prev) {
+				if(j == instr -> operand.ptr) break;
+				else index--; 
+			}
+
+			if(!column) column += printf("  %0*zx: jmp %*zx",
+				width, i, width, index);
+			else column += printf(" | jmp %*zx", width, index);
 			break;
 		
 		case BFI_INSTR_JZ:
-			printf("  %zx  jz  %zx\e[23G| [ |\n", i, count);
+			for(BFi_instr_t *j = instr; j; j = j -> next) {
+				if(j == instr -> operand.ptr) break;
+				else index++; 
+			}
+
+			if(!column) column += printf("  %0*zx: jz  %*zx",
+				width, i, width, index);
+			else column += printf(" | jz  %*zx", width, index);
 			break;
+		}
+
+		if(column > BFc_width) {
+			putchar('\n');
+			column = 0;
+			rows++;
 		}
 
 		instr = instr -> next;
 	}
+
+	if(column) putchar('\n');
 }
 
 void BFp_peek_at_mem() {
 	BFc_get_dimensions();
+	int width = hex_digits(BFi_mem_size);
+
 	size_t rows = (BFc_height * 2) / 3;
-	size_t cols = (BFc_width - BF_MEM_SIZE_DIGITS - 8) / 4;
+	size_t cols = (BFc_width - width - 8) / 4;
 
 	size_t i = BFi_mem_ptr, offset = (rows * cols) / 2;
 
@@ -309,7 +353,7 @@ void BFp_peek_at_mem() {
 		size_t addr = i + j;
 
 		if(addr >= BFi_mem_size) addr -= BFi_mem_size;
-		printf("  " BF_MEM_SIZE_PRI ":", addr);
+		printf("  %0*zx:", width, addr);
 
 		for(size_t k = 0; k < cols; k++) {
 			size_t sub_addr = i + j + k;
@@ -344,9 +388,10 @@ void BFp_peek_at_mem() {
 void BFp_dump_mem() {
 	bool no_pause = false;
 	size_t pages = 1;
+	int width = hex_digits(BFi_mem_size);
 
 	BFc_get_dimensions();
-	size_t cols = (BFc_width - BF_MEM_SIZE_DIGITS - 8) / 4;
+	size_t cols = (BFc_width - width - 8) / 4;
 
 	for(size_t i = 0; BFi_is_running && i < BFi_mem_size; i += cols) {
 		if(i >= BFc_height * cols * pages && !BFc_no_ansi && !no_pause) {
@@ -362,10 +407,10 @@ void BFp_dump_mem() {
 				default:  	break;
 			}
 
-			printf("\e[%zu;1H  " BF_MEM_SIZE_PRI ":", BFc_height - 1, i);
+			printf("\e[%zu;1H  %0*zx:", BFc_height - 1, width, i);
 		}
 
-		else printf("  " BF_MEM_SIZE_PRI ":", i);
+		else printf("  %0*zx:", width, i);
 
 		for(size_t j = 0; j < cols; j++) {
 			if(i + j >= BFi_mem_size) { printf("   "); continue; }
@@ -392,4 +437,10 @@ void BFp_dump_mem() {
 
 		puts("|");
 	}
+}
+
+static int hex_digits(size_t n) {
+	int ret = 0;
+	while(n) { n /= 16; ret++; }
+	return ret;
 }

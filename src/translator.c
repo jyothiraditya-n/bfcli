@@ -68,7 +68,7 @@ void BFt_convert_file() {
 
 	fprintf(file, "char cells[%zu];\n\n", BFi_mem_size);
 	
-	if(BFt_compile) fputs("void compile(char *);\n\n", file);
+	if(BFt_compile) fputs("void assembly(char *);\n\n", file);
 	
 	else {
 		fputs("void brainfuck();\n\n", file);
@@ -91,7 +91,7 @@ void BFt_convert_file() {
 
 	size_t len = strlen(BFi_program_str);
 
-	if(BFt_compile) fputs("\tcompile(&cells[0]);\n", file);
+	if(BFt_compile) fputs("\tassembly(&cells[0]);\n", file);
 	else fputs("\tbrainfuck();\n", file);
 
 	if(BFc_direct_inp)
@@ -102,7 +102,7 @@ void BFt_convert_file() {
 
 	if(BFt_compile) {
 		fputs("asm (\n", file);
-		fputs("\"compile:\\n\"\n", file);
+		fputs("\"assembly:\\n\"\n", file);
 		fputs("\"\tmovq $0x0, %rax\\n\"\n", file);
 		fputs("\"\tmovb $0x0, %bl\\n\"\n", file);
 

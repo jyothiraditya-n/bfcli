@@ -293,7 +293,6 @@ static void run(BFi_instr_t *instr) {
 			}
 
 			int ret = tcsetattr(STDIN_FILENO, TCSANOW, &BFc_cooked);
-
 			if(ret == -1) BFe_report_err(BFE_UNKNOWN_ERROR);
 
 			ret = LCe_edit();

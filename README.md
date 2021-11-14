@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 8.2: The Optimisation of Nonsense
+Version 8.3: The Serialisation of Code
 
 bfcli:0%
 ```

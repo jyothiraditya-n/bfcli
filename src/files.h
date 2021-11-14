@@ -23,8 +23,8 @@ extern char BFf_savefile_name[];
 
 extern void BFf_init();
 extern int BFf_load_file();
-extern void BFf_dump_mem();
 extern void BFf_save_file(char *buffer, size_t size);
+extern void BFf_dump_mem();
 
 #define FILE_OK 0
 
