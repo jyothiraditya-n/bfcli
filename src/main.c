@@ -49,7 +49,6 @@ static void handle_int();
 #define CODE_INCOMPLETE 2
 #define CODE_ERROR 3
 
-
 static void handle_sig(int signum);
 
 static void about();
@@ -57,13 +56,14 @@ static void help();
 static void version();
 
 int main(int argc, char **argv) {
+	if(!strcmp(argv[0], "bfc")) BFt_translate = true;
 	init(argc, argv);
 
 	if(BFc_minimal_mode) {
-		printf("Bfcli Version %d.%d: %s\n",
-			BF_VERSION, BF_SUBVERSION, BF_VERNAME);
-
-		printf("Memory Size: %zu Chars\n\n", BFi_mem_size);
+		printf("Bfcli Version %d.%d: %s\n"
+			"Memory Size: %zu Chars\n\n",
+			BF_VERSION, BF_SUBVERSION, BF_VERNAME,
+			BFi_mem_size);
 	}
 
 	else BFp_print_banner();
@@ -105,6 +105,7 @@ int main(int argc, char **argv) {
 
 		if(ret == FILE_OK) {
 			printf("loaded '%s'.\n", BFf_mainfile_name);
+			Bfi_do_recompile = true;
 			continue;
 		}
 
@@ -301,6 +302,8 @@ static void init(int argc, char **argv) {
 
 	int ret = LCa_read(argc, argv);
 	if(ret != LCA_OK) BFp_print_minihelp();
+
+	if(BFt_compile) BFt_translate = true;
 
 	BFc_init(); BFi_init(); BFf_init();
 	if(BFc_no_ansi) BFc_use_colour = false;

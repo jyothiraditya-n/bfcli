@@ -62,6 +62,7 @@ void BFf_init() {
 		BFi_is_running = true;
 		BFi_last_output = '\n';
 		BFi_exec();
+
 		if(BFi_last_output != '\n') putchar('\n');
 
 		ret = tcsetattr(STDIN_FILENO, TCSANOW, &BFc_cooked);
@@ -71,6 +72,11 @@ void BFf_init() {
 	}
 
 	if(strlen(BFf_mainfile_name)) get_file();
+
+	if(BFt_translate) {
+		BFe_report_err(BFE_NO_FILE);
+		exit(BFE_NO_FILE);
+	}
 }
 
 int BFf_load_file() {
@@ -90,6 +96,7 @@ int BFf_load_file() {
 	char *old_code = NULL;
 
 	if(!BFi_program_str) {
+		old_size = 0;
 		BFi_code_size += size;
 		BFi_program_str = calloc(BFi_code_size, sizeof(char));
 		if(!BFi_program_str) BFe_report_err(BFE_UNKNOWN_ERROR);
@@ -129,8 +136,10 @@ int BFf_load_file() {
 		BFi_code_size = old_size;
 		LCe_length = BFi_code_size;
 
-		for(size_t i = 0; i <= old_size; i++)
+		for(size_t i = 0; i < old_size; i++)
 			BFi_program_str[i] = old_code[i];
+
+		if(old_size) BFi_program_str[old_size] = 0;
 
 		free(old_code);
 		return BFE_BAD_CODE;
@@ -274,11 +283,12 @@ static void get_file() {
 	int ret = BFf_load_file();
 
 	if(ret != FILE_OK) {
+		BFe_file_name = BFf_mainfile_name;
 		BFe_report_err(ret);
 		exit(ret);
 	}
 
-	if(BFt_compile) BFt_convert_file();
+	if(BFt_translate) BFt_convert_file();
 }
 
 static int hex_digits(size_t n) {

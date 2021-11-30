@@ -33,17 +33,25 @@ void BFe_report_err(int errnum) {
 		fprintf(stderr, "%s: error: line too long.\n", BFc_cmd_name);
 		break;
 
+	case BFE_NO_FILE:
+		fprintf(stderr, "%s: error: no file specified to "
+			"translate or compile.\n", BFc_cmd_name);
+		break;
+
 	case BFE_FILE_UNREADABLE:
 		fprintf(stderr, "%s: error: cannot read file '%s'.\n",
-			BFc_cmd_name, BFe_file_name); break;
+			BFc_cmd_name, BFe_file_name);
+		break;
 
 	case BFE_FILE_UNWRITABLE:
 		fprintf(stderr, "%s: error: cannot write file '%s'.\n",
-			BFc_cmd_name, BFe_file_name); break;
+			BFc_cmd_name, BFe_file_name);
+		break;
 
 	case BFE_BAD_CODE:
 		fprintf(stderr, "%s: error: '%s': %s\n", BFc_cmd_name,
-			BFe_file_name, BFe_code_error); break;
+			BFe_file_name, BFe_code_error);
+		break;
 
 	default:
 		fprintf(stderr, "%s: error: unknown error\n", BFc_cmd_name);

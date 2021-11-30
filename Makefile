@@ -58,14 +58,10 @@ $(DEMOS) : % : %.c
 	$(CC) $(DCFLAGS) $< -o $@
 
 .DEFAULT_GOAL = all
-.PHONY : all bf clean demos extras install remove
+.PHONY : all clean demos global install remove
 .PHONY : _demos _transpile_demos
 
 all : bfcli
-
-bf : install
-	-sudo rm /bin/bf
-	sudo ln -s $(DESTDIR)/bfcli /bin/bf
 
 clean :
 	cd libClame; make clean
@@ -74,6 +70,12 @@ clean :
 demos : bfcli
 	+make -j1 _transpile_demos
 	+make _demos
+
+global : install
+	-sudo rm /bin/bfcli /bin/bf /bin/bfc
+	sudo ln -s $(DESTDIR)/bfcli /bin/bfcli
+	sudo ln -s $(DESTDIR)/bfcli /bin/bf
+	sudo ln -s $(DESTDIR)/bfcli /bin/bfc
 
 install : bfcli $(DESTDIR)/
 	cp bfcli $(DESTDIR)/

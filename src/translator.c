@@ -44,9 +44,13 @@ static void _next_amd64(FILE *file, size_t next);
 static void _before_amd64(FILE *file, size_t before);
 
 void BFt_convert_file() {
-	FILE *file = strlen(BFf_outfile_name)
-		? fopen(BFf_outfile_name, "w")
-		: stdout;
+	if(!strlen(BFf_outfile_name)) {
+		strcpy(BFf_outfile_name, BFf_mainfile_name);
+		strncat(BFf_outfile_name, ".c",
+			BF_FILENAME_SIZE - 1 - strlen(BFf_outfile_name));
+	}
+
+	FILE *file = fopen(BFf_outfile_name, "w");
 
 	if(!file) {
 		BFe_file_name = BFf_outfile_name;
@@ -66,15 +70,15 @@ void BFt_convert_file() {
 		fputs("struct termios cooked, raw;\n", file);
 	}
 
-	fprintf(file, "char cells[%zu];\n\n", BFi_mem_size);
+	fprintf(file, "char cells[%zu];\n", BFi_mem_size);
 	
-	if(BFt_compile) fputs("void assembly(char *);\n\n", file);
+	if(BFt_compile) fputs("\nvoid assembly(char *);\n\n", file);
 	
 	else {
-		fputs("void brainfuck();\n\n", file);
-
 		if(BFt_use_safe_code) fputs("size_t ptr = 0;\n", file);
-		else fputs("char *ptr = &cells[0];\n\n", file);
+		else fputs("char *ptr = &cells[0];\n", file);
+
+		fputs("\nvoid brainfuck();\n\n", file);
 	}
 
 	fputs("int main() {\n", file);
@@ -103,8 +107,8 @@ void BFt_convert_file() {
 	if(BFt_compile) {
 		fputs("asm (\n", file);
 		fputs("\"assembly:\\n\"\n", file);
-		fputs("\"\tmovq $0x0, %rax\\n\"\n", file);
-		fputs("\"\tmovb $0x0, %bl\\n\"\n", file);
+		fputs("\"\tmovq\t$0x0, %rax\\n\"\n", file);
+		fputs("\"\tmovb\t$0x0, %bl\\n\"\n", file);
 
 		for(size_t i = 0; i < len; i++) conv_amd64(i, file);
 		fputs("\"\tret\\n\"\n", file);
@@ -230,8 +234,8 @@ static void conv_amd64(size_t i, FILE *file) {
 		if(before) { _before_amd64(file, before); before = 0; }
 
 		fprintf(file, "\"\\n\"\n\"open_%zu:\\n\"\n", bracket);
-		fputs("\"\ttestb %bl, %bl\\n\"\n", file);
-		fprintf(file, "\"\tjz close_%zu\\n\"\n", bracket);
+		fputs("\"\ttestb\t%bl, %bl\\n\"\n", file);
+		fprintf(file, "\"\tjz\tclose_%zu\\n\"\n", bracket);
 
 		stack[indent++] = bracket++;
 		break;
@@ -242,7 +246,7 @@ static void conv_amd64(size_t i, FILE *file) {
 		if(next) { _next_amd64(file, next); next = 0; }
 		if(before) { _before_amd64(file, before); before = 0; }
 
-		fprintf(file, "\"\tjmp open_%zu\\n\"\n", stack[--indent]);
+		fprintf(file, "\"\tjmp\topen_%zu\\n\"\n", stack[--indent]);
 		fprintf(file, "\"\\n\"\n\"close_%zu:\\n\"\n", stack[indent]);
 		break;
 
@@ -252,20 +256,20 @@ static void conv_amd64(size_t i, FILE *file) {
 		if(next) { _next_amd64(file, next); next = 0; }
 		if(before) { _before_amd64(file, before); before = 0; }
 
-		fputs("\"\tpushq %rax\\n\"\n", file);
-		fputs("\"\tpushq %rbx\\n\"\n", file);
-		fputs("\"\tpushq %rdi\\n\"\n", file);
+		fputs("\"\tpushq\t%rax\\n\"\n", file);
+		fputs("\"\tpushq\t%rbx\\n\"\n", file);
+		fputs("\"\tpushq\t%rdi\\n\"\n", file);
 
-		fputs("\"\tmovb %bl, (%rax, %rdi)\\n\"\n", file);
-		fputs("\"\tleaq (%rax, %rdi), %rsi\\n\"\n", file);
-		fputs("\"\tmovq $0x1, %rax\\n\"\n", file);
-		fputs("\"\tmovq $0x1, %rdi\\n\"\n", file);
-		fputs("\"\tmovq $0x1, %rdx\\n\"\n", file);
+		fputs("\"\tmovb\t%bl, (%rax, %rdi)\\n\"\n", file);
+		fputs("\"\tleaq\t(%rax, %rdi), %rsi\\n\"\n", file);
+		fputs("\"\tmovq\t$0x1, %rax\\n\"\n", file);
+		fputs("\"\tmovq\t$0x1, %rdi\\n\"\n", file);
+		fputs("\"\tmovq\t$0x1, %rdx\\n\"\n", file);
 		fputs("\"\tsyscall\\n\"\n", file);
 
-		fputs("\"\tpopq %rdi\\n\"\n", file);
-		fputs("\"\tpopq %rbx\\n\"\n", file);
-		fputs("\"\tpopq %rax\\n\"\n", file);
+		fputs("\"\tpopq\t%rdi\\n\"\n", file);
+		fputs("\"\tpopq\t%rbx\\n\"\n", file);
+		fputs("\"\tpopq\t%rax\\n\"\n", file);
 		break;
 
 	case ',':
@@ -274,54 +278,54 @@ static void conv_amd64(size_t i, FILE *file) {
 		if(next) { _next_amd64(file, next); next = 0; }
 		if(before) { _before_amd64(file, before); before = 0; }
 
-		fputs("\"\tpushq %rax\\n\"\n", file);
-		fputs("\"\tpushq %rdi\\n\"\n", file);
+		fputs("\"\tpushq\t%rax\\n\"\n", file);
+		fputs("\"\tpushq\t%rdi\\n\"\n", file);
 
-		fputs("\"\tleaq (%rax, %rdi), %rsi\\n\"\n", file);
-		fputs("\"\tmovq $0x0, %rax\\n\"\n", file);
-		fputs("\"\tmovq $0x0, %rdi\\n\"\n", file);
-		fputs("\"\tmovq $0x1, %rdx\\n\"\n", file);
+		fputs("\"\tleaq\t(%rax, %rdi), %rsi\\n\"\n", file);
+		fputs("\"\tmovq\t$0x0, %rax\\n\"\n", file);
+		fputs("\"\tmovq\t$0x0, %rdi\\n\"\n", file);
+		fputs("\"\tmovq\t$0x1, %rdx\\n\"\n", file);
 		fputs("\"\tsyscall\\n\"\n", file);
 
-		fputs("\"\tpopq %rdi\\n\"\n", file);
-		fputs("\"\tpopq %rax\\n\"\n", file);
-		fputs("\"\tmovb (%rax, %rdi), %bl\\n\"\n", file);
+		fputs("\"\tpopq\t%rdi\\n\"\n", file);
+		fputs("\"\tpopq\t%rax\\n\"\n", file);
+		fputs("\"\tmovb\t(%rax, %rdi), %bl\\n\"\n", file);
 		break;
 	}
 }
 
 static void _plus_amd64(FILE *file, size_t plus) {
-	fprintf(file, "\"\taddb $0x%zx, %%bl\\n\"\n", plus);
+	fprintf(file, "\"\taddb\t$0x%zx, %%bl\\n\"\n", plus);
 }
 
 static void _minus_amd64(FILE *file, size_t minus) {
-	fprintf(file, "\"\tsubb $0x%zx, %%bl\\n\"\n", minus);
+	fprintf(file, "\"\tsubb\t$0x%zx, %%bl\\n\"\n", minus);
 }
 
 static void _next_amd64(FILE *file, size_t next) {
-	fputs("\"\tmovb %bl, (%rax, %rdi)\\n\"\n", file);
-	fprintf(file, "\"\taddq $0x%zx, %%rax\\n\"\n", next);
+	fputs("\"\tmovb\t%bl, (%rax, %rdi)\\n\"\n", file);
+	fprintf(file, "\"\taddq\t$0x%zx, %%rax\\n\"\n", next);
 
 	if(BFt_use_safe_code) {
-		fprintf(file, "\"\tcmpq $0x%zx, %%rax\\n\"\n", BFi_mem_size);
-		fprintf(file, "\"\tjl safe_%zu\\n\"\n", label);
-		fprintf(file, "\"\tsubq $0x%zx, %%rax\\n\"\n", BFi_mem_size);
+		fprintf(file, "\"\tcmpq\t$0x%zx, %%rax\\n\"\n", BFi_mem_size);
+		fprintf(file, "\"\tjl\tsafe_%zu\\n\"\n", label);
+		fprintf(file, "\"\tsubq\t$0x%zx, %%rax\\n\"\n", BFi_mem_size);
 		fprintf(file, "\"\\n\"\n\"safe_%zu:\\n\"\n", label++);
 	}
 
-	fputs("\"\tmovb (%rax, %rdi), %bl\\n\"\n", file);
+	fputs("\"\tmovb\t(%rax, %rdi), %bl\\n\"\n", file);
 }
 
 static void _before_amd64(FILE *file, size_t before) {
-	fputs("\"\tmovb %bl, (%rax, %rdi)\\n\"\n", file);
-	fprintf(file, "\"\tsubq $0x%zx, %%rax\\n\"\n", before);
+	fputs("\"\tmovb\t%bl, (%rax, %rdi)\\n\"\n", file);
+	fprintf(file, "\"\tsubq\t$0x%zx, %%rax\\n\"\n", before);
 
 	if(BFt_use_safe_code) {
-		fprintf(file, "\"\tcmpq $0x%zx, %%rax\\n\"\n", BFi_mem_size);
-		fprintf(file, "\"\tjl safe_%zu\\n\"\n", label);
-		fprintf(file, "\"\tsubq $0x%zx, %%rax\\n\"\n", BFi_mem_size);
+		fprintf(file, "\"\tcmpq\t$0x%zx, %%rax\\n\"\n", BFi_mem_size);
+		fprintf(file, "\"\tjl\tsafe_%zu\\n\"\n", label);
+		fprintf(file, "\"\tsubq\t$0x%zx, %%rax\\n\"\n", BFi_mem_size);
 		fprintf(file, "\"\\n\"\n\"safe_%zu:\\n\"\n", label++);
 	}
 
-	fputs("\"\tmovb (%rax, %rdi), %bl\\n\"\n", file);
+	fputs("\"\tmovb\t(%rax, %rdi), %bl\\n\"\n", file);
 }

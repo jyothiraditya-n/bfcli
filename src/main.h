@@ -21,8 +21,8 @@
 #define BF_MAIN_H 1
 
 #define BF_VERSION 8
-#define BF_SUBVERSION 3
-#define BF_VERNAME "The Serialisation of Code"
+#define BF_SUBVERSION 4
+#define BF_VERNAME "An Endless Stream of Garbage"
 
 #define BF_LINE_SIZE 4096
 #define BF_CODE_SIZE 65536

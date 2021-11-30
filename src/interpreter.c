@@ -36,6 +36,7 @@ size_t BFi_code_size = BF_CODE_SIZE;
 
 static BFi_instr_t *command_code;
 
+bool Bfi_do_recompile = true;
 bool BFi_is_running;
 char BFi_last_output;
 
@@ -65,6 +66,7 @@ void BFi_compile() {
 	}
 
 	BFi_program_code = compile(BFi_program_str, false);
+	Bfi_do_recompile = false;
 	return;
 }
 
@@ -80,7 +82,7 @@ void BFi_main(char *command_str) {
 }
 
 void BFi_exec() {
-	BFi_compile();
+	if(Bfi_do_recompile) BFi_compile();
 	run(BFi_program_code);
 }
 
@@ -224,6 +226,7 @@ static void run(BFi_instr_t *instr) {
 			break;
 
 		case BFI_INSTR_OUT:
+			BFi_last_output = BFi_mem[BFi_mem_ptr];
 			putchar(BFi_mem[BFi_mem_ptr]);
 			break;
 
@@ -302,6 +305,7 @@ static void run(BFi_instr_t *instr) {
 			if(ret == -1) BFe_report_err(BFE_UNKNOWN_ERROR);
 
 			printf("\e[H\e[J");
+			Bfi_do_recompile = true;
 			BFi_last_output = '\n';
 			break;
 

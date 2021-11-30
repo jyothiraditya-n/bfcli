@@ -193,7 +193,7 @@ void BFp_print_usage() {
 	puts("    -o, --output OUT  Sets the output file for the translated C");
 	puts("                      code and the memory dump to OUT.\n");
 
-	puts("    -r, --ram SIZE   Sets the total memory size for the compiled");
+	puts("    -r, --ram SIZE    Sets the total memory size for the compiled");
 	puts("                      program to SIZE.\n");
 
 	puts("    -s, --safe-code   Generates code that won't segfault if < or");
@@ -203,10 +203,9 @@ void BFp_print_usage() {
 	puts("    -t, --translate   Translates the file to C source code, ouputs");
 	puts("                      the result to OUT and exits.\n");
 	
-	puts("    -x, --compile    Generates assembly code intermixed with the C");
+	puts("    -x, --compile     Generates amd64 assembly code intermixed with the C");
 	puts("                      output. This option affords both high performance");
-	puts("                      and fast compile times, however it only works on");
-	puts("                      amd64-based computers.\n");
+	puts("                      and fast compile times. (Implies -t)\n");
 
 	puts("    -d, --direct-inp  Don't buffer the standard input. Send characters");
 	puts("                      to Brainfuck code without waiting for a newline.\n");
@@ -222,8 +221,8 @@ void BFp_print_bytecode() {
 	bool no_pause = false;
 	size_t pages = 1;
 
+	if(Bfi_do_recompile) BFi_compile();
 	BFc_get_dimensions();
-	BFi_compile();
 
 	BFi_instr_t *instr = BFi_program_code;
 	BFi_instr_t *first = instr;
@@ -233,7 +232,7 @@ void BFp_print_bytecode() {
 	int width = hex_digits(total);
 
 	size_t column = 0, rows = 0;
-	BFc_width -= width + 5;
+	BFc_width -= width + 7;
 	first = instr;
 
 	for(size_t i = 0; BFi_is_running && instr; i++) {

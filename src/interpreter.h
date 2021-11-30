@@ -55,6 +55,7 @@ extern char *BFi_program_str;
 extern BFi_instr_t *BFi_program_code;
 extern size_t BFi_code_size;
 
+extern bool Bfi_do_recompile;
 extern bool BFi_is_running;
 extern char BFi_last_output;
 
