@@ -79,10 +79,6 @@ Note: If a file is specified with -f, the code buffer's length is
   -r, --ram SIZE    Sets the total memory size for the compiled
                     program to SIZE.
 
-  -s, --safe-code   Generates code that won't segfault if < or
-                    > are used out-of-bounds. (The pointer wraps
-                    around.)
-
   -t, --translate   Translates the file to C source code, ouputs
                     the result to OUT and exits.
 
@@ -112,8 +108,7 @@ Valid arguments are:
   -d, --direct-inp |
 
   -f, --file FILE  | -l, --length LEN | -r, --ram SIZE
-  -t, --translate  | -s, --safe-code  | -x, --compile
-  -o, --output OUT |
+  -t, --translate  | -x, --compile    | -o, --output OUT
 
 Happy coding! :)
 ```

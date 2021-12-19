@@ -209,15 +209,39 @@ static void run(BFi_instr_t *instr) {
 
 		case BFI_INSTR_FWD:
 			BFi_mem_ptr += instr -> operand.value;
-			while(BFi_mem_ptr >= BFi_mem_size)
-				BFi_mem_ptr -= BFi_mem_size;
+			if(BFi_mem_ptr >= BFi_mem_size) {
+				BFi_mem_ptr -= instr -> operand.value;
+
+				BFe_file_name = strlen(BFf_mainfile_name)
+					? BFf_mainfile_name
+					: BFc_cmd_name;
+
+				if(BFi_last_output != '\n') putchar('\n');
+				BFe_report_err(BFE_SEGFAULT);
+				putchar('\n');
+
+				BFi_last_output = '\n';
+				return;
+			}
 
 			break;
 
 		case BFI_INSTR_BCK:
 			BFi_mem_ptr -= instr -> operand.value;
-			while(BFi_mem_ptr >= BFi_mem_size)
-				BFi_mem_ptr += BFi_mem_size;
+			if(BFi_mem_ptr >= BFi_mem_size) {
+				BFi_mem_ptr += instr -> operand.value;
+
+				BFe_file_name = strlen(BFf_mainfile_name)
+					? BFf_mainfile_name
+					: BFc_cmd_name;
+
+				if(BFi_last_output != '\n') putchar('\n');
+				BFe_report_err(BFE_SEGFAULT);
+				putchar('\n');
+
+				BFi_last_output = '\n';
+				return;
+			}
 
 			break;
 

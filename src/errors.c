@@ -19,12 +19,18 @@
 
 #include "errors.h"
 #include "clidata.h"
+#include "translator.h"
 
-char *BFe_code_error;
-char *BFe_file_name;
+const char *BFe_code_error;
+const char *BFe_file_name;
 
 void BFe_report_err(int errnum) {
 	switch(errnum) {
+	case BFE_BAD_OPTIM:
+		fprintf(stderr, "%s: error: unknown optimisation level: %d\n",
+			BFc_cmd_name, BFt_optim_lvl);
+		break;
+
 	case BFE_CODE_TOO_LONG:
 		fprintf(stderr, "%s: error: code too long.\n", BFc_cmd_name);
 		break;
@@ -51,6 +57,10 @@ void BFe_report_err(int errnum) {
 	case BFE_BAD_CODE:
 		fprintf(stderr, "%s: error: '%s': %s\n", BFc_cmd_name,
 			BFe_file_name, BFe_code_error);
+		break;
+
+	case BFE_SEGFAULT:
+		fprintf(stderr, "%s: error: out of memory.\n", BFe_file_name);
 		break;
 
 	default:

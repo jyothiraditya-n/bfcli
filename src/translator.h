@@ -22,8 +22,30 @@
 
 extern bool BFt_compile;
 extern bool BFt_translate;
-extern bool BFt_use_safe_code;
+extern int BFt_optim_lvl;
+
+typedef struct BFt_instr_s {
+	struct BFt_instr_s *prev, *next;
+
+	int opcode;
+	size_t op1;
+
+	#define BFT_INSTR_NOP 0
+
+	#define BFT_INSTR_INC 1
+	#define BFT_INSTR_DEC 2
+	#define BFT_INSTR_FWD 3
+	#define BFT_INSTR_BCK 4
+	#define BFT_INSTR_INP 5
+	#define BFT_INSTR_OUT 6
+	#define BFT_INSTR_LOOP 7
+	#define BFT_INSTR_ENDL 8
+
+} BFt_instr_t;
+
+extern BFt_instr_t *BFt_code;
 
 extern void BFt_convert_file();
+extern void BFt_optimise();
 
 #endif

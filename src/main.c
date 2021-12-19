@@ -69,6 +69,7 @@ int main(int argc, char **argv) {
 	else BFp_print_banner();
 
 	static char line[BF_LINE_SIZE];
+	static char old_file[BF_FILENAME_SIZE];
 
 	while(true) {
 		int ret = tcsetattr(STDIN_FILENO, TCSANOW, &BFc_cooked);
@@ -100,6 +101,7 @@ int main(int argc, char **argv) {
 			BFe_report_err(BFE_UNKNOWN_ERROR);
 		}
 
+		strcpy(old_file, BFf_mainfile_name);
 		strcpy(BFf_mainfile_name, line);
 		ret = BFf_load_file();
 
@@ -109,6 +111,8 @@ int main(int argc, char **argv) {
 			continue;
 		}
 
+		else strcpy(BFf_mainfile_name, old_file);
+		
 		size_t len = strlen(line);
 		ret = check(line, len);
 
@@ -250,19 +254,6 @@ static void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
-	var -> id = "BFt_use_safe_code";
-	var -> data = &BFt_use_safe_code;
-
-	arg = LCa_new();
-	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
-	arg -> long_flag = "safe-code";
-	arg -> short_flag = 's';
-	arg -> var = var;
-	arg -> value = true;
-	arg -> var = var;
-
-	var = LCv_new();
-	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
 	var -> id = "compile";
 	var -> data = &BFt_compile;
 
@@ -296,6 +287,18 @@ static void init(int argc, char **argv) {
 	arg -> short_flag = 'd';
 	arg -> var = var;
 	arg -> value = true;
+
+	var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "BFt_optim_lvl";
+	var -> fmt = "%d";
+	var -> data = &BFt_optim_lvl;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "optim";
+	arg -> short_flag = 'O';
+	arg -> var = var;
 
 	LCa_noflags = &BFc_immediate;
 	LCa_max_noflags = 1;

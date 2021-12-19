@@ -148,8 +148,9 @@ void BFp_print_minihelp() {
 	puts("    -d, --direct-inp |\n");
 
 	puts("    -f, --file FILE  | -l, --length LEN | -r, --ram SIZE");
-	puts("    -t, --translate  | -s, --safe-code  | -x, --compile");
-	puts("    -o, --output OUT |\n");
+	puts("    -t, --translate  | -x, --compile    | -o, --output OUT\n");
+
+	puts("    -O, --optim      |\n");
 
 	puts("  Happy coding! :)\n");
 	exit(BFE_BAD_ARGS);
@@ -196,10 +197,6 @@ void BFp_print_usage() {
 	puts("    -r, --ram SIZE    Sets the total memory size for the compiled");
 	puts("                      program to SIZE.\n");
 
-	puts("    -s, --safe-code   Generates code that won't segfault if < or");
-	puts("                      > are used out-of-bounds. (The pointer wraps");
-	puts("                      around.)\n");
-
 	puts("    -t, --translate   Translates the file to C source code, ouputs");
 	puts("                      the result to OUT and exits.\n");
 	
@@ -209,6 +206,8 @@ void BFp_print_usage() {
 
 	puts("    -d, --direct-inp  Don't buffer the standard input. Send characters");
 	puts("                      to Brainfuck code without waiting for a newline.\n");
+
+	puts("    -O, --optim LEVEL Specify the optimisation level.\n");
 
 	puts("  Note: If no output file is specified, the translated code is output");
 	puts("        to STDOUT. Code generated with -s may be both slower to compile");
