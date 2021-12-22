@@ -16,6 +16,9 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
+
+#include <sys/types.h>
 
 #ifndef BF_TRANSLATOR_H
 #define BF_TRANSLATOR_H 1
@@ -29,17 +32,25 @@ typedef struct BFt_instr_s {
 
 	int opcode;
 	size_t op1;
+	ssize_t ad1;
 
 	#define BFT_INSTR_NOP 0
 
-	#define BFT_INSTR_INC 1
-	#define BFT_INSTR_DEC 2
-	#define BFT_INSTR_FWD 3
-	#define BFT_INSTR_BCK 4
-	#define BFT_INSTR_INP 5
-	#define BFT_INSTR_OUT 6
-	#define BFT_INSTR_LOOP 7
-	#define BFT_INSTR_ENDL 8
+	#define BFT_INSTR_MOV 1
+	#define BFT_INSTR_INC 2
+	#define BFT_INSTR_DEC 3
+
+	#define BFT_INSTR_ADDM 4
+	#define BFT_INSTR_SUBM 5
+	#define BFT_INSTR_CMPL 6
+
+	#define BFT_INSTR_FWD 7
+	#define BFT_INSTR_BCK 8
+
+	#define BFT_INSTR_INP 9
+	#define BFT_INSTR_OUT 10
+	#define BFT_INSTR_LOOP 11
+	#define BFT_INSTR_ENDL 12
 
 } BFt_instr_t;
 

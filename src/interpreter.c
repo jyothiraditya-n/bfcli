@@ -212,7 +212,7 @@ static void run(BFi_instr_t *instr) {
 			if(BFi_mem_ptr >= BFi_mem_size) {
 				BFi_mem_ptr -= instr -> operand.value;
 
-				BFe_file_name = strlen(BFf_mainfile_name)
+				BFe_file_name = BFc_immediate
 					? BFf_mainfile_name
 					: BFc_cmd_name;
 
@@ -231,7 +231,7 @@ static void run(BFi_instr_t *instr) {
 			if(BFi_mem_ptr >= BFi_mem_size) {
 				BFi_mem_ptr += instr -> operand.value;
 
-				BFe_file_name = strlen(BFf_mainfile_name)
+				BFe_file_name = BFc_immediate
 					? BFf_mainfile_name
 					: BFc_cmd_name;
 

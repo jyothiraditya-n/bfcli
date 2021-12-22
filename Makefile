@@ -52,7 +52,7 @@ bfcli : $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(OBJS) -o bfcli $(LDLIBS)
 
 $(DCFILES) : %.c : demo/%.bf bfcli
-	./bfcli -xt $< -o $@
+	./bfcli -xt -O1 $< -o $@
 
 $(DEMOS) : % : %.c
 	$(CC) $(DCFLAGS) $< -o $@

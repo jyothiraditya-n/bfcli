@@ -17,15 +17,17 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <sys/types.h>
 
 #include "clidata.h"
 #include "errors.h"
 #include "files.h"
 #include "interpreter.h"
 #include "main.h"
-#include "printing.h"
 #include "translator.h"
 
 bool BFt_compile;
@@ -35,8 +37,12 @@ int BFt_optim_lvl;
 BFt_instr_t *BFt_code;
 
 static BFt_instr_t *optimise_0();
-static void translate_0(FILE *file);
-static void trans_amd64_0(FILE *file);
+static BFt_instr_t *optimise_1();
+
+static void _optimise_1(BFt_instr_t *start, BFt_instr_t *end, bool compl);
+
+static void translate(FILE *file);
+static void trans_amd64(FILE *file);
 
 void BFt_convert_file() {
 	BFt_optimise();
@@ -64,7 +70,7 @@ void BFt_convert_file() {
 		fputs("struct termios cooked, raw;\n", file);
 	}
 
-	fprintf(file, "char cells[%zu];\n\n", BFi_mem_size);
+	fprintf(file, "unsigned char cells[%zu];\n\n", BFi_mem_size);
 
 	fputs("int main() {\n", file);
 	if(BFc_direct_inp) {
@@ -77,19 +83,10 @@ void BFt_convert_file() {
 		fputs("\ttcsetattr(STDIN_FILENO, TCSANOW, &raw);\n\n", file);
 	}
 
-	BFt_optimise();
-	switch(BFt_optim_lvl) {
-		case 0:
-			if(BFt_compile) trans_amd64_0(file);
-			else translate_0(file);
-			break;
-
-		default:
-			BFe_report_err(BFE_BAD_OPTIM);
-			exit(BFE_BAD_OPTIM);
-	}
-
+	if(BFt_compile) trans_amd64(file);
+	else translate(file);
 	fputs("}\n", file);
+
 	int ret = fclose(file);
 	if(ret == EOF) BFe_report_err(BFE_UNKNOWN_ERROR);
 	exit(0);
@@ -105,6 +102,7 @@ void BFt_optimise() {
 	BFi_compile();
 	switch(BFt_optim_lvl) {
 		case 0: BFt_code = optimise_0(); break;
+		case 1: BFt_code = optimise_1(); break;
 
 		default:
 			BFe_report_err(BFE_BAD_OPTIM);
@@ -123,6 +121,8 @@ static BFt_instr_t *optimise_0() {
 	trans -> opcode = BFT_INSTR_NOP;
 
 	size_t brackets = 0;
+	ssize_t offset = 0;
+
 	while(instr) {
 		switch(instr -> opcode) { case BFI_INSTR_JMP: brackets++; }
 		instr = instr -> next;
@@ -140,31 +140,64 @@ static BFt_instr_t *optimise_0() {
 		case BFI_INSTR_INC:
 			trans -> opcode = BFT_INSTR_INC;
 			trans -> op1 = instr -> operand.value;
-			break;
+			trans -> ad1 = offset;
+			goto next;
 
 		case BFI_INSTR_DEC:
 			trans -> opcode = BFT_INSTR_DEC;
 			trans -> op1 = instr -> operand.value;
-			break;
+			trans -> ad1 = offset;
+			goto next;
 
 		case BFI_INSTR_FWD:
-			trans -> opcode = BFT_INSTR_FWD;
-			trans -> op1 = instr -> operand.value;
-			break;
+			offset += instr -> operand.value;
+			goto end;
 
 		case BFI_INSTR_BCK:
-			trans -> opcode = BFT_INSTR_BCK;
-			trans -> op1 = instr -> operand.value;
-			break;
+			offset -= instr -> operand.value;
+			goto end;
 
 		case BFI_INSTR_INP:
 			trans -> opcode = BFT_INSTR_INP;
-			break;
+			trans -> ad1 = offset;
+			goto next;
 
 		case BFI_INSTR_OUT:
 			trans -> opcode = BFT_INSTR_OUT;
-			break;
+			trans -> ad1 = offset;
+		
+		next:	trans -> next = malloc(sizeof(BFt_instr_t));
+			if(!trans -> next) BFe_report_err(BFE_UNKNOWN_ERROR);
 
+			trans -> next -> prev = trans;
+			trans = trans -> next;
+			trans -> opcode = BFT_INSTR_NOP;
+
+		end:	instr = instr -> next;
+			continue;
+		}
+
+		if(offset > 0) {
+			trans -> opcode = BFT_INSTR_FWD;
+			trans -> op1 = offset;
+		}
+
+		else if(offset < 0) {
+			trans -> opcode = BFT_INSTR_BCK;
+			trans -> op1 = -offset;
+		}
+
+		if(offset != 0) {
+			trans -> next = malloc(sizeof(BFt_instr_t));
+			if(!trans -> next) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+			trans -> next -> prev = trans;
+			trans = trans -> next;
+			trans -> opcode = BFT_INSTR_NOP;
+			offset = 0;
+		}
+
+		switch(instr -> opcode) {
 		case BFI_INSTR_JZ:
 			trans -> opcode = BFT_INSTR_LOOP;
 			trans -> op1 = ++brackets;
@@ -188,44 +221,200 @@ static BFt_instr_t *optimise_0() {
 		instr = instr -> next;
 
 		trans = trans -> next;
-		trans -> opcode = BFI_INSTR_NOP;
+		trans -> opcode = BFT_INSTR_NOP;
 	}
 
 	free(stack);
 	return first;
 }
 
-static void translate_0(FILE *file) {
+static BFt_instr_t *optimise_1() {
+	BFt_instr_t *start = optimise_0();
+
+	BFt_instr_t *init = NULL;
+	size_t per_cycle = 0;
+
+	for(BFt_instr_t *i = start; i; i = i -> next) {
+		size_t op1 = i -> op1;
+		ssize_t ad1 = i -> ad1;
+
+		switch(i -> opcode) {
+		case BFT_INSTR_INC:
+			if(!ad1) per_cycle += op1;
+			break;
+
+		case BFT_INSTR_DEC:
+			if(!ad1) per_cycle -= op1;
+			break;
+
+		case BFT_INSTR_FWD:
+		case BFT_INSTR_BCK:
+		case BFT_INSTR_INP:
+		case BFT_INSTR_OUT:
+			init = NULL; break;
+
+		case BFT_INSTR_LOOP:
+			per_cycle = 0;
+			init = i;
+			break;
+
+		case BFT_INSTR_ENDL:
+			if(init) switch(per_cycle) {
+				case 1: _optimise_1(init, i, true); break;
+				case -1: _optimise_1(init, i, false);
+			}
+
+			init = NULL;
+			break;
+		}
+	}
+
+	for(BFt_instr_t *i = start; i; i = i -> next) {
+		switch(i -> opcode) {
+		case BFT_INSTR_MOV:
+			if(i -> next -> ad1) continue;
+
+			switch(i -> next -> opcode) {
+			case BFT_INSTR_INC:
+				i -> op1 = i -> next -> op1;
+				break;
+
+			case BFT_INSTR_DEC:
+				i -> op1 = -(i -> next -> op1);
+				break;
+
+			default:
+				continue;
+			}
+
+			BFt_instr_t *next = i -> next -> next;
+			free(i -> next);
+
+			i -> next = next;
+			next -> prev = i;
+		}
+	}
+
+	return start;
+}
+
+static void _optimise_1(BFt_instr_t *start, BFt_instr_t *end, bool compl) {
+	BFt_instr_t *new = malloc(sizeof(BFt_instr_t));
+	if(!new) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+	BFt_instr_t *start_new = new;
+
+	if(compl) start -> opcode = BFT_INSTR_CMPL;
+	else start -> opcode = BFT_INSTR_NOP;
+
+	for(BFt_instr_t *i = start -> next; i != end; i = i -> next) {
+		size_t op1 = i -> op1;
+		ssize_t ad1 = i -> ad1;
+
+		if(!ad1) continue;
+
+		switch(i -> opcode) {
+		case BFT_INSTR_INC:
+			new -> opcode = BFT_INSTR_ADDM;
+			new -> op1 = op1; new -> ad1 = ad1;
+			break;
+
+		case BFT_INSTR_DEC:
+			new -> opcode = BFT_INSTR_SUBM;
+			new -> op1 = op1; new -> ad1 = ad1;
+			break;
+
+		default:
+			continue;
+		}
+
+		new -> next = malloc(sizeof(BFt_instr_t));
+		if(!new -> next) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+		new -> next -> prev = new;
+		new = new -> next;
+	}
+
+	new -> opcode = BFT_INSTR_NOP;
+
+	end -> opcode = BFT_INSTR_MOV;
+	end -> op1 = 0; end -> ad1 = 0;
+
+	for(BFt_instr_t *i = start -> next; i != end;) {
+		BFt_instr_t *instr = i;
+		i = instr -> next;
+		free(instr);
+	}
+
+	start -> next = start_new;
+	end -> prev = new;
+
+	start_new -> prev = start;
+	new -> next = end;
+}
+
+static void translate(FILE *file) {
 	static char line[BF_LINE_SIZE];
 	BFt_instr_t *instr = BFt_code;
 	size_t chars = 8;
 
-	fprintf(file, "\tchar *ptr = &cells[0];\n\n\t");
+	fprintf(file, "\tchar *ptr = &cells[0];\n");
+	fprintf(file, "\tint (*inp)() = getchar;\n");
+	fprintf(file, "\tint (*out)(int) = putchar;\n\n\t");
 
 	while(instr) {
+		size_t op1 = instr -> op1;
+		ssize_t ad1 = instr -> ad1;
+
 		switch(instr -> opcode) {
+		case BFT_INSTR_MOV:
+			chars += ad1
+				? sprintf(line, "ptr[%zd] = %zu; ", ad1, op1)
+				: sprintf(line, "*ptr = %zu; ", op1);
+			break;
+
 		case BFT_INSTR_INC:
-			chars += sprintf(line, "*ptr += %zu; ", instr -> op1);
+			chars += ad1
+				? sprintf(line, "ptr[%zd] += %zu; ", ad1, op1)
+				: sprintf(line, "*ptr += %zu; ", op1);
 			break;
 
 		case BFT_INSTR_DEC:
-			chars += sprintf(line, "*ptr -= %zu; ", instr -> op1);
+			chars += ad1
+				? sprintf(line, "ptr[%zd] -= %zu; ", ad1, op1)
+				: sprintf(line, "*ptr -= %zu; ", op1);
+			break;
+
+		case BFT_INSTR_ADDM:
+			chars += sprintf(line, "ptr[%zd] += *ptr * %zu; ",
+				ad1, op1);
+			break;
+
+		case BFT_INSTR_SUBM:
+			chars += sprintf(line, "ptr[%zd] -= *ptr * %zu; ",
+				ad1, op1);
+			break;
+
+		case BFT_INSTR_CMPL:
+			chars += sprintf(line, "*ptr = -*ptr; ");
 			break;
 
 		case BFT_INSTR_FWD:
-			chars += sprintf(line, "ptr += %zu; ", instr -> op1);
+			chars += sprintf(line, "ptr += %zu; ", op1);
 			break;
 
 		case BFT_INSTR_BCK:
-			chars += sprintf(line, "ptr -= %zu; ", instr -> op1);
+			chars += sprintf(line, "ptr -= %zu; ", op1);
 			break;
 
 		case BFT_INSTR_INP:
-			chars += sprintf(line, "*ptr = getchar(); ");
+			chars += ad1 ? sprintf(line, "ptr[%zd] = inp(); ", ad1)
+				: sprintf(line, "*ptr = inp(); ");
 			break;
 
 		case BFT_INSTR_OUT:
-			chars += sprintf(line, "putchar(*ptr); ");
+			chars += ad1 ? sprintf(line, "out(ptr[%zd]); ", ad1)
+				: sprintf(line, "out(*ptr); ");
 			break;
 
 		case BFT_INSTR_LOOP:
@@ -249,76 +438,109 @@ static void translate_0(FILE *file) {
 	fputc('\n', file);
 }
 
-static void trans_amd64_0(FILE *file) {
+static void trans_amd64(FILE *file) {
 	BFt_instr_t *instr = BFt_code;
 
 	fprintf(file, "\tasm volatile ( \"AMD64_ASSEMBLY:\\n\"\n");
-	fprintf(file, "\t\"\tmovq\t%%0, %%%%rax\\n\"\n");
+	fprintf(file, "\t\"\tmovq\t%%0, %%%%rbx\\n\"\n");
 
 	while(instr) {
+		size_t op1 = instr -> op1;
+		ssize_t ad1 = instr -> ad1;
+		
 		switch(instr -> opcode) {
+		case BFT_INSTR_MOV:
+			fprintf(file, "\t\"\tmovb\t$%zu, ", op1);
+			if(ad1) fprintf(file, "%zd(%%%%rbx)\\n\"\n", ad1);
+			else fprintf(file, "(%%%%rbx)\\n\"\n");
+			break;
+
 		case BFT_INSTR_INC:
-			fprintf(file, "\t\"\taddb\t$0x%zx, (%%%%rax)\\n\"\n",
-				instr -> op1);
-			break;	
+			if(op1 == 1) fprintf(file, "\t\"\tincb\t");
+			else fprintf(file, "\t\"\taddb\t$%zu, ", op1);
+
+			if(ad1) fprintf(file, "%zd(%%%%rbx)\\n\"\n", ad1);
+			else fprintf(file, "(%%%%rbx)\\n\"\n");
+			break;
 
 		case BFT_INSTR_DEC:
-			fprintf(file, "\t\"\tsubb\t$0x%zx, (%%%%rax)\\n\"\n",
-				instr -> op1);
+			if(op1 == 1) fprintf(file, "\t\"\tdecb\t");
+			else fprintf(file, "\t\"\tsubb\t$%zu, ", op1);
+
+			if(ad1) fprintf(file, "%zd(%%%%rbx)\\n\"\n", ad1);
+			else fprintf(file, "(%%%%rbx)\\n\"\n");
+			break;
+
+		case BFT_INSTR_ADDM:
+			fprintf(file, "\t\"\tmovzb\t(%%%%rbx), %%%%rax\\n\"\n");
+			fprintf(file, "\t\"\tmov\t$%zu, %%%%rcx\\n\"\n", op1);
+			fprintf(file, "\t\"\tmul\t%%%%rcx\\n\"\n");
+			fprintf(file, "\t\"\taddb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad1);
+			break;
+
+		case BFT_INSTR_SUBM:
+			fprintf(file, "\t\"\tmovzb\t(%%%%rbx), %%%%rax\\n\"\n");
+			fprintf(file, "\t\"\tmov\t$%zu, %%%%rcx\\n\"\n", op1);
+			fprintf(file, "\t\"\tmul\t%%%%rcx\\n\"\n");
+			fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad1);
+			break;
+
+		case BFT_INSTR_CMPL:
+			fprintf(file, "\t\"\tnegb\t(%%%%rbx)\\n\"\n");
 			break;
 
 		case BFT_INSTR_FWD:
-			fprintf(file, "\t\"\tadd\t$0x%zx, %%%%rax\\n\"\n",
-				instr -> op1);
+			if(op1 == 1) fprintf(file, "\t\"\tinc\t");
+			else fprintf(file, "\t\"\tadd\t$%zu, ", op1);
+			fprintf(file, "%%%%rbx\\n\"\n");
 			break;
 
 		case BFT_INSTR_BCK:
-			fprintf(file, "\t\"\tsub\t$0x%zx, %%%%rax\\n\"\n",
-				instr -> op1);
+			if(op1 == 1) fprintf(file, "\t\"\tdec\t");
+			else fprintf(file, "\t\"\tsub\t$%zu, ", op1);
+			fprintf(file, "%%%%rbx\\n\"\n");
 			break;
 
 		case BFT_INSTR_INP:
-			fprintf(file, "\t\"\tpushq\t%%%%rax\\n\"\n");
-			fprintf(file, "\t\"\tmovq\t%%%%rax, %%%%rsi\\n\"\n");
-			fprintf(file, "\t\"\tmovq\t$0x0, %%%%rax\\n\"\n");
-			fprintf(file, "\t\"\tmovq\t$0x0, %%%%rdi\\n\"\n");
-			fprintf(file, "\t\"\tmovq\t$0x1, %%%%rdx\\n\"\n");
+			if(ad1) fprintf(file, "\t\"\tlea\t%zd", ad1);
+			else fprintf(file, "\t\"\tlea\t");
+			fprintf(file, "(%%%%rbx), %%%%rsi\\n\"\n");
+
+			fprintf(file, "\t\"\tmovq\t$0, %%%%rax\\n\"\n");
+			fprintf(file, "\t\"\tmovq\t$1, %%%%rdx\\n\"\n");
+			fprintf(file, "\t\"\tmovq\t$0, %%%%rdi\\n\"\n");
 			fprintf(file, "\t\"\tsyscall\\n\"\n");
-			fprintf(file, "\t\"\tpopq\t%%%%rax\\n\"\n");
 			break;
 
 		case BFT_INSTR_OUT:
-			fprintf(file, "\t\"\tpushq\t%%%%rax\\n\"\n");
-			fprintf(file, "\t\"\tmovq\t%%%%rax, %%%%rsi\\n\"\n");
-			fprintf(file, "\t\"\tmovq\t$0x1, %%%%rax\\n\"\n");
-			fprintf(file, "\t\"\tmovq\t$0x1, %%%%rdi\\n\"\n");
-			fprintf(file, "\t\"\tmovq\t$0x1, %%%%rdx\\n\"\n");
+			if(ad1) fprintf(file, "\t\"\tlea\t%zd", ad1);
+			else fprintf(file, "\t\"\tlea\t");
+			fprintf(file, "(%%%%rbx), %%%%rsi\\n\"\n");
+
+			fprintf(file, "\t\"\tmovq\t$1, %%%%rax\\n\"\n");
+			fprintf(file, "\t\"\tmovq\t$1, %%%%rdx\\n\"\n");
+			fprintf(file, "\t\"\tmovq\t$1, %%%%rdi\\n\"\n");
 			fprintf(file, "\t\"\tsyscall\\n\"\n");
-			fprintf(file, "\t\"\tpopq\t%%%%rax\\n\"\n");
 			break;
 
 		case BFT_INSTR_LOOP:
-			fprintf(file, "\n\t\".L%zu:\\n\"\n", instr -> op1);
-			fprintf(file, "\t\"\tcmpb\t$0x0, (%%%%rax)\\n\"\n");
-			fprintf(file, "\t\"\tje\t.E%zu\\n\"\n", instr -> op1);
+			fprintf(file, "\n\t\".L%zu:\\n\"\n", op1);
+			fprintf(file, "\t\"\tcmpb\t$0, (%%%%rbx)\\n\"\n");
+			fprintf(file, "\t\"\tje\t.E%zu\\n\"\n", op1);
 			break;
 
 		case BFT_INSTR_ENDL:
-			fprintf(file, "\t\"\tjmp\t.L%zu\\n\"\n", instr -> op1);
-			fprintf(file, "\n\t\".E%zu:\\n\"\n", instr -> op1);
+			fprintf(file, "\t\"\tjmp\t.L%zu\\n\"\n", op1);
+			fprintf(file, "\n\t\".E%zu:\\n\"\n", op1);
 			break;
-
-		default:
-			instr = instr -> next;
-			continue;
 		}
 
 		instr = instr -> next;
 	}
 
 	fprintf(file, "\n\t: : \"r\" (&cells[0])\n");
-	fprintf(file, "\t: \"rdi\", \"rsi\", \"rax\",\n");
-	fprintf(file, "\t\"rbx\", \"rcx\", \"rdx\");\n\n");
+	fprintf(file, "\t: \"rax\", \"rbx\", \"rcx\", \"rdx\", \"rdi\",\n"
+		"\t\"rsi\", \"r8\", \"r9\", \"r10\", \"r11\");\n\n");
 
 	fprintf(file, "\treturn 0;\n");
 }

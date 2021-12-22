@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 8.4: An Endless Stream of Garbage
+Version 9.0: A Small Lemon Tart
 
 bfcli:0%
 ```
@@ -34,7 +34,7 @@ The following is a non-exhaustive list of the functionality I added:
 
 - Loading valid Brainfuck files at the prompt, performing code buffer editing with `%` and executing them with `@`. (Again, thanks to intergration with `libClame`.)
 
-- Transpiling Brainfuck code to C source code with output to either STDOUT or a custom output file, as specified on the command line, as well as partial compilation to Amd64 assembly to boost compilation performance while offering similar performance to GCC's `-O3`.
+- Translating Brainfuck code to C source code as well as partial compilation to Amd64 assembly to boost compilation performance while offering similar performance to GCC's `-O3`. There are also different levels of optimisation when converting Brainfuck code to C or Assembly.
 
 ## Building, Running and Installing the Program from Source
 
@@ -89,6 +89,9 @@ Note: If a file is specified with -f, the code buffer's length is
   -d, --direct-inp  Don't buffer the standard input. Send characters
                     to Brainfuck code without waiting for a newline.
 
+  -O, --optim LVL   Specify the optimisation level. Valid values for
+                    LVL are 0 and 1.
+
 Note: If no output file is specified, the transpiled code is output
       to STDOUT. Code generated with -s may be both slower to compile
       and execute, so only use it when necessary.
@@ -109,6 +112,8 @@ Valid arguments are:
 
   -f, --file FILE  | -l, --length LEN | -r, --ram SIZE
   -t, --translate  | -x, --compile    | -o, --output OUT
+
+  -O, --optim LVL  |
 
 Happy coding! :)
 ```

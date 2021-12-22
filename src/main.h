@@ -20,9 +20,9 @@
 #ifndef BF_MAIN_H
 #define BF_MAIN_H 1
 
-#define BF_VERSION 8
-#define BF_SUBVERSION 4
-#define BF_VERNAME "An Endless Stream of Garbage"
+#define BF_VERSION 9
+#define BF_SUBVERSION 0
+#define BF_VERNAME "A Small Lemon Tart"
 
 #define BF_LINE_SIZE 4096
 #define BF_CODE_SIZE 65536

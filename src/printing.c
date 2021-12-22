@@ -150,7 +150,7 @@ void BFp_print_minihelp() {
 	puts("    -f, --file FILE  | -l, --length LEN | -r, --ram SIZE");
 	puts("    -t, --translate  | -x, --compile    | -o, --output OUT\n");
 
-	puts("    -O, --optim      |\n");
+	puts("    -O, --optim LVL  |\n");
 
 	puts("  Happy coding! :)\n");
 	exit(BFE_BAD_ARGS);
@@ -207,7 +207,8 @@ void BFp_print_usage() {
 	puts("    -d, --direct-inp  Don't buffer the standard input. Send characters");
 	puts("                      to Brainfuck code without waiting for a newline.\n");
 
-	puts("    -O, --optim LEVEL Specify the optimisation level.\n");
+	puts("    -O, --optim LVL   Specify the optimisation level. Valid values for");
+	puts("                      LVL are 0 and 1.\n");
 
 	puts("  Note: If no output file is specified, the translated code is output");
 	puts("        to STDOUT. Code generated with -s may be both slower to compile");
