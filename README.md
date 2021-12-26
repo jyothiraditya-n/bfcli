@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 9.0: A Small Lemon Tart
+Version 9.1: A Questionable Block of Cheese
 
 bfcli:0%
 ```
@@ -34,7 +34,7 @@ The following is a non-exhaustive list of the functionality I added:
 
 - Loading valid Brainfuck files at the prompt, performing code buffer editing with `%` and executing them with `@`. (Again, thanks to intergration with `libClame`.)
 
-- Translating Brainfuck code to C source code as well as partial compilation to Amd64 assembly to boost compilation performance while offering similar performance to GCC's `-O3`. There are also different levels of optimisation when converting Brainfuck code to C or Assembly.
+- Translating Brainfuck code to C source code as well as partial or complete compilation to Amd64 assembly. The latter significantly boosts compilation performance while offering similar performance to GCC's `-O3`. There are also different levels of optimisation when converting Brainfuck code to C or Assembly.
 
 ## Building, Running and Installing the Program from Source
 
@@ -65,6 +65,7 @@ Note: When in Minimal Mode, it's you and the original Brainfuck
 
   -f, --file FILE   Loads the file FILE into memory.
   -l, --length LEN  Sets the shell's code buffer length to LEN.
+  -r, --ram SIZE    Sets the shell's total memory size to SIZE.
 
 Note: If a file is specified without -f, it is run immediately and
       the program exits as soon as the execution of the file
@@ -73,21 +74,21 @@ Note: If a file is specified without -f, it is run immediately and
 Note: If a file is specified with -f, the code buffer's length is
       set to LEN plus the file's length.
 
-  -o, --output OUT  Sets the output file for the transpiled C
-                    code and the memory dump to OUT.
-
-  -r, --ram SIZE    Sets the total memory size for the compiled
-                    program to SIZE.
-
   -t, --translate   Translates the file to C source code, ouputs
                     the result to OUT and exits.
 
-  -x, --compile     Generates amd64 assembly code intermixed with the C
+  -x, --compile     Generates AMD64 assembly code intermixed with the C
                     output. This option affords both high performance
                     and fast compile times. (Implies -t)
 
+  -s, --standalone  Generates a standalone .s AMD64 assembly file.
+                    (Implies -x, Incompatible with -d)
+
   -d, --direct-inp  Don't buffer the standard input. Send characters
                     to Brainfuck code without waiting for a newline.
+
+  -o, --output OUT  Sets the output file for the translated C
+                    code and the memory dump to OUT.
 
   -O, --optim LVL   Specify the optimisation level. Valid values for
                     LVL are 0 and 1.
@@ -108,12 +109,12 @@ Valid arguments are:
 
   -a, --about      | -h, --help       | -v, --version
   -c, --colour     | -m, --minimal    | -n, --no-ansi
-  -d, --direct-inp |
+  -f, --file FILE  |
 
-  -f, --file FILE  | -l, --length LEN | -r, --ram SIZE
-  -t, --translate  | -x, --compile    | -o, --output OUT
+  -d, --direct-inp | -l, --length LEN | -r, --ram SIZE
+  -t, --translate  | -x, --compile    | -s, --standalone
 
-  -O, --optim LVL  |
+  -o, --output OUT | -O, --optim LVL  |
 
 Happy coding! :)
 ```

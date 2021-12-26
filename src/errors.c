@@ -31,6 +31,11 @@ void BFe_report_err(int errnum) {
 			BFc_cmd_name, BFt_optim_lvl);
 		break;
 
+	case BFE_INCOMPATIBLE_ARGS:
+		fprintf(stderr, "%s: error: %s\n", BFc_cmd_name,
+			BFe_code_error);
+		break;
+
 	case BFE_CODE_TOO_LONG:
 		fprintf(stderr, "%s: error: code too long.\n", BFc_cmd_name);
 		break;

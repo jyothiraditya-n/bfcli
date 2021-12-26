@@ -145,12 +145,12 @@ void BFp_print_minihelp() {
 
 	puts("    -a, --about      | -h, --help       | -v, --version");
 	puts("    -c, --colour     | -m, --minimal    | -n, --no-ansi");
-	puts("    -d, --direct-inp |\n");
+	puts("    -f, --file FILE  |\n");
 
-	puts("    -f, --file FILE  | -l, --length LEN | -r, --ram SIZE");
-	puts("    -t, --translate  | -x, --compile    | -o, --output OUT\n");
+	puts("    -d, --direct-inp | -l, --length LEN | -r, --ram SIZE");
+	puts("    -t, --translate  | -x, --compile    | -s, --standalone\n");
 
-	puts("    -O, --optim LVL  |\n");
+	puts("    -o, --output OUT | -O, --optim LVL  |\n");
 
 	puts("  Happy coding! :)\n");
 	exit(BFE_BAD_ARGS);
@@ -182,7 +182,8 @@ void BFp_print_usage() {
 	puts("        mode are disabled.\n");
 
 	puts("    -f, --file FILE   Loads the file FILE into memory.");
-	puts("    -l, --length LEN  Sets the shell's code buffer length to LEN.\n");
+	puts("    -l, --length LEN  Sets the shell's code buffer length to LEN.");
+	puts("    -r, --ram SIZE    Sets the shell's total memory size to SIZE.\n");
 
 	puts("  Note: If a file is specified without -f, it is run immediately and");
 	puts("        the program exits as soon as the execution of the file");
@@ -191,21 +192,21 @@ void BFp_print_usage() {
 	puts("  Note: If a file is specified with -f, the code buffer's length is");
 	puts("        set to LEN plus the file's length.\n");
 
-	puts("    -o, --output OUT  Sets the output file for the translated C");
-	puts("                      code and the memory dump to OUT.\n");
-
-	puts("    -r, --ram SIZE    Sets the total memory size for the compiled");
-	puts("                      program to SIZE.\n");
-
 	puts("    -t, --translate   Translates the file to C source code, ouputs");
 	puts("                      the result to OUT and exits.\n");
 	
-	puts("    -x, --compile     Generates amd64 assembly code intermixed with the C");
+	puts("    -x, --compile     Generates AMD64 assembly code intermixed with the C");
 	puts("                      output. This option affords both high performance");
 	puts("                      and fast compile times. (Implies -t)\n");
 
+	puts("    -s, --standalone  Generates a standalone .s AMD64 assembly file.");
+	puts("                      (Implies -x, Incompatible with -d)\n");
+
 	puts("    -d, --direct-inp  Don't buffer the standard input. Send characters");
 	puts("                      to Brainfuck code without waiting for a newline.\n");
+
+	puts("    -o, --output OUT  Sets the output file for the translated C");
+	puts("                      code and the memory dump to OUT.\n");
 
 	puts("    -O, --optim LVL   Specify the optimisation level. Valid values for");
 	puts("                      LVL are 0 and 1.\n");

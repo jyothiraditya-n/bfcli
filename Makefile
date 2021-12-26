@@ -22,12 +22,15 @@ OBJS = $(patsubst %.c,%.o,$(CFILES))
 LIBS = libClame/libClame.a
 
 DBFFILES = $(wildcard demo/*.bf)
-DCFILES = $(patsubst demo/%.bf,%.c,$(DBFFILES))
-DEMOS = $(patsubst %.c,%,$(DCFILES))
+DSFILES = $(patsubst demo/%.bf,%.s,$(DBFFILES))
+DOBJS = $(patsubst demo/%.bf,%.o,$(DBFFILES))
+DEMOS = $(patsubst demo/%.bf,%,$(DBFFILES))
 
 CC = gcc
+AS = as
+LD = ld
+
 CPPFLAGS = -Wall -Wextra -Werror -std=c99 -O3 -I libClame/inc/
-DCFLAGS = -Wall -Wextra -Werror -std=gnu89 -O3
 CFLAGS = -std=c99
 LDLIBS += -L libClame/ -lClame
 
@@ -35,8 +38,11 @@ DESTDIR = ~/.local/bin
 
 files = $(wildcard bfcli)
 files += $(foreach obj,$(OBJS),$(wildcard $(obj)))
-files += $(foreach file,$(DCFILES),$(wildcard $(file)))
+
+files += $(foreach file,$(DSFILES),$(wildcard $(file)))
+files += $(foreach obj,$(DOBJS),$(wildcard $(obj)))
 files += $(foreach demo,$(DEMOS),$(wildcard $(demo)))
+
 CLEAN = $(foreach file,$(files),rm $(file);)
 
 $(DESTDIR) : 
@@ -51,15 +57,18 @@ libClame/libClame.a :
 bfcli : $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(OBJS) -o bfcli $(LDLIBS)
 
-$(DCFILES) : %.c : demo/%.bf bfcli
-	./bfcli -xt -O1 $< -o $@
+$(DSFILES) : %.s : demo/%.bf bfcli
+	./bfcli -s -O1 $< -o $@
 
-$(DEMOS) : % : %.c
-	$(CC) $(DCFLAGS) $< -o $@
+$(DOBJS) : %.o : %.s
+	$(AS) $(DSFLAGS) $< -o $@
+
+$(DEMOS) : % : %.o
+	$(LD) $(DLFLAGS) $< -o $@
 
 .DEFAULT_GOAL = all
 .PHONY : all clean demos global install remove
-.PHONY : _demos _transpile_demos
+.PHONY : _demos _translate_demos
 
 all : bfcli
 
@@ -68,7 +77,7 @@ clean :
 	$(CLEAN)
 
 demos : bfcli
-	+make -j1 _transpile_demos
+	+make -j1 _translate_demos
 	+make _demos
 
 global : install
@@ -85,4 +94,4 @@ remove :
 
 _demos : $(DEMOS)
 
-_transpile_demos : $(DCFILES)
+_translate_demos : $(DSFILES)

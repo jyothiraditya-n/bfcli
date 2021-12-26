@@ -300,12 +300,25 @@ static void init(int argc, char **argv) {
 	arg -> short_flag = 'O';
 	arg -> var = var;
 
+	var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "standalone";
+	var -> data = &BFt_standalone;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "standalone";
+	arg -> short_flag = 's';
+	arg -> var = var;
+	arg -> value = true;
+
 	LCa_noflags = &BFc_immediate;
 	LCa_max_noflags = 1;
 
 	int ret = LCa_read(argc, argv);
 	if(ret != LCA_OK) BFp_print_minihelp();
 
+	if(BFt_standalone) BFt_compile = true;
 	if(BFt_compile) BFt_translate = true;
 
 	BFc_init(); BFi_init(); BFf_init();

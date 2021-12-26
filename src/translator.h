@@ -25,6 +25,7 @@
 
 extern bool BFt_compile;
 extern bool BFt_translate;
+extern bool BFt_standalone;
 extern int BFt_optim_lvl;
 
 typedef struct BFt_instr_s {

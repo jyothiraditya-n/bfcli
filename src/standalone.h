@@ -14,24 +14,9 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#ifndef BF_ERRORS_H
-#define BF_ERRORS_H 1
+#ifndef BF_STANDALONE_H
+#define BF_STANDALONE_H 1
 
-#define BFE_UNKNOWN_ERROR 0
-#define BFE_BAD_ARGS 1
-#define BFE_BAD_OPTIM 2
-#define BFE_INCOMPATIBLE_ARGS 3
-#define BFE_CODE_TOO_LONG 4
-#define BFE_LINE_TOO_LONG 5
-#define BFE_NO_FILE 6
-#define BFE_FILE_UNREADABLE 7
-#define BFE_FILE_UNWRITABLE 8
-#define BFE_BAD_CODE 9
-#define BFE_SEGFAULT 10
-
-extern const char *BFe_code_error;
-extern const char *BFe_file_name;
-
-extern void BFe_report_err(int errnum);
+extern void BFs_convert_file();
 
 #endif

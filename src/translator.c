@@ -28,10 +28,12 @@
 #include "files.h"
 #include "interpreter.h"
 #include "main.h"
+#include "standalone.h"
 #include "translator.h"
 
 bool BFt_compile;
 bool BFt_translate;
+bool BFt_standalone;
 int BFt_optim_lvl;
 
 BFt_instr_t *BFt_code;
@@ -45,8 +47,9 @@ static void translate(FILE *file);
 static void trans_amd64(FILE *file);
 
 void BFt_convert_file() {
-	BFt_optimise();
+	if(BFt_standalone) BFs_convert_file();
 
+	BFt_optimise();
 	if(!strlen(BFf_outfile_name)) {
 		strcpy(BFf_outfile_name, BFf_mainfile_name);
 		strncat(BFf_outfile_name, ".c",
@@ -440,14 +443,16 @@ static void translate(FILE *file) {
 
 static void trans_amd64(FILE *file) {
 	BFt_instr_t *instr = BFt_code;
+	int last_io_instr = BFT_INSTR_NOP;
+	bool regs_dirty = true;
 
 	fprintf(file, "\tasm volatile ( \"AMD64_ASSEMBLY:\\n\"\n");
-	fprintf(file, "\t\"\tmovq\t%%0, %%%%rbx\\n\"\n");
+	fprintf(file, "\t\"\tmov\t%%0, %%%%rbx\\n\"\n");
 
 	while(instr) {
 		size_t op1 = instr -> op1;
 		ssize_t ad1 = instr -> ad1;
-		
+
 		switch(instr -> opcode) {
 		case BFT_INSTR_MOV:
 			fprintf(file, "\t\"\tmovb\t$%zu, ", op1);
@@ -472,17 +477,21 @@ static void trans_amd64(FILE *file) {
 			break;
 
 		case BFT_INSTR_ADDM:
-			fprintf(file, "\t\"\tmovzb\t(%%%%rbx), %%%%rax\\n\"\n");
+			fprintf(file, "\t\"\tmov\t(%%%%rbx), %%%%al\\n\"\n");
 			fprintf(file, "\t\"\tmov\t$%zu, %%%%rcx\\n\"\n", op1);
-			fprintf(file, "\t\"\tmul\t%%%%rcx\\n\"\n");
+			fprintf(file, "\t\"\tmul\t%%%%cl\\n\"\n");
 			fprintf(file, "\t\"\taddb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad1);
+			
+			regs_dirty = true;
 			break;
 
 		case BFT_INSTR_SUBM:
-			fprintf(file, "\t\"\tmovzb\t(%%%%rbx), %%%%rax\\n\"\n");
+			fprintf(file, "\t\"\tmov\t(%%%%rbx), %%%%al\\n\"\n");
 			fprintf(file, "\t\"\tmov\t$%zu, %%%%rcx\\n\"\n", op1);
-			fprintf(file, "\t\"\tmul\t%%%%rcx\\n\"\n");
+			fprintf(file, "\t\"\tmul\t%%%%cl\\n\"\n");
 			fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad1);
+			
+			regs_dirty = true;
 			break;
 
 		case BFT_INSTR_CMPL:
@@ -506,10 +515,15 @@ static void trans_amd64(FILE *file) {
 			else fprintf(file, "\t\"\tlea\t");
 			fprintf(file, "(%%%%rbx), %%%%rsi\\n\"\n");
 
-			fprintf(file, "\t\"\tmovq\t$0, %%%%rax\\n\"\n");
-			fprintf(file, "\t\"\tmovq\t$1, %%%%rdx\\n\"\n");
-			fprintf(file, "\t\"\tmovq\t$0, %%%%rdi\\n\"\n");
-			fprintf(file, "\t\"\tsyscall\\n\"\n");
+			if(regs_dirty) fprintf(file, "\t\"\tmov\t$1, %%%%rdx\\n\"\n");
+			else if(last_io_instr == BFT_INSTR_INP) goto in;
+
+			fprintf(file, "\t\"\tmov\t$0, %%%%rax\\n\"\n");
+			fprintf(file, "\t\"\tmov\t%%%%rax, %%%%rdi\\n\"\n");
+		in:	fprintf(file, "\t\"\tsyscall\\n\"\n");
+
+			last_io_instr = BFT_INSTR_INP;
+			regs_dirty = false;
 			break;
 
 		case BFT_INSTR_OUT:
@@ -517,21 +531,36 @@ static void trans_amd64(FILE *file) {
 			else fprintf(file, "\t\"\tlea\t");
 			fprintf(file, "(%%%%rbx), %%%%rsi\\n\"\n");
 
-			fprintf(file, "\t\"\tmovq\t$1, %%%%rax\\n\"\n");
-			fprintf(file, "\t\"\tmovq\t$1, %%%%rdx\\n\"\n");
-			fprintf(file, "\t\"\tmovq\t$1, %%%%rdi\\n\"\n");
-			fprintf(file, "\t\"\tsyscall\\n\"\n");
+			if(regs_dirty) {
+				fprintf(file, "\t\"\tmov\t$1, %%%%rdx\\n\"\n");
+				fprintf(file, "\t\"\tmov\t%%%%rdx, %%%%rax\\n\"\n");
+			}
+
+			else {
+				if(last_io_instr == BFT_INSTR_OUT) goto out;
+				fprintf(file, "\t\"\tmov\t$1, %%%%rax\\n\"\n");
+			}
+
+			fprintf(file, "\t\"\tmov\t%%%%rax, %%%%rdi\\n\"\n");
+		out:	fprintf(file, "\t\"\tsyscall\\n\"\n");
+
+			last_io_instr = BFT_INSTR_OUT;
+			regs_dirty = false;
 			break;
 
 		case BFT_INSTR_LOOP:
 			fprintf(file, "\n\t\".L%zu:\\n\"\n", op1);
 			fprintf(file, "\t\"\tcmpb\t$0, (%%%%rbx)\\n\"\n");
-			fprintf(file, "\t\"\tje\t.E%zu\\n\"\n", op1);
+			fprintf(file, "\t\"\tje\t.LE%zu\\n\"\n", op1);
+
+			if(BFt_optim_lvl >= 1) regs_dirty = true;
 			break;
 
 		case BFT_INSTR_ENDL:
 			fprintf(file, "\t\"\tjmp\t.L%zu\\n\"\n", op1);
-			fprintf(file, "\n\t\".E%zu:\\n\"\n", op1);
+			fprintf(file, "\n\t\".LE%zu:\\n\"\n", op1);
+
+			if(BFt_optim_lvl >= 1) regs_dirty = true;
 			break;
 		}
 
