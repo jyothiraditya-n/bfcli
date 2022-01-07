@@ -26,6 +26,7 @@
 extern bool BFt_compile;
 extern bool BFt_translate;
 extern bool BFt_standalone;
+extern char BFt_target_arch[];
 extern int BFt_optim_lvl;
 
 typedef struct BFt_instr_s {
@@ -37,21 +38,31 @@ typedef struct BFt_instr_s {
 
 	#define BFT_INSTR_NOP 0
 
-	#define BFT_INSTR_MOV 1
-	#define BFT_INSTR_INC 2
-	#define BFT_INSTR_DEC 3
+	#define BFT_INSTR_INC 1
+	#define BFT_INSTR_DEC 2
 
-	#define BFT_INSTR_ADDM 4
-	#define BFT_INSTR_SUBM 5
-	#define BFT_INSTR_CMPL 6
+	#define BFT_INSTR_FWD 3
+	#define BFT_INSTR_BCK 4
 
-	#define BFT_INSTR_FWD 7
-	#define BFT_INSTR_BCK 8
+	#define BFT_INSTR_INP 5
+	#define BFT_INSTR_OUT 6
+	#define BFT_INSTR_LOOP 7
+	#define BFT_INSTR_ENDL 8
 
-	#define BFT_INSTR_INP 9
-	#define BFT_INSTR_OUT 10
-	#define BFT_INSTR_LOOP 11
-	#define BFT_INSTR_ENDL 12
+	#define BFT_INSTR_IFNZ 9
+	#define BFT_INSTR_ENDIF 10
+
+	#define BFT_INSTR_CMPL 11
+	#define BFT_INSTR_MOV 12
+
+	#define BFT_INSTR_MULA 13
+	#define BFT_INSTR_MULS 14
+
+	#define BFT_INSTR_SHLA 15
+	#define BFT_INSTR_SHLS 16
+
+	#define BFT_INSTR_CPYA 17
+	#define BFT_INSTR_CPYS 18
 
 } BFt_instr_t;
 

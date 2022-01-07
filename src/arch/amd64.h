@@ -14,9 +14,10 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#ifndef BF_STANDALONE_H
-#define BF_STANDALONE_H 1
+#ifndef BF_ARCH_AMD64_H
+#define BF_ARCH_AMD64_H 1
 
-extern void BFs_convert_file();
+extern void BFa_amd64_tasm(FILE *file);
+extern void BFa_amd64_tc(FILE *file);
 
 #endif

@@ -36,6 +36,11 @@ void BFe_report_err(int errnum) {
 			BFe_code_error);
 		break;
 
+	case BFE_BAD_ARCH:
+		fprintf(stderr, "%s: error: unknown architecture: %s\n",
+			BFc_cmd_name, BFt_target_arch);
+		break;
+
 	case BFE_CODE_TOO_LONG:
 		fprintf(stderr, "%s: error: code too long.\n", BFc_cmd_name);
 		break;

@@ -23,17 +23,28 @@
 
 #include <sys/types.h>
 
+#include "arch/amd64.h"
+#include "arch/i386.h"
+
 #include "clidata.h"
 #include "errors.h"
 #include "files.h"
 #include "interpreter.h"
 #include "main.h"
-#include "standalone.h"
 #include "translator.h"
+
+#define IS_POWER_OF_2(X) !(X & (X - 1))
+
+static size_t log_base_2(size_t val) {
+	size_t count = 0;
+	while(val) { val >>= 1; count++; }
+	return count - 1;
+}
 
 bool BFt_compile;
 bool BFt_translate;
 bool BFt_standalone;
+char BFt_target_arch[BF_FILENAME_SIZE];
 int BFt_optim_lvl;
 
 BFt_instr_t *BFt_code;
@@ -44,10 +55,10 @@ static BFt_instr_t *optimise_1();
 static void _optimise_1(BFt_instr_t *start, BFt_instr_t *end, bool compl);
 
 static void translate(FILE *file);
-static void trans_amd64(FILE *file);
+static void conv_standalone();
 
 void BFt_convert_file() {
-	if(BFt_standalone) BFs_convert_file();
+	if(BFt_standalone) conv_standalone();
 
 	BFt_optimise();
 	if(!strlen(BFf_outfile_name)) {
@@ -86,7 +97,12 @@ void BFt_convert_file() {
 		fputs("\ttcsetattr(STDIN_FILENO, TCSANOW, &raw);\n\n", file);
 	}
 
-	if(BFt_compile) trans_amd64(file);
+	if(BFt_compile) {
+		if(!strcmp(BFt_target_arch, "amd64")) BFa_amd64_tc(file);
+		else if(!strcmp(BFt_target_arch, "i386")) BFa_i386_tc(file);
+		else { BFe_report_err(BFE_BAD_ARCH); exit(BFE_BAD_ARCH); }
+	}
+
 	else translate(file);
 	fputs("}\n", file);
 
@@ -120,35 +136,31 @@ static BFt_instr_t *optimise_0() {
 
 	BFt_instr_t *first = trans;
 	trans -> prev = NULL;
-	trans -> next = NULL;
 	trans -> opcode = BFT_INSTR_NOP;
 
 	size_t brackets = 0;
 	ssize_t offset = 0;
 
-	while(instr) {
-		switch(instr -> opcode) { case BFI_INSTR_JMP: brackets++; }
-		instr = instr -> next;
-	}
+	for(BFi_instr_t *i = BFi_program_code; i; i = i -> next)
+		if(i -> opcode == BFI_INSTR_JMP) brackets++;
 
 	size_t *stack = malloc(sizeof(size_t) * brackets);
 	if(!stack) BFe_report_err(BFE_UNKNOWN_ERROR);
 
 	size_t nesting = 0;
 	brackets = 0;
-	instr = BFi_program_code;
 
 	while(instr) {
 		switch(instr -> opcode) {
 		case BFI_INSTR_INC:
 			trans -> opcode = BFT_INSTR_INC;
-			trans -> op1 = instr -> operand.value;
+			trans -> op1 = instr -> operand.value % 256;
 			trans -> ad1 = offset;
 			goto next;
 
 		case BFI_INSTR_DEC:
 			trans -> opcode = BFT_INSTR_DEC;
-			trans -> op1 = instr -> operand.value;
+			trans -> op1 = instr -> operand.value % 256;
 			trans -> ad1 = offset;
 			goto next;
 
@@ -190,7 +202,7 @@ static BFt_instr_t *optimise_0() {
 			trans -> op1 = -offset;
 		}
 
-		if(offset != 0) {
+		if(offset) {
 			trans -> next = malloc(sizeof(BFt_instr_t));
 			if(!trans -> next) BFe_report_err(BFE_UNKNOWN_ERROR);
 
@@ -228,6 +240,8 @@ static BFt_instr_t *optimise_0() {
 	}
 
 	free(stack);
+
+	trans -> next = NULL;
 	return first;
 }
 
@@ -283,7 +297,7 @@ static BFt_instr_t *optimise_1() {
 				break;
 
 			case BFT_INSTR_DEC:
-				i -> op1 = -(i -> next -> op1);
+				i -> op1 = 256 - i -> next -> op1;
 				break;
 
 			default:
@@ -307,8 +321,14 @@ static void _optimise_1(BFt_instr_t *start, BFt_instr_t *end, bool compl) {
 
 	BFt_instr_t *start_new = new;
 
-	if(compl) start -> opcode = BFT_INSTR_CMPL;
-	else start -> opcode = BFT_INSTR_NOP;
+	if(compl) {
+		new -> next = malloc(sizeof(BFt_instr_t));
+		if(!new -> next) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+		new -> next -> prev = new;
+		new -> next -> opcode = BFT_INSTR_CMPL;
+		new = new -> next;
+	}
 
 	for(BFt_instr_t *i = start -> next; i != end; i = i -> next) {
 		size_t op1 = i -> op1;
@@ -318,13 +338,35 @@ static void _optimise_1(BFt_instr_t *start, BFt_instr_t *end, bool compl) {
 
 		switch(i -> opcode) {
 		case BFT_INSTR_INC:
-			new -> opcode = BFT_INSTR_ADDM;
-			new -> op1 = op1; new -> ad1 = ad1;
+			if(op1 == 1) new -> opcode = BFT_INSTR_CPYA;
+
+			else if(IS_POWER_OF_2(op1)) {
+				new -> opcode = BFT_INSTR_SHLA;
+				new -> op1 = log_base_2(op1);
+			}
+
+			else {
+				new -> opcode = BFT_INSTR_MULA;
+				new -> op1 = op1;
+			}
+			
+			new -> ad1 = ad1;
 			break;
 
 		case BFT_INSTR_DEC:
-			new -> opcode = BFT_INSTR_SUBM;
-			new -> op1 = op1; new -> ad1 = ad1;
+			if(op1 == 1) new -> opcode = BFT_INSTR_CPYS;
+
+			else if(IS_POWER_OF_2(op1)) {
+				new -> opcode = BFT_INSTR_SHLS;
+				new -> op1 = log_base_2(op1);
+			}
+
+			else {
+				new -> opcode = BFT_INSTR_MULS;
+				new -> op1 = op1;
+			}
+
+			new -> ad1 = ad1;
 			break;
 
 		default:
@@ -338,16 +380,17 @@ static void _optimise_1(BFt_instr_t *start, BFt_instr_t *end, bool compl) {
 		new = new -> next;
 	}
 
-	new -> opcode = BFT_INSTR_NOP;
-
-	end -> opcode = BFT_INSTR_MOV;
-	end -> op1 = 0; end -> ad1 = 0;
+	new -> opcode = BFT_INSTR_MOV;
+	new -> op1 = 0; new -> ad1 = 0;
 
 	for(BFt_instr_t *i = start -> next; i != end;) {
 		BFt_instr_t *instr = i;
 		i = instr -> next;
 		free(instr);
 	}
+
+	start -> opcode = BFT_INSTR_IFNZ;
+	end -> opcode = BFT_INSTR_ENDIF;
 
 	start -> next = start_new;
 	end -> prev = new;
@@ -361,7 +404,7 @@ static void translate(FILE *file) {
 	BFt_instr_t *instr = BFt_code;
 	size_t chars = 8;
 
-	fprintf(file, "\tchar *ptr = &cells[0];\n");
+	fprintf(file, "\tunsigned char *ptr = &cells[0];\n");
 	fprintf(file, "\tint (*inp)() = getchar;\n");
 	fprintf(file, "\tint (*out)(int) = putchar;\n\n\t");
 
@@ -370,12 +413,6 @@ static void translate(FILE *file) {
 		ssize_t ad1 = instr -> ad1;
 
 		switch(instr -> opcode) {
-		case BFT_INSTR_MOV:
-			chars += ad1
-				? sprintf(line, "ptr[%zd] = %zu; ", ad1, op1)
-				: sprintf(line, "*ptr = %zu; ", op1);
-			break;
-
 		case BFT_INSTR_INC:
 			chars += ad1
 				? sprintf(line, "ptr[%zd] += %zu; ", ad1, op1)
@@ -388,18 +425,14 @@ static void translate(FILE *file) {
 				: sprintf(line, "*ptr -= %zu; ", op1);
 			break;
 
-		case BFT_INSTR_ADDM:
-			chars += sprintf(line, "ptr[%zd] += *ptr * %zu; ",
-				ad1, op1);
-			break;
-
-		case BFT_INSTR_SUBM:
-			chars += sprintf(line, "ptr[%zd] -= *ptr * %zu; ",
-				ad1, op1);
-			break;
-
 		case BFT_INSTR_CMPL:
 			chars += sprintf(line, "*ptr = -*ptr; ");
+			break;
+
+		case BFT_INSTR_MOV:
+			chars += ad1
+				? sprintf(line, "ptr[%zd] = %zu; ", ad1, op1)
+				: sprintf(line, "*ptr = %zu; ", op1);
 			break;
 
 		case BFT_INSTR_FWD:
@@ -428,6 +461,42 @@ static void translate(FILE *file) {
 			chars += sprintf(line, "} ");
 			break;
 
+		case BFT_INSTR_IFNZ:
+			chars += sprintf(line, "if(*ptr) { ");
+			break;
+
+		case BFT_INSTR_ENDIF:
+			chars += sprintf(line, "} ");
+			break;
+
+		case BFT_INSTR_MULA:
+			chars += sprintf(line, "ptr[%zd] += *ptr * %zu; ",
+				ad1, op1);
+			break;
+
+		case BFT_INSTR_MULS:
+			chars += sprintf(line, "ptr[%zd] -= *ptr * %zu; ",
+				ad1, op1);
+			break;
+
+		case BFT_INSTR_SHLA:
+			chars += sprintf(line, "ptr[%zd] += *ptr << %zu; ",
+				ad1, op1);
+			break;
+
+		case BFT_INSTR_SHLS:
+			chars += sprintf(line, "ptr[%zd] -= *ptr << %zu; ",
+				ad1, op1);
+			break;
+
+		case BFT_INSTR_CPYA:
+			chars += sprintf(line, "ptr[%zd] += *ptr; ", ad1);
+			break;
+
+		case BFT_INSTR_CPYS:
+			chars += sprintf(line, "ptr[%zd] -= *ptr; ", ad1);
+			break;
+
 		default:
 			instr = instr -> next;
 			continue;
@@ -441,135 +510,33 @@ static void translate(FILE *file) {
 	fputc('\n', file);
 }
 
-static void trans_amd64(FILE *file) {
-	BFt_instr_t *instr = BFt_code;
-	int last_io_instr = BFT_INSTR_NOP;
-	bool regs_dirty = true;
-
-	fprintf(file, "\tasm volatile ( \"AMD64_ASSEMBLY:\\n\"\n");
-	fprintf(file, "\t\"\tmov\t%%0, %%%%rbx\\n\"\n");
-
-	while(instr) {
-		size_t op1 = instr -> op1;
-		ssize_t ad1 = instr -> ad1;
-
-		switch(instr -> opcode) {
-		case BFT_INSTR_MOV:
-			fprintf(file, "\t\"\tmovb\t$%zu, ", op1);
-			if(ad1) fprintf(file, "%zd(%%%%rbx)\\n\"\n", ad1);
-			else fprintf(file, "(%%%%rbx)\\n\"\n");
-			break;
-
-		case BFT_INSTR_INC:
-			if(op1 == 1) fprintf(file, "\t\"\tincb\t");
-			else fprintf(file, "\t\"\taddb\t$%zu, ", op1);
-
-			if(ad1) fprintf(file, "%zd(%%%%rbx)\\n\"\n", ad1);
-			else fprintf(file, "(%%%%rbx)\\n\"\n");
-			break;
-
-		case BFT_INSTR_DEC:
-			if(op1 == 1) fprintf(file, "\t\"\tdecb\t");
-			else fprintf(file, "\t\"\tsubb\t$%zu, ", op1);
-
-			if(ad1) fprintf(file, "%zd(%%%%rbx)\\n\"\n", ad1);
-			else fprintf(file, "(%%%%rbx)\\n\"\n");
-			break;
-
-		case BFT_INSTR_ADDM:
-			fprintf(file, "\t\"\tmov\t(%%%%rbx), %%%%al\\n\"\n");
-			fprintf(file, "\t\"\tmov\t$%zu, %%%%rcx\\n\"\n", op1);
-			fprintf(file, "\t\"\tmul\t%%%%cl\\n\"\n");
-			fprintf(file, "\t\"\taddb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad1);
-			
-			regs_dirty = true;
-			break;
-
-		case BFT_INSTR_SUBM:
-			fprintf(file, "\t\"\tmov\t(%%%%rbx), %%%%al\\n\"\n");
-			fprintf(file, "\t\"\tmov\t$%zu, %%%%rcx\\n\"\n", op1);
-			fprintf(file, "\t\"\tmul\t%%%%cl\\n\"\n");
-			fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad1);
-			
-			regs_dirty = true;
-			break;
-
-		case BFT_INSTR_CMPL:
-			fprintf(file, "\t\"\tnegb\t(%%%%rbx)\\n\"\n");
-			break;
-
-		case BFT_INSTR_FWD:
-			if(op1 == 1) fprintf(file, "\t\"\tinc\t");
-			else fprintf(file, "\t\"\tadd\t$%zu, ", op1);
-			fprintf(file, "%%%%rbx\\n\"\n");
-			break;
-
-		case BFT_INSTR_BCK:
-			if(op1 == 1) fprintf(file, "\t\"\tdec\t");
-			else fprintf(file, "\t\"\tsub\t$%zu, ", op1);
-			fprintf(file, "%%%%rbx\\n\"\n");
-			break;
-
-		case BFT_INSTR_INP:
-			if(ad1) fprintf(file, "\t\"\tlea\t%zd", ad1);
-			else fprintf(file, "\t\"\tlea\t");
-			fprintf(file, "(%%%%rbx), %%%%rsi\\n\"\n");
-
-			if(regs_dirty) fprintf(file, "\t\"\tmov\t$1, %%%%rdx\\n\"\n");
-			else if(last_io_instr == BFT_INSTR_INP) goto in;
-
-			fprintf(file, "\t\"\tmov\t$0, %%%%rax\\n\"\n");
-			fprintf(file, "\t\"\tmov\t%%%%rax, %%%%rdi\\n\"\n");
-		in:	fprintf(file, "\t\"\tsyscall\\n\"\n");
-
-			last_io_instr = BFT_INSTR_INP;
-			regs_dirty = false;
-			break;
-
-		case BFT_INSTR_OUT:
-			if(ad1) fprintf(file, "\t\"\tlea\t%zd", ad1);
-			else fprintf(file, "\t\"\tlea\t");
-			fprintf(file, "(%%%%rbx), %%%%rsi\\n\"\n");
-
-			if(regs_dirty) {
-				fprintf(file, "\t\"\tmov\t$1, %%%%rdx\\n\"\n");
-				fprintf(file, "\t\"\tmov\t%%%%rdx, %%%%rax\\n\"\n");
-			}
-
-			else {
-				if(last_io_instr == BFT_INSTR_OUT) goto out;
-				fprintf(file, "\t\"\tmov\t$1, %%%%rax\\n\"\n");
-			}
-
-			fprintf(file, "\t\"\tmov\t%%%%rax, %%%%rdi\\n\"\n");
-		out:	fprintf(file, "\t\"\tsyscall\\n\"\n");
-
-			last_io_instr = BFT_INSTR_OUT;
-			regs_dirty = false;
-			break;
-
-		case BFT_INSTR_LOOP:
-			fprintf(file, "\n\t\".L%zu:\\n\"\n", op1);
-			fprintf(file, "\t\"\tcmpb\t$0, (%%%%rbx)\\n\"\n");
-			fprintf(file, "\t\"\tje\t.LE%zu\\n\"\n", op1);
-
-			if(BFt_optim_lvl >= 1) regs_dirty = true;
-			break;
-
-		case BFT_INSTR_ENDL:
-			fprintf(file, "\t\"\tjmp\t.L%zu\\n\"\n", op1);
-			fprintf(file, "\n\t\".LE%zu:\\n\"\n", op1);
-
-			if(BFt_optim_lvl >= 1) regs_dirty = true;
-			break;
-		}
-
-		instr = instr -> next;
+static void conv_standalone() {
+	if(BFc_direct_inp) {
+		BFe_code_error = "--standalone is incompatible with --direct-inp.";
+		BFe_report_err(BFE_INCOMPATIBLE_ARGS);
+		exit(BFE_INCOMPATIBLE_ARGS);
 	}
 
-	fprintf(file, "\n\t: : \"r\" (&cells[0])\n");
-	fprintf(file, "\t: \"rax\", \"rbx\", \"rcx\", \"rdx\", \"rdi\",\n"
-		"\t\"rsi\", \"r8\", \"r9\", \"r10\", \"r11\");\n\n");
+	if(!strlen(BFf_outfile_name)) {
+		strcpy(BFf_outfile_name, BFf_mainfile_name);
+		strncat(BFf_outfile_name, ".s",
+			BF_FILENAME_SIZE - 1 - strlen(BFf_outfile_name));
+	}
 
-	fprintf(file, "\treturn 0;\n");
+	FILE *file = fopen(BFf_outfile_name, "w");
+
+	if(!file) {
+		BFe_file_name = BFf_outfile_name;
+		BFe_report_err(BFE_FILE_UNWRITABLE);
+		exit(BFE_FILE_UNWRITABLE);
+	}
+
+	BFt_optimise();
+	if(!strcmp(BFt_target_arch, "amd64")) BFa_amd64_tasm(file);
+	else if(!strcmp(BFt_target_arch, "i386")) BFa_i386_tasm(file);
+	else { BFe_report_err(BFE_BAD_ARCH); exit(BFE_BAD_ARCH); }
+
+	int ret = fclose(file);
+	if(ret == EOF) BFe_report_err(BFE_UNKNOWN_ERROR);
+	exit(0);
 }

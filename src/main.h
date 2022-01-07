@@ -21,8 +21,8 @@
 #define BF_MAIN_H 1
 
 #define BF_VERSION 9
-#define BF_SUBVERSION 1
-#define BF_VERNAME "A Questionable Block of Cheese"
+#define BF_SUBVERSION 2
+#define BF_VERNAME "True Swiss Cheese"
 
 #define BF_LINE_SIZE 4096
 #define BF_CODE_SIZE 65536

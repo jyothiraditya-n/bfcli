@@ -83,12 +83,11 @@ void BFp_print_help() {
 	puts("    + Increments the val at the data pointer.");
 	puts("    - Decrements the val at the data pointer.\n");
 
-	puts("  Note: Data values are modulo-256 unsigned integers, meaning");
-	puts("        0 - 1 = 255, and 255 + 1 = 0.\n");
+	puts("  Note: Data values are modulo-256 unsigned integers, meaning 0 - 1 = 255, and");
+	puts("        255 + 1 = 0.\n");
 
 	puts("    . Outputs the val at the data pointer as an ASCII character.");
-	puts("    , Inputs an ASCII character and stores its val at the data");
-	puts("      pointer.\n");
+	puts("    , Inputs an ASCII character and stores its val at the data pointer\n");
 
 	puts("    [ (Open bracket) begins a loop.");
 	puts("    ] (Close brace) ends a loop.\n");
@@ -101,41 +100,39 @@ void BFp_print_help() {
 	puts("    * Prints memory values around the current pointer val.");
 	puts("    & Prints all memory values.\n");
 
-	puts("  Note: When ANSI support is enabled, & pauses at the end of the");
-	puts("        first screen of text and displays a the prompt ':'. Here,");
-	puts("        you can type any key to advance the memory dump by one");
-	puts("        line, enter to advance it by one page, or tab to complete");
-	puts("        the rest of the dump without pausing again.\n");
+	puts("  Note: When ANSI support is enabled, & pauses at the end of the first screen");
+	puts("        of text and displays a the prompt ':'. Here, you can type any key to");
+	puts("        advance the memory dump by one line, enter to advance it by one page,");
+	puts("        or tab to complete the rest of the dump without pausing again.\n");
 
-	puts("  Note: When an output file is specified with -o, the memory dump");
-	puts("        is redirected to that file instead of being displayed on");
-	puts("        the console.\n");
+	puts("  Note: When an output file is specified with -o, the memory dump is redirected");
+	puts("        to that file instead of being displayed on the console.\n");
 
-	puts("  Note: Extended Brainfuck commands are disabled when executing file");
-	puts("        code, and will simply be ignored. This is done for");
-	puts("        compatibility with vanilla Brainfuck programs.\n");
+	puts("  Note: Extended Brainfuck commands are disabled when executing file code, and");
+	puts("        will simply be ignored. This is done for compatibility with vanilla");
+	puts("        Brainfuck programs.\n");
 
 	puts("    ! Indicates to wait for more code before execution.");
 	puts("    ; Indicates to stop waiting for more code before execution.\n");
 
-	puts("  Note: The above two commands can be placed anywhere in a line and");
-	puts("        and will function correctly, but they may prove most useful");
-	puts("        at the ends of lines while typing long sections of code.\n");
+	puts("  Note: The above two commands can be placed anywhere in a line and and will");
+	puts("        function correctly, but they may prove most useful at the ends of lines");
+	puts("        while typing long sections of code.\n");
 
-	puts("  Note: The interpreter will still wait for more code if the current");
-	puts("        code contains unmatched brackets.\n");
+	puts("  Note: The interpreter will still wait for more code if the current code");
+	puts("        contains unmatched brackets.\n");
 
 	puts("    @ Executes code from the code buffer.");
 	puts("    % Edits code in the code buffer.");
 	puts("    $ Disassemblys the object code generated for the code buffer.\n");
 
-	puts("  Note: In order to load a file when Bfcli is running, type the file");
-	puts("        name at the main prompt. When files are loaded, they are put");
-	puts("        into the code buffer.\n");
+	puts("  Note: In order to load a file when Bfcli is running, type the file name at");
+	puts("        the main prompt. When files are loaded, they are put into the code");
+	puts("        buffer.\n");
 
-	puts("  Note: Buffer Editing functionality is disabled when the use of ANSI");
-	puts("        escape sequences is disabled. % will simply print the contents");
-	puts("        of the code buffer in this case.");
+	puts("  Note: Buffer Editing functionality is disabled when the use of ANSI escape");
+	puts("        sequences is disabled. % will simply print the contents of the code");
+	puts("        buffer in this case.");
 }
 
 void BFp_print_minihelp() {
@@ -143,14 +140,13 @@ void BFp_print_minihelp() {
 	
 	puts("  Valid arguments are:\n");
 
-	puts("    -a, --about      | -h, --help       | -v, --version");
-	puts("    -c, --colour     | -m, --minimal    | -n, --no-ansi");
-	puts("    -f, --file FILE  |\n");
+	puts("    -a, --about      | -h, --help       | -v, --version    | -c, --colour     |");
+	puts("    -m, --minimal    | -n, --no-ansi    | -f, --file FILE  |\n");
 
-	puts("    -d, --direct-inp | -l, --length LEN | -r, --ram SIZE");
-	puts("    -t, --translate  | -x, --compile    | -s, --standalone\n");
+	puts("    -d, --direct-inp | -l, --length LEN | -r, --ram SIZE   | -t, --translate  |");
+	puts("    -x, --compile    | -s, --standalone |\n");
 
-	puts("    -o, --output OUT | -O, --optim LVL  |\n");
+	puts("    -o, --output OUT | -A, --arch ARCH  | -O, --optim LVL  |\n");
 
 	puts("  Happy coding! :)\n");
 	exit(BFE_BAD_ARGS);
@@ -174,46 +170,44 @@ void BFp_print_usage() {
 	puts("    -n, --no-ansi     Disables the use of ANSI escape sequences.");
 	puts("    -m, --minimal     Disables Brainfuck extensions.\n");
 
-	puts("  Note: Colour support and use of ANSI escape sequences is enabled");
-	puts("        by default.\n");
+	puts("  Note: Colour support and use of ANSI escape sequences is enabled by default.\n");
 
-	puts("  Note: When in Minimal Mode, it's you and the original Brainfuck");
-	puts("        language, and that's it. All of the extensions of interactive");
-	puts("        mode are disabled.\n");
+	puts("  Note: When in Minimal Mode, it's you and the original Brainfuck language, and");
+	puts("        that's it. All of the extensions of interactive mode are disabled.\n");
 
 	puts("    -f, --file FILE   Loads the file FILE into memory.");
 	puts("    -l, --length LEN  Sets the shell's code buffer length to LEN.");
 	puts("    -r, --ram SIZE    Sets the shell's total memory size to SIZE.\n");
 
-	puts("  Note: If a file is specified without -f, it is run immediately and");
-	puts("        the program exits as soon as the execution of the file");
-	puts("        terminates. Use -f if you want the interactive prompt.\n");
+	puts("  Note: If a file is specified without -f, it is run immediately and the");
+	puts("        program exits as soon as the execution of the file terminates. Use -f");
+	puts("        if you want the interactive prompt.\n");
 
-	puts("  Note: If a file is specified with -f, the code buffer's length is");
-	puts("        set to LEN plus the file's length.\n");
+	puts("  Note: If a file is specified with -f, the code buffer's length is set to LEN");
+	puts("        plus the file's length.\n");
 
-	puts("    -t, --translate   Translates the file to C source code, ouputs");
-	puts("                      the result to OUT and exits.\n");
+	puts("    -t, --translate   Translates the file to C source code and exits.\n");
 	
-	puts("    -x, --compile     Generates AMD64 assembly code intermixed with the C");
+	puts("    -x, --compile     Generates assembly code intermixed with the C");
 	puts("                      output. This option affords both high performance");
 	puts("                      and fast compile times. (Implies -t)\n");
 
-	puts("    -s, --standalone  Generates a standalone .s AMD64 assembly file.");
-	puts("                      (Implies -x, Incompatible with -d)\n");
+	puts("    -s, --standalone  Generates a standalone .s assembly file. (Implies");
+	puts("                      -x, Incompatible with -d)\n");
 
-	puts("    -d, --direct-inp  Don't buffer the standard input. Send characters");
-	puts("                      to Brainfuck code without waiting for a newline.\n");
+	puts("    -d, --direct-inp  Disables input buffering. Characters are sent to");
+	puts("                      Brainfuck code without waiting for a newline.\n");
 
-	puts("    -o, --output OUT  Sets the output file for the translated C");
-	puts("                      code and the memory dump to OUT.\n");
+	puts("    -o, --output OUT  Sets the output file for the translated C code and the");
+	puts("                      memory dump to OUT.\n");
 
-	puts("    -O, --optim LVL   Specify the optimisation level. Valid values for");
-	puts("                      LVL are 0 and 1.\n");
+	puts("    -A, --arch ARCH   Sets the assembly architecture to ARCH. Valid values are");
+	puts("                      amd64 and i386.\n");
 
-	puts("  Note: If no output file is specified, the translated code is output");
-	puts("        to STDOUT. Code generated with -s may be both slower to compile");
-	puts("        and execute, so only use it when necessary.\n");
+	puts("    -O, --optim LVL   Sets the optimisation level to LVL. Valid values are 0");
+	puts("                      and 1.\n");
+
+	puts("  Note: If no output file is specified, a filename is chosen automatically.\n");
 
 	puts("  Happy coding! :)");
 }

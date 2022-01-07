@@ -14,25 +14,10 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#ifndef BF_ERRORS_H
-#define BF_ERRORS_H 1
+#ifndef BF_ARCH_I386_H
+#define BF_ARCH_I386_H 1
 
-#define BFE_UNKNOWN_ERROR 0
-#define BFE_BAD_ARGS 1
-#define BFE_BAD_OPTIM 2
-#define BFE_BAD_ARCH 3
-#define BFE_INCOMPATIBLE_ARGS 4
-#define BFE_CODE_TOO_LONG 5
-#define BFE_LINE_TOO_LONG 6
-#define BFE_NO_FILE 7
-#define BFE_FILE_UNREADABLE 8
-#define BFE_FILE_UNWRITABLE 9
-#define BFE_BAD_CODE 10
-#define BFE_SEGFAULT 11
-
-extern const char *BFe_code_error;
-extern const char *BFe_file_name;
-
-extern void BFe_report_err(int errnum);
+extern void BFa_i386_tasm(FILE *file);
+extern void BFa_i386_tc(FILE *file);
 
 #endif

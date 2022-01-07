@@ -41,14 +41,13 @@
 size_t BFm_insertion_point;
 
 static void init(int argc, char **argv);
-
 static int check(char *BFi_program_str, size_t len);
-static void handle_int();
 
 #define CODE_OK 1
 #define CODE_INCOMPLETE 2
 #define CODE_ERROR 3
 
+static void handle_int();
 static void handle_sig(int signum);
 
 static void about();
@@ -302,13 +301,26 @@ static void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
-	var -> id = "standalone";
+	var -> id = "BFt_standalone";
 	var -> data = &BFt_standalone;
 
 	arg = LCa_new();
 	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
 	arg -> long_flag = "standalone";
 	arg -> short_flag = 's';
+	arg -> var = var;
+	arg -> value = true;
+
+	var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "BFt_target_arch";
+	var -> fmt = BF_FILENAME_SCN;
+	var -> data = &BFt_target_arch;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "arch";
+	arg -> short_flag = 'A';
 	arg -> var = var;
 	arg -> value = true;
 
@@ -320,6 +332,16 @@ static void init(int argc, char **argv) {
 
 	if(BFt_standalone) BFt_compile = true;
 	if(BFt_compile) BFt_translate = true;
+
+	if(!strlen(BFt_target_arch)) {
+		#if defined(__i386__)
+		strcpy(BFt_target_arch, "i386");
+		#elif defined(__amd64__)
+		strcpy(BFt_target_arch, "amd64");
+		#else
+		strcpy(BFt_target_arch, "other");
+		#endif
+	}
 
 	BFc_init(); BFi_init(); BFf_init();
 	if(BFc_no_ansi) BFc_use_colour = false;

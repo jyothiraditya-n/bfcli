@@ -17,7 +17,7 @@
 HEADERS = $(wildcard src/*.h)
 HEADERS += $(wildcard libClame/inc/*.h)
 
-CFILES = $(wildcard src/*.c)
+CFILES = $(wildcard src/*.c) $(wildcard src/arch/*.c)
 OBJS = $(patsubst %.c,%.o,$(CFILES))
 LIBS = libClame/libClame.a
 
@@ -31,10 +31,12 @@ AS = as
 LD = ld
 
 CPPFLAGS = -Wall -Wextra -Werror -std=c99 -O3 -I libClame/inc/
-CFLAGS = -std=c99
+CFLAGS = -std=c99 -s
 LDLIBS += -L libClame/ -lClame
 
-DESTDIR = ~/.local/bin
+DLFLAGS += -s
+
+DESTDIR ?= ~/.local/bin
 
 files = $(wildcard bfcli)
 files += $(foreach obj,$(OBJS),$(wildcard $(obj)))
@@ -58,7 +60,7 @@ bfcli : $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(OBJS) -o bfcli $(LDLIBS)
 
 $(DSFILES) : %.s : demo/%.bf bfcli
-	./bfcli -s -O1 $< -o $@
+	./bfcli -sO1 $< -o $@
 
 $(DOBJS) : %.o : %.s
 	$(AS) $(DSFLAGS) $< -o $@

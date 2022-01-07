@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 9.1: A Questionable Block of Cheese
+Version 9.2: Pure Swiss Cheese
 
 bfcli:0%
 ```
@@ -45,145 +45,144 @@ Then, to start the compiled program, you can then run `./bfcli`. Some example Br
 The following are the command-line arguments that this program accepts:
 
 ```
-Usage: bf [ARGS] [FILE]
+  
+  Usage: bf [ARGS] [FILE]
 
-Valid arguments are:
-  -a, --about       Prints the licence and about dialogue.
-  -h, --help        Prints the help dialogue.
-  -v, --version     Prints the program version.
+  Valid arguments are:
+    -a, --about       Prints the licence and about dialogue.
+    -h, --help        Prints the help dialogue.
+    -v, --version     Prints the program version.
 
-  -c, --colour      Enables colour output.
-  -n, --no-ansi     Disables the use of ANSI escape sequences.
-  -m, --minimal     Disables Brainfuck extensions.
+    -c, --colour      Enables colour output.
+    -n, --no-ansi     Disables the use of ANSI escape sequences.
+    -m, --minimal     Disables Brainfuck extensions.
 
-Note: Colour support and use of ANSI escape sequences is enabled
-      by default.
+  Note: Colour support and use of ANSI escape sequences is enabled by default.
 
-Note: When in Minimal Mode, it's you and the original Brainfuck
-      language, and that's it. All of the extensions of interactive
-      mode are disabled.
+  Note: When in Minimal Mode, it's you and the original Brainfuck language, and
+        that's it. All of the extensions of interactive mode are disabled.
 
-  -f, --file FILE   Loads the file FILE into memory.
-  -l, --length LEN  Sets the shell's code buffer length to LEN.
-  -r, --ram SIZE    Sets the shell's total memory size to SIZE.
+    -f, --file FILE   Loads the file FILE into memory.
+    -l, --length LEN  Sets the shell's code buffer length to LEN.
+    -r, --ram SIZE    Sets the shell's total memory size to SIZE.
 
-Note: If a file is specified without -f, it is run immediately and
-      the program exits as soon as the execution of the file
-      terminates. Use -f if you want the interactive prompt.
+  Note: If a file is specified without -f, it is run immediately and the
+        program exits as soon as the execution of the file terminates. Use -f
+        if you want the interactive prompt.
 
-Note: If a file is specified with -f, the code buffer's length is
-      set to LEN plus the file's length.
+  Note: If a file is specified with -f, the code buffer's length is set to LEN
+        plus the file's length.
 
-  -t, --translate   Translates the file to C source code, ouputs
-                    the result to OUT and exits.
+    -t, --translate   Translates the file to C source code and exits.
 
-  -x, --compile     Generates AMD64 assembly code intermixed with the C
-                    output. This option affords both high performance
-                    and fast compile times. (Implies -t)
+    -x, --compile     Generates AMD64 assembly code intermixed with the C
+                      output. (Implies -t)
 
-  -s, --standalone  Generates a standalone .s AMD64 assembly file.
-                    (Implies -x, Incompatible with -d)
+    -s, --standalone  Generates a standalone .s AMD64 assembly file. (Implies
+                      -x, Incompatible with -d)
 
-  -d, --direct-inp  Don't buffer the standard input. Send characters
-                    to Brainfuck code without waiting for a newline.
+    -d, --direct-inp  Disables input buffering. Characters are sent to
+                      Brainfuck code without waiting for a newline.
 
-  -o, --output OUT  Sets the output file for the translated C
-                    code and the memory dump to OUT.
+    -o, --output OUT  Sets the output file for the translated C code and the
+                      memory dump to OUT.
 
-  -O, --optim LVL   Specify the optimisation level. Valid values for
-                    LVL are 0 and 1.
+    -A, --arch ARCH   Sets the assembly architecture to ARCH. Valid values are
+                      amd64 and i386.
 
-Note: If no output file is specified, the transpiled code is output
-      to STDOUT. Code generated with -s may be both slower to compile
-      and execute, so only use it when necessary.
+    -O, --optim LVL   Sets the optimisation level to LVL. Valid values are 0
+                      and 1.
 
-Happy coding! :)
+  Note: If no output file is specified, a filename is chosen automatically.
+
+  Happy coding! :)
+
 ```
 
 TL;DR:
 
 ```
-Usage: bf [ARGS] [FILE]
+  
+  Usage: bf [ARGS] [FILE]
 
-Valid arguments are:
+  Valid arguments are:
 
-  -a, --about      | -h, --help       | -v, --version
-  -c, --colour     | -m, --minimal    | -n, --no-ansi
-  -f, --file FILE  |
+    -a, --about      | -h, --help       | -v, --version    | -c, --colour     |
+    -m, --minimal    | -n, --no-ansi    | -f, --file FILE  |
 
-  -d, --direct-inp | -l, --length LEN | -r, --ram SIZE
-  -t, --translate  | -x, --compile    | -s, --standalone
+    -d, --direct-inp | -l, --length LEN | -r, --ram SIZE   | -t, --translate  |
+    -x, --compile    | -s, --standalone |
 
-  -o, --output OUT | -O, --optim LVL  |
+    -o, --output OUT | -A, --arch ARCH  | -O, --optim LVL  |
 
-Happy coding! :)
+  Happy coding! :)
+
 ```
 
 The following is the help dialogue for the interactive functionality:
 
 ```
-Interactive Brainfuck interpreter; exit with ^C.
 
-Brainfuck commands:
-  > Increments the data pointer.
-  < Decrements the data pointer.
+  Interactive Brainfuck interpreter; exit with ^C.
 
-  + Increments the value at the data pointer.
-  - Decrements the value at the data pointer.
+  Brainfuck commands:
+    > Increments the data pointer.
+    < Decrements the data pointer.
 
-Note: Data values are modulo-256 unsigned integers, meaning
-      0 - 1 = 255, and 255 + 1 = 0.
+    + Increments the value at the data pointer.
+    - Decrements the value at the data pointer.
 
-  . Outputs the value at the data pointer as an ASCII character.
-  , Inputs an ASCII character and stores its value at the data
-    pointer.
+  Note: Data values are modulo-256 unsigned integers, meaning 0 - 1 = 255, and
+        255 + 1 = 0.
 
-  [ (Open bracket) begins a loop.
-  ] (Close brace) ends a loop.
+    . Outputs the value at the data pointer as an ASCII character.
+    , Inputs an ASCII character and stores its value at the data pointer.
 
-Note: Loops run while the value at the data pointer is non-zero.
+    [ (Open bracket) begins a loop.
+    ] (Close brace) ends a loop.
 
-Extended Brainfuck commands:
-  ? Prints the help and copyright disclaimer to the console.
-  / Clears the memory and moves the pointer to 0.
-  * Prints memory values around the current pointer value.
-  & Prints all memory values.
+  Note: Loops run while the value at the data pointer is non-zero.
 
-Note: When ANSI support is enabled, & pauses at the end of the
-      first screen of text and displays a the prompt ':'. Here,
-      you can type any key to advance the memory dump by one
-      line, enter to advance it by one page, or tab to complete
-      the rest of the dump without pausing again.
+  Extended Brainfuck commands:
+    ? Prints the help and copyright disclaimer to the console.
+    / Clears the memory and moves the pointer to 0.
+    * Prints memory values around the current pointer value.
+    & Prints all memory values.
 
-Note: When an output file is specified with -o, the memory dump
-      is redirected to that file instead of being displayed on
-      the console.
+  Note: When ANSI support is enabled, & pauses at the end of the first screen
+        of text and displays a the prompt ':'. Here, you can type any key to
+        advance the memory dump by one line, enter to advance it by one page,
+        or tab to complete the rest of the dump without pausing again.
 
-Note: Extended Brainfuck commands are disabled when executing file
-      code, and will simply be ignored. This is done for
-      compatibility with vanilla Brainfuck programs.
+  Note: When an output file is specified with -o, the memory dump is redirected
+        to that file instead of being displayed on the console.
 
-  ! Indicates to wait for more code before execution.
-  ; Indicates to stop waiting for more code before execution.
+  Note: Extended Brainfuck commands are disabled when executing file code, and
+        will simply be ignored. This is done for compatibility with vanilla
+        Brainfuck programs.
 
-Note: The above two commands can be placed anywhere in a line and
-      and will function correctly, but they may prove most useful
-      at the ends of lines while typing long sections of code.
+    ! Indicates to wait for more code before execution.
+    ; Indicates to stop waiting for more code before execution.
 
-Note: The interpreter will still wait for more code if the current
-      code contains unmatched brackets.
+  Note: The above two commands can be placed anywhere in a line and and will
+        function correctly, but they may prove most useful at the ends of lines
+        while typing long sections of code.
 
-  @ Executes code from the code buffer.
-  % Edits code in the code buffer.
-  $ Disassembles the object code generated for the code buffer.
+  Note: The interpreter will still wait for more code if the current code
+        contains unmatched brackets.
 
-Note: In order to load a file when Bfcli is running, type the file
-      name at the main prompt. When files are loaded, they are put
-      into the code buffer.
+    @ Executes code from the code buffer.
+    % Edits code in the code buffer.
+    $ Disassembles the object code generated for the code buffer.
 
-Note: Buffer Editing functionality is disabled when the use of ANSI
-      escape sequences is disabled. % will simply print the contents
-      of the code buffer in this case.
+  Note: In order to load a file when Bfcli is running, type the file name at
+        the main prompt. When files are loaded, they are put into the code
+        buffer.
+
+  Note: Buffer Editing functionality is disabled when the use of ANSI escape
+        sequences is disabled. % will simply print the contents of the code
+        buffer in this case.
+
 ```
 
 Finally, to install the code, you can run `make install`. This will install it to `~/.local/bin` where `~` is your user's home folder. If you wish to change this location, you can specify a new one with `DESTDIR=<location> make install`. However, you may need to run the command with elevated privileges if installing to a system folder like `/bin`.

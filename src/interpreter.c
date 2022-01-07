@@ -154,7 +154,7 @@ static BFi_instr_t *compile(char *str, bool enable_exts) {
 			continue;
 		}
 
-		if(!enable_exts) continue;
+		if(!enable_exts || BFc_minimal_mode) continue;
 
 		switch(str[i]) {
 		case '?':
