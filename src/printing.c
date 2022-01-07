@@ -140,10 +140,10 @@ void BFp_print_minihelp() {
 	
 	puts("  Valid arguments are:\n");
 
-	puts("    -a, --about      | -h, --help       | -v, --version    | -c, --colour     |");
+	puts("    -a, --about      | -h, --help       | -v, --version    | -c, --colour");
 	puts("    -m, --minimal    | -n, --no-ansi    | -f, --file FILE  |\n");
 
-	puts("    -d, --direct-inp | -l, --length LEN | -r, --ram SIZE   | -t, --translate  |");
+	puts("    -d, --direct-inp | -l, --length LEN | -r, --ram SIZE   | -t, --translate");
 	puts("    -x, --compile    | -s, --standalone |\n");
 
 	puts("    -o, --output OUT | -A, --arch ARCH  | -O, --optim LVL  |\n");
