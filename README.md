@@ -107,10 +107,10 @@ TL;DR:
 
   Valid arguments are:
 
-    -a, --about      | -h, --help       | -v, --version    | -c, --colour     |
+    -a, --about      | -h, --help       | -v, --version    | -c, --colour
     -m, --minimal    | -n, --no-ansi    | -f, --file FILE  |
 
-    -d, --direct-inp | -l, --length LEN | -r, --ram SIZE   | -t, --translate  |
+    -d, --direct-inp | -l, --length LEN | -r, --ram SIZE   | -t, --translate
     -x, --compile    | -s, --standalone |
 
     -o, --output OUT | -A, --arch ARCH  | -O, --optim LVL  |
