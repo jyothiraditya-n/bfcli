@@ -36,8 +36,6 @@
 #include "printing.h"
 #include "translator.h"
 
-#define NXOR(A, B) ((A && B) || (!A && !B))
-
 size_t BFm_insertion_point;
 
 static void init(int argc, char **argv);

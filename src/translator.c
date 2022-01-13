@@ -380,17 +380,35 @@ static void _optimise_1(BFt_instr_t *start, BFt_instr_t *end, bool compl) {
 		new = new -> next;
 	}
 
-	new -> opcode = BFT_INSTR_MOV;
-	new -> op1 = 0; new -> ad1 = 0;
-
 	for(BFt_instr_t *i = start -> next; i != end;) {
 		BFt_instr_t *instr = i;
 		i = instr -> next;
 		free(instr);
 	}
 
+	if(compl && start_new -> next == new) {
+		free(start_new);
+		start_new = new;
+	}
+
+	if(start_new == new) {
+		start -> opcode = BFT_INSTR_NOP;
+		end -> opcode = BFT_INSTR_MOV;
+		end -> op1 = 0; end -> ad1 = 0;
+
+		start -> next = end;
+		end -> prev = start;
+
+		free(new);
+		return;
+	}
+
 	start -> opcode = BFT_INSTR_IFNZ;
-	end -> opcode = BFT_INSTR_ENDIF;
+	new -> opcode = BFT_INSTR_ENDIF;
+	new -> op1 = end -> op1;
+
+	end -> opcode = BFT_INSTR_MOV;
+	end -> op1 = 0; end -> ad1 = 0;
 
 	start -> next = start_new;
 	end -> prev = new;
@@ -404,9 +422,9 @@ static void translate(FILE *file) {
 	BFt_instr_t *instr = BFt_code;
 	size_t chars = 8;
 
-	fprintf(file, "\tunsigned char *ptr = &cells[0];\n");
-	fprintf(file, "\tint (*inp)() = getchar;\n");
-	fprintf(file, "\tint (*out)(int) = putchar;\n\n\t");
+	fprintf(file, "\tunsigned char *ptr = &cells[0];\n\n");
+	fprintf(file, "\t#define INP getchar\n");
+	fprintf(file, "\t#define OUT putchar\n\n\t");
 
 	while(instr) {
 		size_t op1 = instr -> op1;
@@ -444,13 +462,13 @@ static void translate(FILE *file) {
 			break;
 
 		case BFT_INSTR_INP:
-			chars += ad1 ? sprintf(line, "ptr[%zd] = inp(); ", ad1)
-				: sprintf(line, "*ptr = inp(); ");
+			chars += ad1 ? sprintf(line, "ptr[%zd] = INP(); ", ad1)
+				: sprintf(line, "*ptr = INP(); ");
 			break;
 
 		case BFT_INSTR_OUT:
-			chars += ad1 ? sprintf(line, "out(ptr[%zd]); ", ad1)
-				: sprintf(line, "out(*ptr); ");
+			chars += ad1 ? sprintf(line, "OUT(ptr[%zd]); ", ad1)
+				: sprintf(line, "OUT(*ptr); ");
 			break;
 
 		case BFT_INSTR_LOOP:

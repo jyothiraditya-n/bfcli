@@ -252,6 +252,7 @@ static void run(BFi_instr_t *instr) {
 		case BFI_INSTR_OUT:
 			BFi_last_output = BFi_mem[BFi_mem_ptr];
 			putchar(BFi_mem[BFi_mem_ptr]);
+			fflush(stdout);
 			break;
 
 		case BFI_INSTR_JMP:

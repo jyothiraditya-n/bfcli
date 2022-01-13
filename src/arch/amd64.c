@@ -48,17 +48,13 @@ void BFa_amd64_tasm(FILE *file) {
 
 		switch(instr -> opcode) {
 		case BFT_INSTR_INC:
-			if(op1 == 1) fprintf(file, "\tincb\t");
-			else fprintf(file, "\taddb\t$%zu, ", op1);
-
+			fprintf(file, "\taddb\t$%zu, ", op1);
 			if(ad1) fprintf(file, "%zd(%%rbx)\n", ad1);
 			else fprintf(file, "(%%rbx)\n");
 			break;
 
 		case BFT_INSTR_DEC:
-			if(op1 == 1) fprintf(file, "\tdecb\t");
-			else fprintf(file, "\tsubb\t$%zu, ", op1);
-
+			fprintf(file, "\tsubb\t$%zu, ", op1);
 			if(ad1) fprintf(file, "%zd(%%rbx)\n", ad1);
 			else fprintf(file, "(%%rbx)\n");
 			break;
@@ -74,14 +70,12 @@ void BFa_amd64_tasm(FILE *file) {
 			break;
 
 		case BFT_INSTR_FWD:
-			if(op1 == 1) fprintf(file, "\tinc\t");
-			else fprintf(file, "\tadd\t$%zu, ", op1);
+			fprintf(file, "\tadd\t$%zu, ", op1);
 			fprintf(file, "%%rbx\n");
 			break;
 
 		case BFT_INSTR_BCK:
-			if(op1 == 1) fprintf(file, "\tdec\t");
-			else fprintf(file, "\tsub\t$%zu, ", op1);
+			fprintf(file, "\tsub\t$%zu, ", op1);
 			fprintf(file, "%%rbx\n");
 			break;
 
@@ -151,14 +145,14 @@ void BFa_amd64_tasm(FILE *file) {
 
 		case BFT_INSTR_MULA:
 			fprintf(file, "\tmov\t(%%rbx), %%al\n");
-			fprintf(file, "\tmov\t$%zu, %%rcx\n", op1);
+			fprintf(file, "\tmov\t$%zu, %%cl\n", op1);
 			fprintf(file, "\tmul\t%%cl\n");
 			fprintf(file, "\taddb\t%%al, %zd(%%rbx)\n", ad1);
 			break;
 
 		case BFT_INSTR_MULS:
 			fprintf(file, "\tmov\t(%%rbx), %%al\n");
-			fprintf(file, "\tmov\t$%zu, %%rcx\n", op1);
+			fprintf(file, "\tmov\t$%zu, %%cl\n", op1);
 			fprintf(file, "\tmul\t%%cl\n");
 			fprintf(file, "\tsubb\t%%al, %zd(%%rbx)\n", ad1);
 			break;
@@ -205,30 +199,24 @@ void BFa_amd64_tc(FILE *file) {
 
 		switch(instr -> opcode) {
 		case BFT_INSTR_INC:
-			if(op1 == 1) fprintf(file, "\t\"\tincb\t");
-			else fprintf(file, "\t\"\taddb\t$%zu, ", op1);
-
+			fprintf(file, "\t\"\taddb\t$%zu, ", op1);
 			if(ad1) fprintf(file, "%zd(%%%%rbx)\\n\"\n", ad1);
 			else fprintf(file, "(%%%%rbx)\\n\"\n");
 			break;
 
 		case BFT_INSTR_DEC:
-			if(op1 == 1) fprintf(file, "\t\"\tdecb\t");
-			else fprintf(file, "\t\"\tsubb\t$%zu, ", op1);
-
+			fprintf(file, "\t\"\tsubb\t$%zu, ", op1);
 			if(ad1) fprintf(file, "%zd(%%%%rbx)\\n\"\n", ad1);
 			else fprintf(file, "(%%%%rbx)\\n\"\n");
 			break;
 
 		case BFT_INSTR_FWD:
-			if(op1 == 1) fprintf(file, "\t\"\tinc\t");
-			else fprintf(file, "\t\"\tadd\t$%zu, ", op1);
+			fprintf(file, "\t\"\tadd\t$%zu, ", op1);
 			fprintf(file, "%%%%rbx\\n\"\n");
 			break;
 
 		case BFT_INSTR_BCK:
-			if(op1 == 1) fprintf(file, "\t\"\tdec\t");
-			else fprintf(file, "\t\"\tsub\t$%zu, ", op1);
+			fprintf(file, "\t\"\tsub\t$%zu, ", op1);
 			fprintf(file, "%%%%rbx\\n\"\n");
 			break;
 
@@ -306,14 +294,14 @@ void BFa_amd64_tc(FILE *file) {
 
 		case BFT_INSTR_MULA:
 			fprintf(file, "\t\"\tmov\t(%%%%rbx), %%%%al\\n\"\n");
-			fprintf(file, "\t\"\tmov\t$%zu, %%%%rcx\\n\"\n", op1);
+			fprintf(file, "\t\"\tmov\t$%zu, %%%%cl\\n\"\n", op1);
 			fprintf(file, "\t\"\tmul\t%%%%cl\\n\"\n");
 			fprintf(file, "\t\"\taddb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad1);
 			break;
 
 		case BFT_INSTR_MULS:
 			fprintf(file, "\t\"\tmov\t(%%%%rbx), %%%%al\\n\"\n");
-			fprintf(file, "\t\"\tmov\t$%zu, %%%%rcx\\n\"\n", op1);
+			fprintf(file, "\t\"\tmov\t$%zu, %%%%cl\\n\"\n", op1);
 			fprintf(file, "\t\"\tmul\t%%%%cl\\n\"\n");
 			fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad1);
 			break;
