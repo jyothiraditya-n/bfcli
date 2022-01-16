@@ -93,8 +93,8 @@ static BFi_instr_t *compile(char *str, bool enable_exts) {
 	first -> prev = NULL;
 	first -> next = NULL;
 	first -> opcode = BFI_INSTR_NOP;
-	first -> operand.ptr = NULL;
-	first -> operand.value = 0;
+	first -> op.ptr = NULL;
+	first -> op.value = 0;
 
 	BFi_instr_t *current = first;
 	size_t length = strlen(str);
@@ -149,8 +149,8 @@ static BFi_instr_t *compile(char *str, bool enable_exts) {
 				else break;
 			}
 
-			j -> operand.ptr = current;
-			current -> prev -> operand.ptr = j;
+			j -> op.ptr = current;
+			current -> prev -> op.ptr = j;
 			continue;
 		}
 
@@ -189,7 +189,7 @@ static BFi_instr_t *compile(char *str, bool enable_exts) {
 
 	if(value) {
 		current -> opcode = opcode;
-		current -> operand.value = value;
+		current -> op.value = value;
 	}
 
 	return first;
@@ -200,17 +200,17 @@ static void run(BFi_instr_t *instr) {
 	while(instr && BFi_is_running) {
 		switch(instr -> opcode) {
 		case BFI_INSTR_INC:
-			BFi_mem[BFi_mem_ptr] += instr -> operand.value;
+			BFi_mem[BFi_mem_ptr] += instr -> op.value;
 			break;
 
 		case BFI_INSTR_DEC:
-			BFi_mem[BFi_mem_ptr] -= instr -> operand.value;
+			BFi_mem[BFi_mem_ptr] -= instr -> op.value;
 			break;
 
 		case BFI_INSTR_FWD:
-			BFi_mem_ptr += instr -> operand.value;
+			BFi_mem_ptr += instr -> op.value;
 			if(BFi_mem_ptr >= BFi_mem_size) {
-				BFi_mem_ptr -= instr -> operand.value;
+				BFi_mem_ptr -= instr -> op.value;
 
 				BFe_file_name = BFc_immediate
 					? BFf_mainfile_name
@@ -227,9 +227,9 @@ static void run(BFi_instr_t *instr) {
 			break;
 
 		case BFI_INSTR_BCK:
-			BFi_mem_ptr -= instr -> operand.value;
+			BFi_mem_ptr -= instr -> op.value;
 			if(BFi_mem_ptr >= BFi_mem_size) {
-				BFi_mem_ptr += instr -> operand.value;
+				BFi_mem_ptr += instr -> op.value;
 
 				BFe_file_name = BFc_immediate
 					? BFf_mainfile_name
@@ -256,12 +256,12 @@ static void run(BFi_instr_t *instr) {
 			break;
 
 		case BFI_INSTR_JMP:
-			instr = instr -> operand.ptr;
+			instr = instr -> op.ptr;
 			continue;
 
 		case BFI_INSTR_JZ:
 			if(BFi_mem[BFi_mem_ptr]) break;
-			instr = instr -> operand.ptr;
+			instr = instr -> op.ptr;
 			continue;
 
 		case BFI_INSTR_HELP:
@@ -370,7 +370,7 @@ static void append_cmplx(BFi_instr_t **current, int *opcode, size_t *value,
 
 	else if(*opcode != context) {
 		(*current) -> opcode = *opcode;
-		(*current) -> operand.value = *value;
+		(*current) -> op.value = *value;
 
 		(*current) -> next = malloc(sizeof(BFi_instr_t));
 		if(!(*current) -> next) BFe_report_err(BFE_UNKNOWN_ERROR);

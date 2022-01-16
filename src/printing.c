@@ -204,8 +204,8 @@ void BFp_print_usage() {
 	puts("    -A, --arch ARCH   Sets the assembly architecture to ARCH. Valid values are");
 	puts("                      amd64 and i386.\n");
 
-	puts("    -O, --optim LVL   Sets the optimisation level to LVL. Valid values are 0");
-	puts("                      and 1.\n");
+	puts("    -O, --optim LVL   Sets the optimisation level to LVL. Valid values are 0, 1");
+	puts("                      and 2.\n");
 
 	puts("  Note: If no output file is specified, a filename is chosen automatically.\n");
 
@@ -247,7 +247,7 @@ void BFp_print_bytecode() {
 			printf("\e[%zu;1H", BFc_height - 1);
 		}
 
-		size_t val = instr -> operand.value;
+		size_t val = instr -> op.value;
 		switch(instr -> opcode) {
 		case BFI_INSTR_NOP:
 			if(!column) column += printf("  %0*zx: nop %*s",
@@ -297,7 +297,7 @@ void BFp_print_bytecode() {
 		switch(instr -> opcode) {
 		case BFI_INSTR_JMP:
 			for(BFi_instr_t *j = instr; j; j = j -> prev) {
-				if(j == instr -> operand.ptr) break;
+				if(j == instr -> op.ptr) break;
 				else index--; 
 			}
 
@@ -308,7 +308,7 @@ void BFp_print_bytecode() {
 		
 		case BFI_INSTR_JZ:
 			for(BFi_instr_t *j = instr; j; j = j -> next) {
-				if(j == instr -> operand.ptr) break;
+				if(j == instr -> op.ptr) break;
 				else index++; 
 			}
 

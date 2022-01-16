@@ -21,14 +21,9 @@
 #define BF_INTERPRETER_H 1
 
 typedef struct BFi_instr_s {
+	union { struct BFi_instr_s *ptr; size_t value; } op;
 	struct BFi_instr_s *prev, *next;
 	int opcode;
-
-	union {
-		struct BFi_instr_s *ptr;
-		size_t value;
-
-	} operand;
 
 	#define BFI_INSTR_NOP 0
 

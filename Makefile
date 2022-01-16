@@ -60,7 +60,7 @@ bfcli : $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(OBJS) -o bfcli $(LDLIBS)
 
 $(DSFILES) : %.s : demo/%.bf bfcli
-	./bfcli -sO1 $< -o $@
+	./bfcli -sO2 $< -o $@
 
 $(DOBJS) : %.o : %.s
 	$(AS) $(DSFLAGS) $< -o $@

@@ -29,7 +29,10 @@
 #include "../translator.h"
 
 void BFa_i386_tasm(FILE *file) {
-	fprintf(file, ".bss\n\n");
+	fprintf(file, ".bss\n");
+	if(BFt_optim_lvl >= 2) fprintf(file, "\t.skip\t%zu\n", BFi_mem_size);
+	fprintf(file, "\n");
+
 	fprintf(file, "cells:\n");
 	fprintf(file, "\t.skip\t%zu\n\n", BFi_mem_size);
 
@@ -434,7 +437,9 @@ void BFa_i386_tc(FILE *file) {
 		}
 	}
 
-	fprintf(file, "\n\t: : \"r\" (&cells[0])\n");
+	fprintf(file, "\n\t: : \"r\" (&cells[%zu])\n",
+		BFt_optim_lvl >= 2 ? BFi_mem_size : 0);
+	
 	fprintf(file, "\t: \"eax\", \"ebx\", \"ecx\", \"edx\", \"esi\");\n\n");
 
 	fprintf(file, "\treturn 0;\n");

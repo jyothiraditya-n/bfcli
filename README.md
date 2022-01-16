@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 9.3: Cheesecake
+Version 9.4: A Slightly Soggy Burger
 
 bfcli:0%
 ```
@@ -90,8 +90,8 @@ The following are the command-line arguments that this program accepts:
     -A, --arch ARCH   Sets the assembly architecture to ARCH. Valid values are
                       amd64 and i386.
 
-    -O, --optim LVL   Sets the optimisation level to LVL. Valid values are 0
-                      and 1.
+    -O, --optim LVL   Sets the optimisation level to LVL. Valid values are 0, 1
+                      and 2.
 
   Note: If no output file is specified, a filename is chosen automatically.
 

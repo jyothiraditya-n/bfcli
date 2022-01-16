@@ -51,6 +51,7 @@ BFt_instr_t *BFt_code;
 
 static BFt_instr_t *optimise_0();
 static BFt_instr_t *optimise_1();
+static BFt_instr_t *optimise_2();
 
 static void conv_loop(BFt_instr_t *start, BFt_instr_t *end, bool compl);
 static BFt_instr_t *conv_instr(BFt_instr_t *start, BFt_instr_t *end,
@@ -86,7 +87,9 @@ void BFt_convert_file() {
 		fputs("struct termios cooked, raw;\n", file);
 	}
 
-	fprintf(file, "unsigned char cells[%zu];\n\n", BFi_mem_size);
+	fprintf(file, "#define VAR unsigned char\n");
+	if(BFt_optim_lvl < 2) fprintf(file, "VAR cells[%zu];\n\n", BFi_mem_size);
+	else fprintf(file, "VAR cells[%zu];\n\n", BFi_mem_size * 2);
 
 	fputs("int main() {\n", file);
 	if(BFc_direct_inp) {
@@ -124,6 +127,7 @@ void BFt_optimise() {
 	switch(BFt_optim_lvl) {
 		case 0: BFt_code = optimise_0(); break;
 		case 1: BFt_code = optimise_1(); break;
+		case 2: BFt_code = optimise_2(); break;
 
 		default:
 			BFe_report_err(BFE_BAD_OPTIM);
@@ -156,22 +160,22 @@ static BFt_instr_t *optimise_0() {
 		switch(instr -> opcode) {
 		case BFI_INSTR_INC:
 			trans -> opcode = BFT_INSTR_INC;
-			trans -> op1 = instr -> operand.value % 256;
+			trans -> op1 = instr -> op.value % 256;
 			trans -> ad1 = offset;
 			goto next;
 
 		case BFI_INSTR_DEC:
 			trans -> opcode = BFT_INSTR_DEC;
-			trans -> op1 = instr -> operand.value % 256;
+			trans -> op1 = instr -> op.value % 256;
 			trans -> ad1 = offset;
 			goto next;
 
 		case BFI_INSTR_FWD:
-			offset += instr -> operand.value;
+			offset += instr -> op.value;
 			goto end;
 
 		case BFI_INSTR_BCK:
-			offset -= instr -> operand.value;
+			offset -= instr -> op.value;
 			goto end;
 
 		case BFI_INSTR_INP:
@@ -429,17 +433,38 @@ static BFt_instr_t *conv_instr(BFt_instr_t *start, BFt_instr_t *end,
 	else return end;
 }
 
+static BFt_instr_t *optimise_2() {
+	BFt_instr_t *start = optimise_1();
+	BFt_instr_t *instr = start;
+
+	while(instr) switch(instr -> opcode) {
+	case BFT_INSTR_NOP: case BFT_INSTR_IFNZ: case BFT_INSTR_ENDIF:
+		if(instr -> prev) instr -> prev -> next = instr -> next;
+		else start = instr -> next;
+
+		if(instr -> next) instr -> next -> prev = instr -> prev;
+		BFt_instr_t *rip = instr;
+		instr = instr -> next;
+		free(rip);
+		break;
+
+	default:
+		instr = instr -> next;
+	}
+
+	return start;
+}
+
 static void translate(FILE *file) {
 	static char line[BF_LINE_SIZE];
 	BFt_instr_t *instr = BFt_code;
 	size_t chars = 8;
 
-
-	fprintf(file, "\t#define VAR unsigned char\n");
 	fprintf(file, "\t#define INP getchar\n");
 	fprintf(file, "\t#define OUT putchar\n\n");
 
-	fprintf(file, "\tVAR *ptr = &cells[0];\n\n\t");
+	if(BFt_optim_lvl < 2) fprintf(file, "\tVAR *ptr = &cells[0];\n\n\t");
+	else fprintf(file, "\tVAR *ptr = &cells[%zu];\n\n\t", BFi_mem_size);
 
 	while(instr) {
 		size_t op1 = instr -> op1;
