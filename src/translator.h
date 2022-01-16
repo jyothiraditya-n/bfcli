@@ -33,7 +33,7 @@ typedef struct BFt_instr_s {
 	struct BFt_instr_s *prev, *next;
 
 	int opcode;
-	size_t op1;
+	size_t op1, op2;
 	ssize_t ad1;
 
 	#define BFT_INSTR_NOP 0

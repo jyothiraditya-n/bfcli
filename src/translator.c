@@ -33,9 +33,9 @@
 #include "main.h"
 #include "translator.h"
 
-#define IS_POWER_OF_2(X) !(X & (X - 1))
+#define IS_2_POW(X) !(X & (X - 1))
 
-static size_t log_base_2(size_t val) {
+static size_t log_b2(size_t val) {
 	size_t count = 0;
 	while(val) { val >>= 1; count++; }
 	return count - 1;
@@ -52,7 +52,9 @@ BFt_instr_t *BFt_code;
 static BFt_instr_t *optimise_0();
 static BFt_instr_t *optimise_1();
 
-static void _optimise_1(BFt_instr_t *start, BFt_instr_t *end, bool compl);
+static void conv_loop(BFt_instr_t *start, BFt_instr_t *end, bool compl);
+static BFt_instr_t *conv_instr(BFt_instr_t *start, BFt_instr_t *end,
+			       BFt_instr_t *instr);
 
 static void translate(FILE *file);
 static void conv_standalone();
@@ -277,8 +279,8 @@ static BFt_instr_t *optimise_1() {
 
 		case BFT_INSTR_ENDL:
 			if(init) switch(per_cycle) {
-				case 1: _optimise_1(init, i, true); break;
-				case -1: _optimise_1(init, i, false);
+				case 1: conv_loop(init, i, true); break;
+				case -1: conv_loop(init, i, false);
 			}
 
 			init = NULL;
@@ -315,70 +317,18 @@ static BFt_instr_t *optimise_1() {
 	return start;
 }
 
-static void _optimise_1(BFt_instr_t *start, BFt_instr_t *end, bool compl) {
+static void conv_loop(BFt_instr_t *start, BFt_instr_t *end, bool compl) {
 	BFt_instr_t *new = malloc(sizeof(BFt_instr_t));
 	if(!new) BFe_report_err(BFE_UNKNOWN_ERROR);
 
 	BFt_instr_t *start_new = new;
+	new -> op1 = 0; new -> op2 = 0;
 
-	if(compl) {
-		new -> next = malloc(sizeof(BFt_instr_t));
-		if(!new -> next) BFe_report_err(BFE_UNKNOWN_ERROR);
+	if(compl) new -> opcode = BFT_INSTR_CMPL;
+	else new -> opcode = BFT_INSTR_NOP;
 
-		new -> next -> prev = new;
-		new -> next -> opcode = BFT_INSTR_CMPL;
-		new = new -> next;
-	}
-
-	for(BFt_instr_t *i = start -> next; i != end; i = i -> next) {
-		size_t op1 = i -> op1;
-		ssize_t ad1 = i -> ad1;
-
-		if(!ad1) continue;
-
-		switch(i -> opcode) {
-		case BFT_INSTR_INC:
-			if(op1 == 1) new -> opcode = BFT_INSTR_CPYA;
-
-			else if(IS_POWER_OF_2(op1)) {
-				new -> opcode = BFT_INSTR_SHLA;
-				new -> op1 = log_base_2(op1);
-			}
-
-			else {
-				new -> opcode = BFT_INSTR_MULA;
-				new -> op1 = op1;
-			}
-			
-			new -> ad1 = ad1;
-			break;
-
-		case BFT_INSTR_DEC:
-			if(op1 == 1) new -> opcode = BFT_INSTR_CPYS;
-
-			else if(IS_POWER_OF_2(op1)) {
-				new -> opcode = BFT_INSTR_SHLS;
-				new -> op1 = log_base_2(op1);
-			}
-
-			else {
-				new -> opcode = BFT_INSTR_MULS;
-				new -> op1 = op1;
-			}
-
-			new -> ad1 = ad1;
-			break;
-
-		default:
-			continue;
-		}
-
-		new -> next = malloc(sizeof(BFt_instr_t));
-		if(!new -> next) BFe_report_err(BFE_UNKNOWN_ERROR);
-
-		new -> next -> prev = new;
-		new = new -> next;
-	}
+	for(BFt_instr_t *i = start -> next; i != end; i = i -> next)
+		if(i -> ad1) new = conv_instr(start_new, new, i);
 
 	for(BFt_instr_t *i = start -> next; i != end;) {
 		BFt_instr_t *instr = i;
@@ -386,22 +336,23 @@ static void _optimise_1(BFt_instr_t *start, BFt_instr_t *end, bool compl) {
 		free(instr);
 	}
 
-	if(compl && start_new -> next == new) {
-		free(start_new);
-		start_new = new;
-	}
-
-	if(start_new == new) {
-		start -> opcode = BFT_INSTR_NOP;
-		end -> opcode = BFT_INSTR_MOV;
-		end -> op1 = 0; end -> ad1 = 0;
-
+	if(new -> opcode == BFT_INSTR_NOP || new -> opcode == BFT_INSTR_CMPL) {
 		start -> next = end;
 		end -> prev = start;
+
+		start -> opcode = BFT_INSTR_NOP;
+		end -> opcode = BFT_INSTR_MOV;
+		end -> ad1 = 0; end -> op1 = 0;
 
 		free(new);
 		return;
 	}
+
+	new -> next = malloc(sizeof(BFt_instr_t));
+	if(!new -> next) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+	new -> next -> prev = new;
+	new = new -> next;
 
 	start -> opcode = BFT_INSTR_IFNZ;
 	new -> opcode = BFT_INSTR_ENDIF;
@@ -417,18 +368,84 @@ static void _optimise_1(BFt_instr_t *start, BFt_instr_t *end, bool compl) {
 	new -> next = end;
 }
 
+static BFt_instr_t *conv_instr(BFt_instr_t *start, BFt_instr_t *end,
+			       BFt_instr_t *instr)
+{
+	size_t op = instr -> op1;
+	ssize_t ad = instr -> ad1;
+
+	int opcode = BFT_INSTR_NOP;
+	size_t op1 = 0, op2 = 0;
+
+	BFt_instr_t *i;
+	switch(instr -> opcode) {
+	case BFT_INSTR_INC:
+		if(IS_2_POW(op) && op != 1) {
+			for(i = start; i -> op2 != op && i != end;
+				i = i -> next);
+
+			opcode = BFT_INSTR_SHLA;
+			op2 = log_b2(op); op1 = 0;
+			break;
+		}
+
+		for(i = start; i -> op1 != op && i != end; i = i -> next);
+
+		opcode = op == 1 ? BFT_INSTR_CPYA : BFT_INSTR_MULA;
+		op1 = op; op2 = 0;
+		break;
+
+	case BFT_INSTR_DEC:
+		if(IS_2_POW(op) && op != 1) {
+			for(i = start; i -> op2 != op && i != end;
+				i = i -> next);
+
+			opcode = BFT_INSTR_SHLS;
+			op2 = log_b2(op); op1 = 0;
+			break;
+		}
+
+		for(i = start; i -> op1 != op && i != end; i = i -> next);
+
+		opcode = op == 1 ? BFT_INSTR_CPYS : BFT_INSTR_MULS;
+		op1 = op; op2 = 0;
+		break;
+
+	default:
+		return end;
+	}
+
+	BFt_instr_t *new = malloc(sizeof(BFt_instr_t));
+	if(!new) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+	new -> prev = i; new -> next = i -> next;
+	new -> opcode = opcode; new -> ad1 = ad;
+	new -> op1 = op1; new -> op2 = op2; 
+
+	if(i -> next) i -> next -> prev = new;
+	i -> next = new;
+
+	if(i == end) return new;
+	else return end;
+}
+
 static void translate(FILE *file) {
 	static char line[BF_LINE_SIZE];
 	BFt_instr_t *instr = BFt_code;
 	size_t chars = 8;
 
-	fprintf(file, "\tunsigned char *ptr = &cells[0];\n\n");
+
+	fprintf(file, "\t#define VAR unsigned char\n");
 	fprintf(file, "\t#define INP getchar\n");
-	fprintf(file, "\t#define OUT putchar\n\n\t");
+	fprintf(file, "\t#define OUT putchar\n\n");
+
+	fprintf(file, "\tVAR *ptr = &cells[0];\n\n\t");
 
 	while(instr) {
 		size_t op1 = instr -> op1;
+		size_t op2 = instr -> op2;
 		ssize_t ad1 = instr -> ad1;
+		size_t offset = 0;
 
 		switch(instr -> opcode) {
 		case BFT_INSTR_INC:
@@ -480,7 +497,7 @@ static void translate(FILE *file) {
 			break;
 
 		case BFT_INSTR_IFNZ:
-			chars += sprintf(line, "if(*ptr) { ");
+			chars += sprintf(line, "if(*ptr) { VAR ");
 			break;
 
 		case BFT_INSTR_ENDIF:
@@ -488,31 +505,69 @@ static void translate(FILE *file) {
 			break;
 
 		case BFT_INSTR_MULA:
-			chars += sprintf(line, "ptr[%zd] += *ptr * %zu; ",
-				ad1, op1);
-			break;
+			if(instr -> prev -> opcode != BFT_INSTR_MULA
+				|| instr -> prev -> op1 != op1)
+			{
+				chars += offset = sprintf(line,
+					"acc = *ptr * %zu; ", op1);
+			}
+
+			goto add;
 
 		case BFT_INSTR_MULS:
-			chars += sprintf(line, "ptr[%zd] -= *ptr * %zu; ",
-				ad1, op1);
-			break;
+			if(instr -> prev -> opcode != BFT_INSTR_MULS
+				|| instr -> prev -> op1 != op1)
+			{
+				chars += offset = sprintf(line,
+					"acc = *ptr * %zu; ", op1);
+			}
+
+			goto sub;
 
 		case BFT_INSTR_SHLA:
-			chars += sprintf(line, "ptr[%zd] += *ptr << %zu; ",
-				ad1, op1);
-			break;
+			if(instr -> prev -> opcode != BFT_INSTR_SHLA
+				|| instr -> prev -> op2 != op2)
+			{
+				chars += offset = sprintf(line,
+					"acc = *ptr << %zu; ", op2);
+			}
+
+			goto add;
 
 		case BFT_INSTR_SHLS:
-			chars += sprintf(line, "ptr[%zd] -= *ptr << %zu; ",
-				ad1, op1);
-			break;
+			if(instr -> prev -> opcode != BFT_INSTR_SHLS
+				|| instr -> prev -> op2 != op2)
+			{
+				chars += offset = sprintf(line,
+					"acc = *ptr << %zu; ", op2);
+			}
+
+			goto sub;
 
 		case BFT_INSTR_CPYA:
-			chars += sprintf(line, "ptr[%zd] += *ptr; ", ad1);
-			break;
+			if(instr -> prev -> opcode != BFT_INSTR_CPYA
+				|| instr -> prev -> op1 != op1)
+			{
+				chars += offset = sprintf(line,
+					"acc = *ptr; ");
+			}
+
+			goto add;
 
 		case BFT_INSTR_CPYS:
-			chars += sprintf(line, "ptr[%zd] -= *ptr; ", ad1);
+			if(instr -> prev -> opcode != BFT_INSTR_CPYS
+				|| instr -> prev -> op1 != op1)
+			{
+				chars += offset = sprintf(line,
+					"acc = *ptr; ");
+			}
+
+			goto sub;
+
+		add:	chars += sprintf(line + offset, "ptr[%zd] += acc; ", ad1);
+			break;
+
+		sub:	chars += sprintf(line + offset, "ptr[%zd] -= acc; ", ad1);
 			break;
 
 		default:

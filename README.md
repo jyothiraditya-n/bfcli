@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021 Jyothiraditya Nellakra
-Version 9.2: Pure Swiss Cheese
+Version 9.3: Cheesecake
 
 bfcli:0%
 ```
