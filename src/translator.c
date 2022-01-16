@@ -459,12 +459,13 @@ static void translate(FILE *file) {
 	BFt_instr_t *instr = BFt_code;
 	size_t chars = 8;
 
-	fprintf(file, "\t#define VAR unsigned char\n");
+	fprintf(file, "\t#define VAR register unsigned char\n");
 	fprintf(file, "\t#define INP getchar\n");
 	fprintf(file, "\t#define OUT putchar\n\n");
 
-	if(BFt_optim_lvl < 2) fprintf(file, "\tVAR *ptr = &cells[0];\n\n\t");
-	else fprintf(file, "\tVAR *ptr = &cells[%zu];\n\n\t", BFi_mem_size);
+	if(BFt_optim_lvl < 2) fprintf(file, "\tVAR *ptr = &cells[0];\n");
+	else fprintf(file, "\tVAR *ptr = &cells[%zu];\n", BFi_mem_size);
+	fprintf(file, "\tVAR acc = 0;\n\n\t");
 
 	while(instr) {
 		size_t op1 = instr -> op1;
@@ -522,7 +523,7 @@ static void translate(FILE *file) {
 			break;
 
 		case BFT_INSTR_IFNZ:
-			chars += sprintf(line, "if(*ptr) { VAR ");
+			chars += sprintf(line, "if(*ptr) { ");
 			break;
 
 		case BFT_INSTR_ENDIF:
