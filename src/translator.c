@@ -87,9 +87,8 @@ void BFt_convert_file() {
 		fputs("struct termios cooked, raw;\n", file);
 	}
 
-	fprintf(file, "#define VAR unsigned char\n");
-	if(BFt_optim_lvl < 2) fprintf(file, "VAR cells[%zu];\n\n", BFi_mem_size);
-	else fprintf(file, "VAR cells[%zu];\n\n", BFi_mem_size * 2);
+	if(BFt_optim_lvl < 2) fprintf(file, "unsigned char cells[%zu];\n\n", BFi_mem_size);
+	else fprintf(file, "unsigned char cells[%zu];\n\n", BFi_mem_size * 2);
 
 	fputs("int main() {\n", file);
 	if(BFc_direct_inp) {
@@ -460,6 +459,7 @@ static void translate(FILE *file) {
 	BFt_instr_t *instr = BFt_code;
 	size_t chars = 8;
 
+	fprintf(file, "\t#define VAR unsigned char\n");
 	fprintf(file, "\t#define INP getchar\n");
 	fprintf(file, "\t#define OUT putchar\n\n");
 
