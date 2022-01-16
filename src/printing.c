@@ -188,12 +188,11 @@ void BFp_print_usage() {
 
 	puts("    -t, --translate   Translates the file to C source code and exits.\n");
 	
-	puts("    -x, --compile     Generates assembly code intermixed with the C");
-	puts("                      output. This option affords both high performance");
-	puts("                      and fast compile times. (Implies -t)\n");
+	puts("    -x, --compile     Generates assembly code intermixed with the C output.");
+	puts("                      (Implies -t)\n");
 
-	puts("    -s, --standalone  Generates a standalone .s assembly file. (Implies");
-	puts("                      -x, Incompatible with -d)\n");
+	puts("    -s, --standalone  Generates a standalone .s assembly file. (Implies -x,");
+	puts("                      Incompatible with -d)\n");
 
 	puts("    -d, --direct-inp  Disables input buffering. Characters are sent to");
 	puts("                      Brainfuck code without waiting for a newline.\n");

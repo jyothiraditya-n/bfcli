@@ -75,11 +75,11 @@ The following are the command-line arguments that this program accepts:
 
     -t, --translate   Translates the file to C source code and exits.
 
-    -x, --compile     Generates AMD64 assembly code intermixed with the C
-                      output. (Implies -t)
+    -x, --compile     Generates assembly code intermixed with the C output.
+                      (Implies -t)
 
-    -s, --standalone  Generates a standalone .s AMD64 assembly file. (Implies
-                      -x, Incompatible with -d)
+    -s, --standalone  Generates a standalone .s assembly file. (Implies -x,
+                      Incompatible with -d)
 
     -d, --direct-inp  Disables input buffering. Characters are sent to
                       Brainfuck code without waiting for a newline.
