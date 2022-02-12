@@ -203,8 +203,8 @@ void BFp_print_usage() {
 	puts("    -A, --arch ARCH   Sets the assembly architecture to ARCH. Valid values are");
 	puts("                      amd64 and i386.\n");
 
-	puts("    -O, --optim LVL   Sets the optimisation level to LVL. Valid values are 0, 1");
-	puts("                      and 2.\n");
+	puts("    -O, --optim LVL   Sets the optimisation level to LVL. Valid values are 0,");
+	puts("                      1, 2 and 3.\n");
 
 	puts("  Note: If no output file is specified, a filename is chosen automatically.\n");
 
@@ -215,10 +215,10 @@ void BFp_print_bytecode() {
 	bool no_pause = false;
 	size_t pages = 1;
 
-	if(Bfi_do_recompile) BFi_compile();
+	if(Bfi_do_recompile) BFi_compile(false);
 	BFc_get_dimensions();
 
-	BFi_instr_t *instr = BFi_program_code;
+	BFi_instr_t *instr = BFi_code;
 	BFi_instr_t *first = instr;
 	size_t total = 0;
 
@@ -246,7 +246,7 @@ void BFp_print_bytecode() {
 			printf("\e[%zu;1H", BFc_height - 1);
 		}
 
-		size_t val = instr -> op.value;
+		size_t val = instr -> op1;
 		switch(instr -> opcode) {
 		case BFI_INSTR_NOP:
 			if(!column) column += printf("  %0*zx: nop %*s",
@@ -296,7 +296,7 @@ void BFp_print_bytecode() {
 		switch(instr -> opcode) {
 		case BFI_INSTR_JMP:
 			for(BFi_instr_t *j = instr; j; j = j -> prev) {
-				if(j == instr -> op.ptr) break;
+				if(j == instr -> ptr) break;
 				else index--; 
 			}
 
@@ -307,7 +307,7 @@ void BFp_print_bytecode() {
 		
 		case BFI_INSTR_JZ:
 			for(BFi_instr_t *j = instr; j; j = j -> next) {
-				if(j == instr -> op.ptr) break;
+				if(j == instr -> ptr) break;
 				else index++; 
 			}
 

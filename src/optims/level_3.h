@@ -14,19 +14,11 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "../interpreter.h"
 
-#include <sys/types.h>
+#ifndef BF_OPTIMS_LEVEL3_H
+#define BF_OPTIMS_LEVEL3_H 1
 
-#ifndef BF_TRANSLATOR_H
-#define BF_TRANSLATOR_H 1
-
-extern bool BFt_compile;
-extern bool BFt_translate;
-extern bool BFt_standalone;
-
-extern void BFt_translate_c();
+extern BFi_instr_t *BFo_optimise_lv3();
 
 #endif

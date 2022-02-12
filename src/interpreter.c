@@ -30,11 +30,15 @@
 #include "main.h"
 #include "printing.h"
 
+#define COMMAND_STRING 0
+#define PROGRAM_STRING 1
+#define PARTIAL_OUTPUT 2
+
 char *BFi_program_str;
-BFi_instr_t *BFi_program_code;
+BFi_instr_t *BFi_code;
 size_t BFi_code_size = BF_CODE_SIZE;
 
-static BFi_instr_t *command_code;
+static BFi_instr_t *cmd_code;
 
 bool Bfi_do_recompile = true;
 bool BFi_is_running;
@@ -44,11 +48,11 @@ unsigned char *BFi_mem;
 size_t BFi_mem_ptr;
 size_t BFi_mem_size = BF_MEM_SIZE;
 
-static BFi_instr_t *compile(char *str, bool enable_exts);
+static BFi_instr_t *compile(char *str, int mode);
 static void run(BFi_instr_t *instr);
 
 static void append_simple(BFi_instr_t **current, int opcode);
-static void append_cmplx(BFi_instr_t **current, int *opcode, size_t *value,
+static void append_cmplx(BFi_instr_t **current, int *opcode, size_t *op,
 			 int context);
 
 static char get_input();
@@ -58,70 +62,88 @@ void BFi_init() {
 	if(!BFi_mem) BFe_report_err(BFE_UNKNOWN_ERROR);
 }
 
-void BFi_compile() {
-	while(BFi_program_code) {
-		BFi_instr_t *instr = BFi_program_code;
-		BFi_program_code = instr -> next;
+void BFi_compile(bool translate) {
+	while(BFi_code) {
+		BFi_instr_t *instr = BFi_code;
+		BFi_code = instr -> next;
 		free(instr);
 	}
 
-	BFi_program_code = compile(BFi_program_str, false);
-	Bfi_do_recompile = false;
+	if(!translate) {
+		BFi_code = compile(BFi_program_str, PROGRAM_STRING);
+		Bfi_do_recompile = false;
+	}
+
+	else BFi_code = compile(BFi_program_str, PARTIAL_OUTPUT);
 	return;
 }
 
 void BFi_main(char *command_str) {
-	while(command_code) {
-		BFi_instr_t *instr = command_code;
-		command_code = instr -> next;
+	while(cmd_code) {
+		BFi_instr_t *instr = cmd_code;
+		cmd_code = instr -> next;
 		free(instr);
 	}
 
-	command_code = compile(command_str, true);
-	run(command_code);
+	cmd_code = compile(command_str, COMMAND_STRING);
+	run(cmd_code);
 }
 
 void BFi_exec() {
-	if(Bfi_do_recompile) BFi_compile();
-	run(BFi_program_code);
+	if(Bfi_do_recompile) BFi_compile(false);
+	run(BFi_code);
 }
 
-static BFi_instr_t *compile(char *str, bool enable_exts) {
+static BFi_instr_t *compile(char *str, int mode) {
 	BFi_instr_t *first = malloc(sizeof(BFi_instr_t));
 	if(!first) BFe_report_err(BFE_UNKNOWN_ERROR);
 
 	first -> prev = NULL;
 	first -> next = NULL;
+	first -> ptr = NULL;
+
 	first -> opcode = BFI_INSTR_NOP;
-	first -> op.ptr = NULL;
-	first -> op.value = 0;
+	first -> op1 = 0;
+	first -> op2 = 0;
+	first -> ad = 0;
+
+	size_t length = strlen(str);
+	size_t brackets = 0, nesting = 0;
+
+	for(size_t i = 0; i < length; i++)
+		if(str[i] == '[') brackets++;
+
+	BFi_instr_t **stack1 = malloc(sizeof(BFi_instr_t *) * brackets);
+	size_t *stack2 = malloc(sizeof(size_t) * brackets);
+
+	if(!(stack1 && stack2)) BFe_report_err(BFE_UNKNOWN_ERROR);
 
 	BFi_instr_t *current = first;
-	size_t length = strlen(str);
+	brackets = 0;
 
 	int opcode = BFI_INSTR_NOP;
-	size_t value = 0;
+	size_t op = 0;
 
 	for(size_t i = 0; i < length; i++) {
 		switch(str[i]) {
 		case '+':
-			append_cmplx(&current, &opcode, &value, BFI_INSTR_INC);
+			append_cmplx(&current, &opcode, &op, BFI_INSTR_INC);
 			continue;
 
 		case '-':
-			append_cmplx(&current, &opcode, &value, BFI_INSTR_DEC);
+			append_cmplx(&current, &opcode, &op, BFI_INSTR_DEC);
 			continue;
 
 		case '>':
-			append_cmplx(&current, &opcode, &value, BFI_INSTR_FWD);
+			append_cmplx(&current, &opcode, &op, BFI_INSTR_FWD);
 			continue;
 
 		case '<':
-			append_cmplx(&current, &opcode, &value, BFI_INSTR_BCK);
+			append_cmplx(&current, &opcode, &op, BFI_INSTR_BCK);
 			continue;
 		}
 
-		append_cmplx(&current, &opcode, &value, BFI_INSTR_NOP);
+		append_cmplx(&current, &opcode, &op, BFI_INSTR_NOP);
 
 		switch(str[i]) {
 		case ',':
@@ -133,84 +155,140 @@ static BFi_instr_t *compile(char *str, bool enable_exts) {
 			continue;
 
 		case '[':
-			append_simple(&current, BFI_INSTR_JZ);
+			if(mode != PARTIAL_OUTPUT) {
+				append_simple(&current, BFI_INSTR_JZ);
+				stack1[nesting++] = current -> prev;
+				continue;
+			}
+
+			append_simple(&current, BFI_INSTR_LOOP);
+			current -> prev -> op1 = ++brackets;
+			stack2[nesting++] = brackets;
 			continue;
 
 		case ']':
-			append_simple(&current, BFI_INSTR_JMP);
-			BFi_instr_t *j = current -> prev -> prev;
-			size_t loops = 1;
-
-			while(true) {
-				if(j -> opcode == BFI_INSTR_JMP) loops++;
-				else if(j -> opcode == BFI_INSTR_JZ) loops--;
-
-				if(loops) j = j -> prev;
-				else break;
+			if(mode == PARTIAL_OUTPUT) {
+				append_simple(&current, BFI_INSTR_ENDL);
+				current -> prev -> op1 = stack2[--nesting];
+				continue;
 			}
 
-			j -> op.ptr = current;
-			current -> prev -> op.ptr = j;
+			append_simple(&current, BFI_INSTR_JMP);
+			stack1[--nesting] -> ptr = current;
+			current -> prev -> ptr = stack1[nesting];
 			continue;
 		}
 
-		if(!enable_exts || BFc_minimal_mode) continue;
+		if(mode != COMMAND_STRING || BFc_minimal_mode) continue;
 
 		switch(str[i]) {
 		case '?':
 			append_simple(&current, BFI_INSTR_HELP);
-			continue;
+			break;
 
 		case '/':
 			append_simple(&current, BFI_INSTR_INIT);
-			continue;
+			break;
 
 		case '*':
 			append_simple(&current, BFI_INSTR_MEM_PEEK);
-			continue;
+			break;
 
 		case '&':
 			append_simple(&current, BFI_INSTR_MEM_DUMP);
-			continue;
+			break;
 
 		case '@':
 			append_simple(&current, BFI_INSTR_EXEC);
-			continue;
+			break;
 
 		case '%':
 			append_simple(&current, BFI_INSTR_EDIT);
-			continue;
+			break;
 
 		case '$':
 			append_simple(&current, BFI_INSTR_COMP);
-			continue;
+			break;
 		}
 	}
 
-	if(value) {
+	if(op) {
 		current -> opcode = opcode;
-		current -> op.value = value;
+		current -> op1 = op;
 	}
 
+	if(stack1) free(stack1);
+	if(stack2) free(stack2);
 	return first;
 
+}
+
+static void append_simple(BFi_instr_t **current, int opcode) {
+	(*current) -> opcode = opcode;
+
+	(*current) -> next = malloc(sizeof(BFi_instr_t));
+	if(!(*current) -> next) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+	(*current) -> next -> prev = *current;
+	(*current) -> next -> next = NULL;
+	(*current) -> next -> ptr = NULL;
+
+	(*current) -> next -> opcode = BFI_INSTR_NOP;
+	(*current) -> next -> op1 = 0;
+	(*current) -> next -> op2 = 0;
+	(*current) -> next -> ad = 0;
+
+	*current = (*current) -> next;
+	return;
+}
+
+static void append_cmplx(BFi_instr_t **current, int *opcode, size_t *op,
+			 int context)
+{
+	if(*opcode == BFI_INSTR_NOP) {
+		*opcode = context;
+		
+		if(context == BFI_INSTR_NOP) *op = 0;
+		else *op = 1;
+	}
+
+	else if(*opcode != context) {
+		(*current) -> opcode = *opcode;
+		(*current) -> op1 = *op;
+
+		(*current) -> next = malloc(sizeof(BFi_instr_t));
+		if(!(*current) -> next) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+		(*current) -> next -> prev = *current;
+		(*current) -> next -> next = NULL;
+		(*current) -> next -> opcode = BFI_INSTR_NOP;
+
+		(*current) = (*current) -> next;
+		*opcode = context;
+
+		if(context == BFI_INSTR_NOP) *op = 0;
+		else *op = 1;
+	}
+
+	else (*op)++;
+	return;
 }
 
 static void run(BFi_instr_t *instr) {
 	while(instr && BFi_is_running) {
 		switch(instr -> opcode) {
 		case BFI_INSTR_INC:
-			BFi_mem[BFi_mem_ptr] += instr -> op.value;
+			BFi_mem[BFi_mem_ptr] += instr -> op1;
 			break;
 
 		case BFI_INSTR_DEC:
-			BFi_mem[BFi_mem_ptr] -= instr -> op.value;
+			BFi_mem[BFi_mem_ptr] -= instr -> op1;
 			break;
 
 		case BFI_INSTR_FWD:
-			BFi_mem_ptr += instr -> op.value;
+			BFi_mem_ptr += instr -> op1;
 			if(BFi_mem_ptr >= BFi_mem_size) {
-				BFi_mem_ptr -= instr -> op.value;
+				BFi_mem_ptr -= instr -> op1;
 
 				BFe_file_name = BFc_immediate
 					? BFf_mainfile_name
@@ -227,9 +305,9 @@ static void run(BFi_instr_t *instr) {
 			break;
 
 		case BFI_INSTR_BCK:
-			BFi_mem_ptr -= instr -> op.value;
+			BFi_mem_ptr -= instr -> op1;
 			if(BFi_mem_ptr >= BFi_mem_size) {
-				BFi_mem_ptr += instr -> op.value;
+				BFi_mem_ptr += instr -> op1;
 
 				BFe_file_name = BFc_immediate
 					? BFf_mainfile_name
@@ -256,12 +334,12 @@ static void run(BFi_instr_t *instr) {
 			break;
 
 		case BFI_INSTR_JMP:
-			instr = instr -> op.ptr;
+			instr = instr -> ptr;
 			continue;
 
 		case BFI_INSTR_JZ:
 			if(BFi_mem[BFi_mem_ptr]) break;
-			instr = instr -> op.ptr;
+			instr = instr -> ptr;
 			continue;
 
 		case BFI_INSTR_HELP:
@@ -347,47 +425,6 @@ static void run(BFi_instr_t *instr) {
 
 		instr = instr -> next;
 	}
-}
-
-static void append_simple(BFi_instr_t **current, int opcode) {
-	(*current) -> opcode = opcode;
-
-	(*current) -> next = malloc(sizeof(BFi_instr_t));
-	if(!(*current) -> next) BFe_report_err(BFE_UNKNOWN_ERROR);
-
-	(*current) -> next -> prev = *current;
-	(*current) -> next -> next = NULL;
-	(*current) -> next -> opcode = BFI_INSTR_NOP;
-
-	*current = (*current) -> next;
-	return;
-}
-
-static void append_cmplx(BFi_instr_t **current, int *opcode, size_t *value,
-			 int context)
-{
-	if(*opcode == BFI_INSTR_NOP) { *opcode = context; *value = 1; }
-
-	else if(*opcode != context) {
-		(*current) -> opcode = *opcode;
-		(*current) -> op.value = *value;
-
-		(*current) -> next = malloc(sizeof(BFi_instr_t));
-		if(!(*current) -> next) BFe_report_err(BFE_UNKNOWN_ERROR);
-
-		(*current) -> next -> prev = *current;
-		(*current) -> next -> next = NULL;
-		(*current) -> next -> opcode = BFI_INSTR_NOP;
-
-		(*current) = (*current) -> next;
-		*opcode = context;
-
-		if(context == BFI_INSTR_NOP) *value = 0;
-		else *value = 1;
-	}
-
-	else (*value)++;
-	return;
 }
 
 static char get_input() {

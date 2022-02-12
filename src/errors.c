@@ -17,8 +17,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "arch.h"
 #include "errors.h"
 #include "clidata.h"
+#include "optims.h"
 #include "translator.h"
 
 const char *BFe_code_error;
@@ -28,7 +30,7 @@ void BFe_report_err(int errnum) {
 	switch(errnum) {
 	case BFE_BAD_OPTIM:
 		fprintf(stderr, "%s: error: unknown optimisation level: %d\n",
-			BFc_cmd_name, BFt_optim_lvl);
+			BFc_cmd_name, BFo_level);
 		break;
 
 	case BFE_INCOMPATIBLE_ARGS:
@@ -38,7 +40,7 @@ void BFe_report_err(int errnum) {
 
 	case BFE_BAD_ARCH:
 		fprintf(stderr, "%s: error: unknown architecture: %s\n",
-			BFc_cmd_name, BFt_target_arch);
+			BFc_cmd_name, BFa_target_arch);
 		break;
 
 	case BFE_CODE_TOO_LONG:

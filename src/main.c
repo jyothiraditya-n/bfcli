@@ -28,11 +28,13 @@
 #include <LC_editor.h>
 #include <LC_lines.h>
 
+#include "arch.h"
 #include "clidata.h"
 #include "errors.h"
 #include "files.h"
 #include "interpreter.h"
 #include "main.h"
+#include "optims.h"
 #include "printing.h"
 #include "translator.h"
 
@@ -287,9 +289,9 @@ static void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
-	var -> id = "BFt_optim_lvl";
+	var -> id = "BFo_level";
 	var -> fmt = "%d";
-	var -> data = &BFt_optim_lvl;
+	var -> data = &BFo_level;
 
 	arg = LCa_new();
 	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
@@ -311,9 +313,9 @@ static void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
-	var -> id = "BFt_target_arch";
+	var -> id = "BFa_target_arch";
 	var -> fmt = BF_FILENAME_SCN;
-	var -> data = &BFt_target_arch;
+	var -> data = &BFa_target_arch;
 
 	arg = LCa_new();
 	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
@@ -331,13 +333,13 @@ static void init(int argc, char **argv) {
 	if(BFt_standalone) BFt_compile = true;
 	if(BFt_compile) BFt_translate = true;
 
-	if(!strlen(BFt_target_arch)) {
+	if(!strlen(BFa_target_arch)) {
 		#if defined(__i386__)
-		strcpy(BFt_target_arch, "i386");
+		strcpy(BFa_target_arch, "i386");
 		#elif defined(__amd64__)
-		strcpy(BFt_target_arch, "amd64");
+		strcpy(BFa_target_arch, "amd64");
 		#else
-		strcpy(BFt_target_arch, "other");
+		strcpy(BFa_target_arch, "other");
 		#endif
 	}
 

@@ -14,19 +14,39 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
+#include <stdlib.h>
 
 #include <sys/types.h>
 
-#ifndef BF_TRANSLATOR_H
-#define BF_TRANSLATOR_H 1
+#include "errors.h"
+#include "interpreter.h"
+#include "optims.h"
+#include "translator.h"
 
-extern bool BFt_compile;
-extern bool BFt_translate;
-extern bool BFt_standalone;
+#include "optims/level_1.h"
+#include "optims/level_2.h"
+#include "optims/level_3.h"
 
-extern void BFt_translate_c();
+int BFo_level;
+ssize_t BFo_mem_padding;
 
-#endif
+void BFo_optimise() {
+	while(BFi_code) {
+		BFi_instr_t *instr = BFi_code;
+		BFi_code = instr -> next;
+		free(instr);
+	}
+
+	BFi_compile(true);
+	switch(BFo_level) {
+		case 0: break;
+		case 1: BFi_code = BFo_optimise_lv1(); break;
+		case 2: BFi_code = BFo_optimise_lv2(); break;
+		case 3: BFi_code = BFo_optimise_lv3(); break;
+
+		default:
+			BFe_report_err(BFE_BAD_OPTIM);
+			exit(BFE_BAD_OPTIM);
+	}
+}

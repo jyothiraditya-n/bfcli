@@ -14,19 +14,12 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#ifndef BF_ARCH_H
+#define BF_ARCH_H 1
 
-#include <sys/types.h>
+extern char BFa_target_arch[];
 
-#ifndef BF_TRANSLATOR_H
-#define BF_TRANSLATOR_H 1
-
-extern bool BFt_compile;
-extern bool BFt_translate;
-extern bool BFt_standalone;
-
-extern void BFt_translate_c();
+extern void BFa_translate();
+extern void BFa_translate_c(FILE *file);
 
 #endif

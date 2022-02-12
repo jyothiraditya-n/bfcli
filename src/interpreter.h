@@ -17,13 +17,18 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include <sys/types.h>
+
 #ifndef BF_INTERPRETER_H
 #define BF_INTERPRETER_H 1
 
 typedef struct BFi_instr_s {
-	union { struct BFi_instr_s *ptr; size_t value; } op;
 	struct BFi_instr_s *prev, *next;
+	struct BFi_instr_s *ptr;
+	
 	int opcode;
+	size_t op1, op2;
+	ssize_t ad;
 
 	#define BFI_INSTR_NOP 0
 
@@ -44,10 +49,23 @@ typedef struct BFi_instr_s {
 	#define BFI_INSTR_EDIT 14
 	#define BFI_INSTR_COMP 15
 
+	#define BFI_INSTR_LOOP 16
+	#define BFI_INSTR_ENDL 17
+	#define BFI_INSTR_IFNZ 18
+	#define BFI_INSTR_ENDIF 19
+	#define BFI_INSTR_CMPL 20
+	#define BFI_INSTR_MOV 21
+	#define BFI_INSTR_MULA 22
+	#define BFI_INSTR_MULS 23
+	#define BFI_INSTR_SHLA 24
+	#define BFI_INSTR_SHLS 25
+	#define BFI_INSTR_CPYA 26
+	#define BFI_INSTR_CPYS 27
+
 } BFi_instr_t;
 
 extern char *BFi_program_str;
-extern BFi_instr_t *BFi_program_code;
+extern BFi_instr_t *BFi_code;
 extern size_t BFi_code_size;
 
 extern bool Bfi_do_recompile;
@@ -61,7 +79,7 @@ extern size_t BFi_mem_size;
 extern void BFi_init();
 extern void BFi_main(char *command_str);
 
-extern void BFi_compile();
+extern void BFi_compile(bool translate);
 extern void BFi_exec();
 
 #endif

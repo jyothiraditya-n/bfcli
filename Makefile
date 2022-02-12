@@ -17,7 +17,7 @@
 HEADERS = $(wildcard src/*.h)
 HEADERS += $(wildcard libClame/inc/*.h)
 
-CFILES = $(wildcard src/*.c) $(wildcard src/arch/*.c)
+CFILES = $(shell find src/ -name "*.c")
 OBJS = $(patsubst %.c,%.o,$(CFILES))
 LIBS = libClame/libClame.a
 
@@ -60,7 +60,7 @@ bfcli : $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(OBJS) -o bfcli $(LDLIBS)
 
 $(DSFILES) : %.s : demo/%.bf bfcli
-	./bfcli -sO2 $< -o $@
+	./bfcli -sO3 $< -o $@
 
 $(DOBJS) : %.o : %.s
 	$(AS) $(DSFLAGS) $< -o $@

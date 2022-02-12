@@ -288,7 +288,7 @@ static void get_file() {
 		exit(ret);
 	}
 
-	if(BFt_translate) BFt_convert_file();
+	if(BFt_translate) BFt_translate_c();
 }
 
 static int hex_digits(size_t n) {

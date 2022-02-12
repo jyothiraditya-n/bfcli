@@ -90,8 +90,8 @@ The following are the command-line arguments that this program accepts:
     -A, --arch ARCH   Sets the assembly architecture to ARCH. Valid values are
                       amd64 and i386.
 
-    -O, --optim LVL   Sets the optimisation level to LVL. Valid values are 0, 1
-                      and 2.
+    -O, --optim LVL   Sets the optimisation level to LVL. Valid values are 0,
+                      1, 2 and 3.
 
   Note: If no output file is specified, a filename is chosen automatically.
 
