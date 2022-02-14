@@ -130,7 +130,6 @@ void BFa_i386_tasm(FILE *file) {
 
 		case BFI_INSTR_ENDIF:
 			fprintf(file, "\n.LE%zu:\n", op1);
-			regs_dirty = true;
 			break;
 
 		case BFI_INSTR_CMPL:
@@ -153,12 +152,14 @@ void BFa_i386_tasm(FILE *file) {
 			fprintf(file, "\tmov\t$%zu, %%cl\n", op1);
 			fprintf(file, "\tmul\t%%cl\n");
 		mula:	fprintf(file, "\taddb\t%%al, %zd(%%esi)\n", ad);
+			regs_dirty = true;
 			break;
 
 		lmula:	fprintf(file, "\tmovzb\t(%%esi), %%eax\n");
 			fprintf(file, "\tlea\t(%%eax,%%eax,%zu), %%eax\n",
 				op1 - 1);
 			fprintf(file, "\taddb\t%%al, %zd(%%esi)\n", ad);
+			regs_dirty = true;
 			break;
 
 		case BFI_INSTR_MULS:
@@ -171,12 +172,14 @@ void BFa_i386_tasm(FILE *file) {
 			fprintf(file, "\tmov\t$%zu, %%cl\n", op1);
 			fprintf(file, "\tmul\t%%cl\n");
 		muls:	fprintf(file, "\tsubb\t%%al, %zd(%%esi)\n", ad);
+			regs_dirty = true;
 			break;
 
 		lmuls:	fprintf(file, "\tmovzb\t(%%esi), %%eax\n");
 			fprintf(file, "\tlea\t(%%eax,%%eax,%zu), %%eax\n",
 				op1 - 1);
 			fprintf(file, "\tsubb\t%%al, %zd(%%esi)\n", ad);
+			regs_dirty = true;
 			break;
 
 		case BFI_INSTR_SHLA:
@@ -192,11 +195,13 @@ void BFa_i386_tasm(FILE *file) {
 			fprintf(file, "\tmov\t(%%esi), %%al\n");
 			fprintf(file, "\tshl\t$%zu, %%al\n", op2);
 		shla:	fprintf(file, "\taddb\t%%al, %zd(%%esi)\n", ad);
+			regs_dirty = true;
 			break;
 
 		lshla:	fprintf(file, "\tmovzb\t(%%esi), %%eax\n");
 			fprintf(file, "\tlea\t(,%%eax,%zu), %%eax\n", op1);
 			fprintf(file, "\taddb\t%%al, %zd(%%esi)\n", ad);
+			regs_dirty = true;
 			break;
 
 		case BFI_INSTR_SHLS:
@@ -212,11 +217,13 @@ void BFa_i386_tasm(FILE *file) {
 			fprintf(file, "\tmov\t(%%esi), %%al\n");
 			fprintf(file, "\tshl\t$%zu, %%al\n", op2);
 		shls:	fprintf(file, "\tsubb\t%%al, %zd(%%esi)\n", ad);
+			regs_dirty = true;
 			break;
 
 		lshls:	fprintf(file, "\tmovzb\t(%%esi), %%eax\n");
 			fprintf(file, "\tlea\t(,%%eax,%zu), %%eax\n", op1);
 			fprintf(file, "\tsubb\t%%al, %zd(%%esi)\n", ad);
+			regs_dirty = true;
 			break;
 
 		case BFI_INSTR_CPYA:
@@ -225,6 +232,7 @@ void BFa_i386_tasm(FILE *file) {
 
 			fprintf(file, "\tmov\t(%%esi), %%al\n");
 		cpya:	fprintf(file, "\taddb\t%%al, %zd(%%esi)\n", ad);
+			regs_dirty = true;
 			break;
 
 		case BFI_INSTR_CPYS:
@@ -233,6 +241,7 @@ void BFa_i386_tasm(FILE *file) {
 
 			fprintf(file, "\tmov\t(%%esi), %%al\n");
 		cpys:	fprintf(file, "\tsubb\t%%al, %zd(%%esi)\n", ad);
+			regs_dirty = true;
 			break;
 
 		case BFI_INSTR_SUB:
@@ -354,7 +363,6 @@ void BFa_i386_tc(FILE *file) {
 
 		case BFI_INSTR_ENDIF:
 			fprintf(file, "\n\t\".LE%zu:\\n\"\n", op1);
-			regs_dirty = true;
 			break;
 
 		case BFI_INSTR_CMPL:
@@ -377,12 +385,14 @@ void BFa_i386_tc(FILE *file) {
 			fprintf(file, "\t\"\tmov\t$%zu, %%%%cl\\n\"\n", op1);
 			fprintf(file, "\t\"\tmul\t%%%%cl\\n\"\n");
 		mula:	fprintf(file, "\t\"\taddb\t%%%%al, %zd(%%%%esi)\\n\"\n", ad);
+			regs_dirty = true;
 			break;
 
 		lmula:	fprintf(file, "\t\"\tmovzb\t(%%%%esi), %%%%eax\\n\"\n");
 			fprintf(file, "\t\"\tlea\t(%%%%eax,%%%%eax,%zu),%%%%eax\\n\"\n",
 				op1 - 1);
 			fprintf(file, "\t\"\taddb\t%%%%al, %zd(%%%%esi)\\n\"\n", ad);
+			regs_dirty = true;
 			break;
 
 		case BFI_INSTR_MULS:
@@ -395,12 +405,14 @@ void BFa_i386_tc(FILE *file) {
 			fprintf(file, "\t\"\tmov\t$%zu, %%%%cl\\n\"\n", op1);
 			fprintf(file, "\t\"\tmul\t%%%%cl\\n\"\n");
 		muls:	fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%esi)\\n\"\n", ad);
+			regs_dirty = true;
 			break;
 
 		lmuls:	fprintf(file, "\t\"\tmovzb\t(%%%%esi), %%%%eax\\n\"\n");
 			fprintf(file, "\t\"\tlea\t(%%%%eax,%%%%eax,%zu), %%%%eax\\n\"\n",
 				op1 - 1);
 			fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%esi)\\n\"\n", ad);
+			regs_dirty = true;
 			break;
 
 		case BFI_INSTR_SHLA:
@@ -416,11 +428,13 @@ void BFa_i386_tc(FILE *file) {
 			fprintf(file, "\t\"\tmov\t(%%%%esi), %%%%al\\n\"\n");
 			fprintf(file, "\t\"\tshl\t$%zu, %%%%al\\n\"\n", op2);
 		shla:	fprintf(file, "\t\"\taddb\t%%%%al, %zd(%%%%esi)\\n\"\n", ad);
+			regs_dirty = true;
 			break;
 
 		lshla:	fprintf(file, "\t\"\tmovzb\t(%%%%esi), %%%%eax\\n\"\n");
 			fprintf(file, "\t\"\tlea\t(,%%%%eax,%zu), %%%%eax\\n\"\n", op1);
 			fprintf(file, "\t\"\taddb\t%%%%al, %zd(%%%%esi)\\n\"\n", ad);
+			regs_dirty = true;
 			break;
 
 		case BFI_INSTR_SHLS:
@@ -436,11 +450,13 @@ void BFa_i386_tc(FILE *file) {
 			fprintf(file, "\t\"\tmov\t(%%%%esi), %%%%al\\n\"\n");
 			fprintf(file, "\t\"\tshl\t$%zu, %%%%al\\n\"\n", op2);
 		shls:	fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%esi)\\n\"\n", ad);
+			regs_dirty = true;
 			break;
 
 		lshls:	fprintf(file, "\t\"\tmovzb\t(%%%%esi), %%%%eax\\n\"\n");
 			fprintf(file, "\t\"\tlea\t(,%%%%eax,%zu), %%%%eax\\n\"\n", op1);
 			fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%esi)\\n\"\n", ad);
+			regs_dirty = true;
 			break;
 
 		case BFI_INSTR_CPYA:
@@ -449,6 +465,7 @@ void BFa_i386_tc(FILE *file) {
 
 			fprintf(file, "\t\"\tmov\t(%%%%esi), %%%%al\\n\"\n");
 		cpya:	fprintf(file, "\t\"\taddb\t%%%%al, %zd(%%%%esi)\\n\"\n", ad);
+			regs_dirty = true;
 			break;
 
 		case BFI_INSTR_CPYS:
@@ -457,6 +474,7 @@ void BFa_i386_tc(FILE *file) {
 
 			fprintf(file, "\t\"\tmov\t(%%%%esi), %%%%al\\n\"\n");
 		cpys:	fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%esi)\\n\"\n", ad);
+			regs_dirty = true;
 			break;
 
 		case BFI_INSTR_SUB:

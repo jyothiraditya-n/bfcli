@@ -63,8 +63,7 @@ $(DSFILES) : %.s : demo/%.bf bfcli
 	./bfcli -sOs $< -o $@
 
 kingdom.s : demo/kingdom.bf bfcli
-	./bfcli -sO2 demo/kingdom.bf -o kingdom.s
-	# BUGBUG -O3 causes it to not work correctly.
+	./bfcli -sO3 demo/kingdom.bf -o kingdom.s
 
 $(DOBJS) : %.o : %.s
 	$(AS) $(DSFLAGS) $< -o $@
