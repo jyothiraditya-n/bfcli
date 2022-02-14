@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
-Copyright (C) 2021 Jyothiraditya Nellakra
-Version 9.4: A Slightly Soggy Burger
+Copyright (C) 2021-2022 Jyothiraditya Nellakra
+Version 10.0: A Midnight Snack
 
 bfcli:0%
 ```

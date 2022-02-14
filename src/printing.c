@@ -1,5 +1,5 @@
 /* Bfcli: The Interactive Brainfuck Command-Line Interpreter
- * Copyright (C) 2021 Jyothiraditya Nellakra
+ * Copyright (C) 2021-2022 Jyothiraditya Nellakra
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,7 @@ static int hex_digits(size_t n);
 
 void BFp_print_about() {
 	puts("  Bfcli: The Interactive Brainfuck Command-Line Interpreter");
-	puts("  Copyright (C) 2021 Jyothiraditya Nellakra");
+	puts("  Copyright (C) 2021-2022 Jyothiraditya Nellakra");
 	printf("  Version %d.%d: %s\n\n", BF_VERSION, BF_SUBVERSION, BF_VERNAME);
 
 	printf("  Line buffer size: %d chars\n", BF_LINE_SIZE);
@@ -58,7 +58,7 @@ void BFp_print_about() {
 
 void BFp_print_banner() {
 	puts("Bfcli: The Interactive Brainfuck Command-Line Interpreter");
-	puts("Copyright (C) 2021 Jyothiraditya Nellakra");
+	puts("Copyright (C) 2021-2022 Jyothiraditya Nellakra");
 	printf("Version %d.%d: %s\n\n", BF_VERSION, BF_SUBVERSION, BF_VERNAME);
 
 	puts("  This program comes with ABSOLUTELY NO WARRANTY. This is");
