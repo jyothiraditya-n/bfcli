@@ -16,7 +16,6 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <sys/types.h>
 
 #include "level_2.h"
 #include "level_3.h"

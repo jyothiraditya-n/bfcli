@@ -60,7 +60,11 @@ bfcli : $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(OBJS) -o bfcli $(LDLIBS)
 
 $(DSFILES) : %.s : demo/%.bf bfcli
-	./bfcli -sO3 $< -o $@
+	./bfcli -sOs $< -o $@
+
+kingdom.s : demo/kingdom.bf bfcli
+	./bfcli -sO2 demo/kingdom.bf -o kingdom.s
+	# BUGBUG -O3 causes it to not work correctly.
 
 $(DOBJS) : %.o : %.s
 	$(AS) $(DSFLAGS) $< -o $@

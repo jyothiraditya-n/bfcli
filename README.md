@@ -90,8 +90,8 @@ The following are the command-line arguments that this program accepts:
     -A, --arch ARCH   Sets the assembly architecture to ARCH. Valid values are
                       amd64 and i386.
 
-    -O, --optim LVL   Sets the optimisation level to LVL. Valid values are 0,
-                      1, 2 and 3.
+    -O, --optim BAND  Sets the optimisation band to BAND. Valid values are '0',
+                      '1', '2', '3' and 'S'/'s'.
 
   Note: If no output file is specified, a filename is chosen automatically.
 
@@ -113,7 +113,7 @@ TL;DR:
     -d, --direct-inp | -l, --length LEN | -r, --ram SIZE   | -t, --translate
     -x, --compile    | -s, --standalone |
 
-    -o, --output OUT | -A, --arch ARCH  | -O, --optim LVL  |
+    -o, --output OUT | -A, --arch ARCH  | -O, --optim BAND |
 
   Happy coding! :)
 

@@ -31,9 +31,7 @@
 
 void BFa_amd64_tasm(FILE *file) {
 	fprintf(file, "\t.bss\n");
-	if(BFo_level >= 2 && BFo_mem_padding)
-		fprintf(file, "\t.skip\t%zu\n", BFo_mem_padding);
-	
+	if(BFo_mem_padding) fprintf(file, "\t.skip\t%zu\n", BFo_mem_padding);
 	fprintf(file, "\n");
 
 	fprintf(file, "cells:\n");
@@ -47,6 +45,7 @@ void BFa_amd64_tasm(FILE *file) {
 
 	int last_io_instr = BFI_INSTR_NOP;
 	bool regs_dirty = true;
+	bool done_ret = false;
 
 	for(BFi_instr_t *instr = BFi_code; instr; instr = instr -> next) {
 		size_t op1 = instr -> op1;
@@ -241,9 +240,31 @@ void BFa_amd64_tasm(FILE *file) {
 			fprintf(file, "\tmov\t(%%rbx), %%al\n");
 		cpys:	fprintf(file, "\tsubb\t%%al, %zd(%%rbx)\n", ad);
 			break;
+
+		case BFI_INSTR_SUB:
+			fprintf(file, "\n_%zu:\n", op1);
+			regs_dirty = true;
+			break;
+
+		case BFI_INSTR_JSR:
+			fprintf(file, "\tcall\t_%zu\n", op1);
+			regs_dirty = true;
+			break;
+
+		case BFI_INSTR_RTS:
+			fprintf(file, "\tret\n");
+			regs_dirty = true;
+			break;
+
+		case BFI_INSTR_RET:
+			fprintf(file, "\tmov\t$60, %%rax\n");
+			fprintf(file, "\tmov\t$0, %%rdi\n");
+			fprintf(file, "\tsyscall\n");
+			done_ret = true;
 		}
 	}
 
+	if(done_ret) return;
 	fprintf(file, "\tmov\t$60, %%rax\n");
 	fprintf(file, "\tmov\t$0, %%rdi\n");
 	fprintf(file, "\tsyscall\n");
@@ -447,6 +468,26 @@ void BFa_amd64_tc(FILE *file) {
 			fprintf(file, "\t\"\tmov\t(%%%%rbx), %%%%al\\n\"\n");
 		cpys:	fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad);
 			break;
+
+		case BFI_INSTR_SUB:
+			fprintf(file, "\n\t\"_%zu:\\n\"\n", op1);
+			regs_dirty = true;
+			break;
+
+		case BFI_INSTR_JSR:
+			fprintf(file, "\t\"\tcall\t_%zu\\n\"\n", op1);
+			regs_dirty = true;
+			break;
+
+		case BFI_INSTR_RTS:
+			fprintf(file, "\t\"\tret\\n\"\n");
+			regs_dirty = true;
+			break;
+
+		case BFI_INSTR_RET:
+			fprintf(file, "\t\"\tmov\t$60, %%%%rax\\n\"\n");
+			fprintf(file, "\t\"\tmov\t$0, %%%%rdi\\n\"\n");
+			fprintf(file, "\t\"\tsyscall\\n\"\n");
 		}
 	}
 

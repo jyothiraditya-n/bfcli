@@ -62,6 +62,11 @@ typedef struct BFi_instr_s {
 	#define BFI_INSTR_CPYA 26
 	#define BFI_INSTR_CPYS 27
 
+	#define BFI_INSTR_SUB 28
+	#define BFI_INSTR_JSR 29
+	#define BFI_INSTR_RTS 30
+	#define BFI_INSTR_RET 31
+
 } BFi_instr_t;
 
 extern char *BFi_program_str;

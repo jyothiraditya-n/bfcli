@@ -68,9 +68,30 @@ void BFt_translate_c() {
 	}
 
 	fprintf(file, "unsigned char cells[%zu];\n\n",
-		BFi_mem_size + BFo_mem_padding);
+			BFi_mem_size + BFo_mem_padding);
 
+	if(!BFt_compile) {
+		fprintf(file, "#define INP getchar\n");
+		fprintf(file, "#define OUT putchar\n\n");
+
+		fprintf(file, "unsigned char *ptr = &cells[%zu];\n",
+			BFo_mem_padding);
+
+		fprintf(file, "unsigned char acc = 0;\n\n");
+	}
+
+	static char line[BF_LINE_SIZE];
+	size_t chars = 0;
+
+	for(size_t i = 1; i < BFo_sub_count; i++) {
+		chars += sprintf(line, "void sub_%zu(); ", i);
+		if(chars >= 80) chars = fprintf(file, "\n%s", line) - 1;
+		else fputs(line, file);
+	}
+
+	if(BFo_sub_count > 1) fputs("\n\n", file);
 	fputs("int main() {\n", file);
+
 	if(BFc_direct_inp) {
 		fputs("\ttcgetattr(STDIN_FILENO, &cooked);\n", file);
 		fputs("\traw = cooked;\n", file);
@@ -93,13 +114,7 @@ void BFt_translate_c() {
 static void translate(FILE *file) {
 	static char line[BF_LINE_SIZE];
 	size_t chars = 8;
-
-	fprintf(file, "\t#define VAR register unsigned char\n");
-	fprintf(file, "\t#define INP getchar\n");
-	fprintf(file, "\t#define OUT putchar\n\n");
-
-	fprintf(file, "\tVAR *ptr = &cells[%zu];\n", BFo_mem_padding);
-	fprintf(file, "\tVAR acc = 0;\n\n\t");
+	fputc('\t', file);
 
 	for(BFi_instr_t *instr = BFi_code; instr; instr = instr -> next) {
 		size_t op1 = instr -> op1;
@@ -230,8 +245,21 @@ static void translate(FILE *file) {
 		sub:	chars += sprintf(line + offset, "ptr[%zd] -= acc; ", ad);
 			break;
 
+		case BFI_INSTR_SUB:
+			fprintf(file, "\n}\n\nvoid sub_%zu() {\n\t", op1);
+			chars = 8;
+			continue;
+
+		case BFI_INSTR_JSR:
+			chars += sprintf(line, "sub_%zu(); ", op1);
+			break;
+
+		case BFI_INSTR_RTS:
+		case BFI_INSTR_RET:
+			line[0] = 0;
+			break;
+
 		default:
-			instr = instr -> next;
 			continue;
 		}
 

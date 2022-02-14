@@ -290,7 +290,7 @@ static void init(int argc, char **argv) {
 	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
 	var -> id = "BFo_level";
-	var -> fmt = "%d";
+	var -> fmt = "%c";
 	var -> data = &BFo_level;
 
 	arg = LCa_new();

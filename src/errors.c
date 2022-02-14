@@ -29,7 +29,7 @@ const char *BFe_file_name;
 void BFe_report_err(int errnum) {
 	switch(errnum) {
 	case BFE_BAD_OPTIM:
-		fprintf(stderr, "%s: error: unknown optimisation level: %d\n",
+		fprintf(stderr, "%s: error: unknown optimisation band: '%c'\n",
 			BFc_cmd_name, BFo_level);
 		break;
 

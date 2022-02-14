@@ -14,17 +14,11 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#include <stddef.h>
+#include "../interpreter.h"
 
-#ifndef BF_OPTIMS_H
-#define BF_OPTIMS_H 1
+#ifndef BF_OPTIMS_SIZE_H
+#define BF_OPTIMS_SIZE_H 1
 
-extern char BFo_level;
-extern ssize_t BFo_mem_padding;
-
-#define BFO_MAX_SUBS 256
-extern size_t BFo_sub_count;
-
-extern void BFo_optimise();
+extern BFi_instr_t *BFo_optimise_size();
 
 #endif

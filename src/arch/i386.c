@@ -31,8 +31,7 @@
 
 void BFa_i386_tasm(FILE *file) {
 	fprintf(file, "\t.bss\n");
-	if(BFo_level >= 2 && BFo_mem_padding)
-		fprintf(file, "\t.skip\t%zu\n", BFo_mem_padding);
+	if(BFo_mem_padding) fprintf(file, "\t.skip\t%zu\n", BFo_mem_padding);
 	fprintf(file, "\n");
 
 	fprintf(file, "cells:\n");
@@ -46,6 +45,7 @@ void BFa_i386_tasm(FILE *file) {
 
 	int last_io_instr = BFI_INSTR_NOP;
 	bool regs_dirty = true;
+	bool done_ret = false;
 
 	for(BFi_instr_t *instr = BFi_code; instr; instr = instr -> next) {
 		size_t op1 = instr -> op1;
@@ -234,9 +234,31 @@ void BFa_i386_tasm(FILE *file) {
 			fprintf(file, "\tmov\t(%%esi), %%al\n");
 		cpys:	fprintf(file, "\tsubb\t%%al, %zd(%%esi)\n", ad);
 			break;
+
+		case BFI_INSTR_SUB:
+			fprintf(file, "\n_%zu:\n", op1);
+			regs_dirty = true;
+			break;
+
+		case BFI_INSTR_JSR:
+			fprintf(file, "\tcall\t_%zu\n", op1);
+			regs_dirty = true;
+			break;
+
+		case BFI_INSTR_RTS:
+			fprintf(file, "\tret\n");
+			regs_dirty = true;
+			break;
+
+		case BFI_INSTR_RET:
+			fprintf(file, "\tmov\t$1, %%eax\n");
+			fprintf(file, "\tmov\t$0, %%ebx\n");
+			fprintf(file, "\tint\t$128\n");
+			done_ret = true;
 		}
 	}
 
+	if(done_ret) return;
 	fprintf(file, "\tmov\t$1, %%eax\n");
 	fprintf(file, "\tmov\t$0, %%ebx\n");
 	fprintf(file, "\tint\t$128\n");
@@ -436,6 +458,26 @@ void BFa_i386_tc(FILE *file) {
 			fprintf(file, "\t\"\tmov\t(%%%%esi), %%%%al\\n\"\n");
 		cpys:	fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%esi)\\n\"\n", ad);
 			break;
+
+		case BFI_INSTR_SUB:
+			fprintf(file, "\n\t\"_%zu:\\n\"\n", op1);
+			regs_dirty = true;
+			break;
+
+		case BFI_INSTR_JSR:
+			fprintf(file, "\t\"\tcall\t_%zu\\n\"\n", op1);
+			regs_dirty = true;
+			break;
+
+		case BFI_INSTR_RTS:
+			fprintf(file, "\t\"\tret\\n\"\n");
+			regs_dirty = true;
+			break;
+
+		case BFI_INSTR_RET:
+			fprintf(file, "\t\"\tmov\t$1, %%%%eax\\n\"\n");
+			fprintf(file, "\t\"\tmov\t$0, %%%%ebx\\n\"\n");
+			fprintf(file, "\t\"\tint\t$128\\n\"\n");
 		}
 	}
 

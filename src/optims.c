@@ -27,9 +27,11 @@
 #include "optims/level_1.h"
 #include "optims/level_2.h"
 #include "optims/level_3.h"
+#include "optims/size.h"
 
-int BFo_level;
+char BFo_level = '0';
 ssize_t BFo_mem_padding;
+size_t BFo_sub_count = 1;
 
 void BFo_optimise() {
 	while(BFi_code) {
@@ -40,10 +42,13 @@ void BFo_optimise() {
 
 	BFi_compile(true);
 	switch(BFo_level) {
-		case 0: break;
-		case 1: BFi_code = BFo_optimise_lv1(); break;
-		case 2: BFi_code = BFo_optimise_lv2(); break;
-		case 3: BFi_code = BFo_optimise_lv3(); break;
+		case '0': break;
+		case '1': BFi_code = BFo_optimise_lv1(); break;
+		case '2': BFi_code = BFo_optimise_lv2(); break;
+		case '3': BFi_code = BFo_optimise_lv3(); break;
+
+		case 'S':
+		case 's': BFi_code = BFo_optimise_size(); break;
 
 		default:
 			BFe_report_err(BFE_BAD_OPTIM);
