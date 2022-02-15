@@ -21,8 +21,8 @@
 #define BF_MAIN_H 1
 
 #define BF_VERSION 10
-#define BF_SUBVERSION 0
-#define BF_VERNAME "A Midnight Snack"
+#define BF_SUBVERSION 1
+#define BF_VERNAME "A Pink Water Bottle"
 
 #define BF_LINE_SIZE 4096
 #define BF_CODE_SIZE 65536

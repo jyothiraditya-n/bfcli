@@ -31,7 +31,9 @@
 
 char BFo_level = '0';
 ssize_t BFo_mem_padding;
+
 size_t BFo_sub_count = 1;
+size_t BFo_max_subs = -1;
 
 void BFo_optimise() {
 	while(BFi_code) {

@@ -32,7 +32,7 @@ LD = ld
 
 CPPFLAGS = -Wall -Wextra -Werror -std=c99 -O3 -I libClame/inc/
 CFLAGS = -std=c99 -s
-LDLIBS += -L libClame/ -lClame
+LDLIBS += -L libClame/ -lClame -lpthread
 
 DLFLAGS += -s
 
@@ -60,7 +60,7 @@ bfcli : $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(OBJS) -o bfcli $(LDLIBS)
 
 $(DSFILES) : %.s : demo/%.bf bfcli
-	./bfcli -sOs $< -o $@
+	./bfcli -sOS $< -o $@
 
 kingdom.s : demo/kingdom.bf bfcli
 	./bfcli -sO3 demo/kingdom.bf -o kingdom.s

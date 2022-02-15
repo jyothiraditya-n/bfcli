@@ -146,7 +146,7 @@ void BFp_print_minihelp() {
 	puts("    -d, --direct-inp | -l, --length LEN | -r, --ram SIZE   | -t, --translate");
 	puts("    -x, --compile    | -s, --standalone |\n");
 
-	puts("    -o, --output OUT | -A, --arch ARCH  | -O, --optim BAND |\n");
+	puts("    -o, --output OUT | -A, --arch ARCH  | -O, --optim BAND | -M, --max-subs N\n");
 
 	puts("  Happy coding! :)\n");
 	exit(BFE_BAD_ARGS);
@@ -203,8 +203,11 @@ void BFp_print_usage() {
 	puts("    -A, --arch ARCH   Sets the assembly architecture to ARCH. Valid values are");
 	puts("                      amd64 and i386.\n");
 
-	puts("    -O, --optim BAND  Sets the optimisation band to BAND. Valid values are '0',");
-	puts("                      '1', '2', '3' and 'S'/'s'.\n");
+	puts("    -O, --optim BAND  Sets the optimisation band to BAND. Valid values are 0,");
+	puts("                      1, 2, 3 and S/s.\n");
+
+	puts("    -M, --max-subs N  Sets the maximum number of subroutines and relocations");
+	puts("                      used by `-OS` to N. (N = 0 disables the limit.)\n");
 
 	puts("  Note: If no output file is specified, a filename is chosen automatically.\n");
 

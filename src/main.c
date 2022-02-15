@@ -205,7 +205,7 @@ static void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
-	var -> id = "BFf_mainfile_name";
+	var -> id = "file";
 	var -> fmt = BF_FILENAME_SCN;
 	var -> data = BFf_mainfile_name;
 
@@ -241,7 +241,7 @@ static void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
-	var -> id = "BFf_outfile_name";
+	var -> id = "output";
 	var -> fmt = BF_FILENAME_SCN;
 	var -> data = BFf_outfile_name;
 
@@ -277,7 +277,7 @@ static void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
-	var -> id = "BFc_direct_inp";
+	var -> id = "direct-inp";
 	var -> data = &BFc_direct_inp;
 
 	arg = LCa_new();
@@ -289,7 +289,7 @@ static void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
-	var -> id = "BFo_level";
+	var -> id = "optim";
 	var -> fmt = "%c";
 	var -> data = &BFo_level;
 
@@ -301,7 +301,7 @@ static void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
-	var -> id = "BFt_standalone";
+	var -> id = "standalone";
 	var -> data = &BFt_standalone;
 
 	arg = LCa_new();
@@ -313,7 +313,7 @@ static void init(int argc, char **argv) {
 
 	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
-	var -> id = "BFa_target_arch";
+	var -> id = "arch";
 	var -> fmt = BF_FILENAME_SCN;
 	var -> data = &BFa_target_arch;
 
@@ -323,6 +323,18 @@ static void init(int argc, char **argv) {
 	arg -> short_flag = 'A';
 	arg -> var = var;
 	arg -> value = true;
+
+	var = LCv_new();
+	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
+	var -> id = "max-subs";
+	var -> fmt = "%zu";
+	var -> data = &BFo_max_subs;
+
+	arg = LCa_new();
+	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
+	arg -> long_flag = "max-subs";
+	arg -> short_flag = 'M';
+	arg -> var = var;
 
 	LCa_noflags = &BFc_immediate;
 	LCa_max_noflags = 1;

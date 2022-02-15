@@ -22,8 +22,8 @@
 extern char BFo_level;
 extern ssize_t BFo_mem_padding;
 
-#define BFO_MAX_SUBS 256
 extern size_t BFo_sub_count;
+extern size_t BFo_max_subs;
 
 extern void BFo_optimise();
 

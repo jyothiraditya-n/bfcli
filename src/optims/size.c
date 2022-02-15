@@ -18,6 +18,10 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+
 #include <sys/types.h>
 
 #include "level_3.h"
@@ -37,6 +41,8 @@ typedef struct {
 } ret_t;
 
 static size_t total_nodes;
+static size_t thread_count;
+static sem_t mutex;
 
 static BFi_instr_t *base, **matches;
 static size_t length, count;
@@ -44,6 +50,14 @@ static ssize_t savings;
 
 static int are_equal(BFi_instr_t *a, BFi_instr_t *b);
 static void insert(BFi_instr_t **node);
+
+typedef struct {
+	BFi_instr_t *base;
+	size_t index;
+
+} data_t;
+
+static void *call_eval(void *data_p);
 static void evaluate(BFi_instr_t *our_base, size_t index);
 static ret_t rec_eval(BFi_instr_t *our_base, ret_t data);
 
@@ -79,16 +93,37 @@ BFi_instr_t *BFo_optimise_size() {
 		}
 	}
 
+	thread_count = sysconf(_SC_NPROCESSORS_ONLN);
+	pthread_t threads[thread_count];
+	data_t thread_data[thread_count];
+
+	int ret = sem_init(&mutex, 0, 1);
+	if(ret == -1) BFe_report_err(BFE_UNKNOWN_ERROR);
+
 loop:	total_nodes = 0;
 	for(instr = start; instr; instr = instr -> next)
 		total_nodes++;
 
-	size_t i = 0;
-	for(instr = start; instr; instr = instr -> next)
-		evaluate(instr, i++);
+	if(thread_count > total_nodes) thread_count = total_nodes;
+
+	instr = start;
+	for(size_t i = 0; i < thread_count; i++) {
+		thread_data[i].base = instr;
+		thread_data[i].index = i;
+
+		ret = pthread_create(&threads[i], NULL,
+			call_eval, (void *) &thread_data[i]);
+
+		if(ret == -1) BFe_report_err(BFE_UNKNOWN_ERROR);
+		else instr = instr -> next;
+	}
+
+	for(size_t i = 0; i < thread_count; i++)
+		pthread_join(threads[i], NULL);
 
 	if(!base || !count || savings <= 0) {
 		if(matches) free(matches);
+	endl:	sem_destroy(&mutex);
 		return start;
 	}
 
@@ -105,7 +140,7 @@ loop:	total_nodes = 0;
 	end -> op1 = BFo_sub_count;
 
 	instr = base;
-	for(i = 1; i <= length; i++) {
+	for(size_t i = 1; i <= length; i++) {
 		insert(&end);
 		end -> opcode = instr -> opcode;
 		end -> op1 = instr -> op1;
@@ -118,7 +153,7 @@ loop:	total_nodes = 0;
 	insert(&end);
 	end -> opcode = BFI_INSTR_RTS;
 
-	for(i = 0; i < count; i++) {
+	for(size_t i = 0; i < count; i++) {
 		BFi_instr_t *first = matches[i];
 		BFi_instr_t *last = matches[i];
 
@@ -155,7 +190,7 @@ loop:	total_nodes = 0;
 	matches = NULL;
 	base = NULL;
 
-	if(BFo_sub_count > BFO_MAX_SUBS) return start;
+	if(BFo_sub_count > BFo_max_subs) goto endl;
 	else goto loop;
 }
 
@@ -191,6 +226,21 @@ static void insert(BFi_instr_t **node) {
 	(*node) -> op1 = (*node) -> op2 = (*node) -> ad = 0;
 }
 
+static void *call_eval(void *data_p) {
+	data_t *data = (data_t *) data_p;
+
+	while(data -> base) {
+		evaluate(data -> base, data -> index);
+
+		for(size_t i = 0; i < thread_count && data -> base; i++)
+			data -> base = data -> base -> next;
+
+		data -> index += thread_count;
+	}
+
+	return NULL;
+}
+
 static void evaluate(BFi_instr_t *our_base, size_t index) {
 	BFi_instr_t **our_matches;
 	size_t our_length = 1, our_count = 0;
@@ -199,7 +249,7 @@ static void evaluate(BFi_instr_t *our_base, size_t index) {
 	ssize_t our_brackets = are_equal(our_base, our_base);
 	our_brackets = our_brackets < 0 ? our_brackets + 2 : 0;
 
-	our_matches = malloc(sizeof(BFi_instr_t *) * total_nodes - index);
+	our_matches = malloc(sizeof(BFi_instr_t *) * (total_nodes - index));
 	if(!our_matches) BFe_report_err(BFE_UNKNOWN_ERROR);
 
 	for(BFi_instr_t *i = our_base; i; i = i -> next)
@@ -222,6 +272,7 @@ static void evaluate(BFi_instr_t *our_base, size_t index) {
 
 	else free(data.matches);
 
+	sem_wait(&mutex);
 	if(our_savings > savings && !our_brackets) {
 		if(matches) free(matches);
 
@@ -233,6 +284,7 @@ static void evaluate(BFi_instr_t *our_base, size_t index) {
 	}
 
 	else free(our_matches);
+	sem_post(&mutex);
 }
 
 static ret_t rec_eval(BFi_instr_t *our_base, ret_t data) {
