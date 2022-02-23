@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021-2022 Jyothiraditya Nellakra
-Version 10.0: A Midnight Snack
+Version 10.2: A Mug of Hot Chocolate
 
 bfcli:0%
 ```

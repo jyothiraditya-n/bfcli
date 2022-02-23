@@ -15,6 +15,7 @@
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #include <sys/types.h>
@@ -33,7 +34,7 @@ char BFo_level = '0';
 ssize_t BFo_mem_padding;
 
 size_t BFo_sub_count = 1;
-size_t BFo_max_subs = -1;
+size_t BFo_max_subs = SIZE_MAX;
 
 void BFo_optimise() {
 	while(BFi_code) {

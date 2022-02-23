@@ -76,13 +76,11 @@ void BFa_amd64_tasm(FILE *file) {
 			break;
 
 		case BFI_INSTR_FWD:
-			fprintf(file, "\tadd\t$%zu, ", op1);
-			fprintf(file, "%%rbx\n");
+			fprintf(file, "\tadd\t$%zu, %%rbx\n", op1);
 			break;
 
 		case BFI_INSTR_BCK:
-			fprintf(file, "\tsub\t$%zu, ", op1);
-			fprintf(file, "%%rbx\n");
+			fprintf(file, "\tsub\t$%zu, %%rbx\n", op1);
 			break;
 
 		case BFI_INSTR_INP:
@@ -164,9 +162,7 @@ void BFa_amd64_tasm(FILE *file) {
 		lmula:	fprintf(file, "\tmovzb\t(%%rbx), %%rax\n");
 			fprintf(file, "\tlea\t(%%rax,%%rax,%zu), %%rax\n",
 				op1 - 1);
-			fprintf(file, "\taddb\t%%al, %zd(%%rbx)\n", ad);
-			regs_dirty = true;
-			break;
+			goto mula;
 
 		case BFI_INSTR_MULS:
 			if(instr -> prev -> opcode == BFI_INSTR_MULS
@@ -184,13 +180,11 @@ void BFa_amd64_tasm(FILE *file) {
 		lmuls:	fprintf(file, "\tmovzb\t(%%rbx), %%rax\n");
 			fprintf(file, "\tlea\t(%%rax,%%rax,%zu), %%rax\n",
 				op1 - 1);
-			fprintf(file, "\tsubb\t%%al, %zd(%%rbx)\n", ad);
-			regs_dirty = true;
-			break;
+			goto muls;
 
 		case BFI_INSTR_SHLA:
 			if(instr -> prev -> opcode == BFI_INSTR_SHLA
-				&& instr -> prev -> op2 == op2) goto shla;
+				&& instr -> prev -> op2 == op2) goto mula;
 
 			switch(op2) {
 				case 1: op1 = 2; goto lshla;
@@ -200,19 +194,15 @@ void BFa_amd64_tasm(FILE *file) {
 
 			fprintf(file, "\tmov\t(%%rbx), %%al\n");
 			fprintf(file, "\tshl\t$%zu, %%al\n", op2);
-		shla:	fprintf(file, "\taddb\t%%al, %zd(%%rbx)\n", ad);
-			regs_dirty = true;
-			break;
+			goto mula;
 
 		lshla:	fprintf(file, "\tmovzb\t(%%rbx), %%rax\n");
 			fprintf(file, "\tlea\t(,%%rax,%zu), %%rax\n", op1);
-			fprintf(file, "\taddb\t%%al, %zd(%%rbx)\n", ad);
-			regs_dirty = true;
-			break;
+			goto mula;
 
 		case BFI_INSTR_SHLS:
 			if(instr -> prev -> opcode == BFI_INSTR_SHLS
-				&& instr -> prev -> op2 == op2) goto shls;
+				&& instr -> prev -> op2 == op2) goto muls;
 
 			switch(op2) {
 				case 1: op1 = 2; goto lshls;
@@ -222,33 +212,25 @@ void BFa_amd64_tasm(FILE *file) {
 
 			fprintf(file, "\tmov\t(%%rbx), %%al\n");
 			fprintf(file, "\tshl\t$%zu, %%al\n", op2);
-		shls:	fprintf(file, "\tsubb\t%%al, %zd(%%rbx)\n", ad);
-			regs_dirty = true;
-			break;
+			goto muls;
 
 		lshls:	fprintf(file, "\tmovzb\t(%%rbx), %%rax\n");
 			fprintf(file, "\tlea\t(,%%rax,%zu), %%rax\n", op1);
-			fprintf(file, "\tsubb\t%%al, %zd(%%rbx)\n", ad);
-			regs_dirty = true;
-			break;
+			goto muls;
 
 		case BFI_INSTR_CPYA:
 			if(instr -> prev -> opcode == BFI_INSTR_CPYA
-				&& instr -> prev -> op1 == op1) goto cpya;
+				&& instr -> prev -> op1 == op1) goto mula;
 
 			fprintf(file, "\tmov\t(%%rbx), %%al\n");
-		cpya:	fprintf(file, "\taddb\t%%al, %zd(%%rbx)\n", ad);
-			regs_dirty = true;
-			break;
+			goto mula;
 
 		case BFI_INSTR_CPYS:
 			if(instr -> prev -> opcode == BFI_INSTR_CPYS
-				&& instr -> prev -> op1 == op1) goto cpys;
+				&& instr -> prev -> op1 == op1) goto muls;
 
 			fprintf(file, "\tmov\t(%%rbx), %%al\n");
-		cpys:	fprintf(file, "\tsubb\t%%al, %zd(%%rbx)\n", ad);
-			regs_dirty = true;
-			break;
+			goto muls;
 
 		case BFI_INSTR_SUB:
 			fprintf(file, "\n_%zu:\n", op1);
@@ -305,13 +287,11 @@ void BFa_amd64_tc(FILE *file) {
 			break;
 
 		case BFI_INSTR_FWD:
-			fprintf(file, "\t\"\tadd\t$%zu, ", op1);
-			fprintf(file, "%%%%rbx\\n\"\n");
+			fprintf(file, "\t\"\tadd\t$%zu, %%%%rbx\\n\"\n", op1);
 			break;
 
 		case BFI_INSTR_BCK:
-			fprintf(file, "\t\"\tsub\t$%zu, ", op1);
-			fprintf(file, "%%%%rbx\\n\"\n");
+			fprintf(file, "\t\"\tsub\t$%zu, %%%%rbx\\n\"\n", op1);
 			break;
 
 		case BFI_INSTR_INP:
@@ -401,9 +381,7 @@ void BFa_amd64_tc(FILE *file) {
 		lmula:	fprintf(file, "\t\"\tmovzb\t(%%%%rbx), %%%%rax\\n\"\n");
 			fprintf(file, "\t\"\tlea\t(%%%%rax,%%%%rax,%zu), %%%%rax\\n\"\n",
 				op1 - 1);
-			fprintf(file, "\t\"\taddb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad);
-			regs_dirty = true;
-			break;
+			goto mula;
 
 		case BFI_INSTR_MULS:
 			if(instr -> prev -> opcode == BFI_INSTR_MULS
@@ -421,13 +399,11 @@ void BFa_amd64_tc(FILE *file) {
 		lmuls:	fprintf(file, "\t\"\tmovzb\t(%%%%rbx), %%%%rax\\n\"\n");
 			fprintf(file, "\t\"\tlea\t(%%%%rax,%%%%rax,%zu), %%%%rax\\n\"\n",
 				op1 - 1);
-			fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad);
-			regs_dirty = true;
-			break;
+			goto muls;
 
 		case BFI_INSTR_SHLA:
 			if(instr -> prev -> opcode == BFI_INSTR_SHLA
-				&& instr -> prev -> op2 == op2) goto shla;
+				&& instr -> prev -> op2 == op2) goto mula;
 
 			switch(op2) {
 				case 1: op1 = 2; goto lshla;
@@ -437,19 +413,15 @@ void BFa_amd64_tc(FILE *file) {
 
 			fprintf(file, "\t\"\tmov\t(%%%%rbx), %%%%al\\n\"\n");
 			fprintf(file, "\t\"\tshl\t$%zu, %%%%al\\n\"\n", op2);
-		shla:	fprintf(file, "\t\"\taddb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad);
-			regs_dirty = true;
-			break;
+			goto mula;
 
 		lshla:	fprintf(file, "\t\"\tmovzb\t(%%%%rbx), %%%%rax\\n\"\n");
 			fprintf(file, "\t\"\tlea\t(,%%%%rax,%zu), %%%%rax\\n\"\n", op1);
-			fprintf(file, "\t\"\taddb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad);
-			regs_dirty = true;
-			break;
+			goto mula;
 
 		case BFI_INSTR_SHLS:
 			if(instr -> prev -> opcode == BFI_INSTR_SHLS
-				&& instr -> prev -> op2 == op2) goto shls;
+				&& instr -> prev -> op2 == op2) goto muls;
 
 			switch(op2) {
 				case 1: op1 = 2; goto lshls;
@@ -459,33 +431,25 @@ void BFa_amd64_tc(FILE *file) {
 
 			fprintf(file, "\t\"\tmov\t(%%%%rbx), %%%%al\\n\"\n");
 			fprintf(file, "\t\"\tshl\t$%zu, %%%%al\\n\"\n", op2);
-		shls:	fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad);
-			regs_dirty = true;
-			break;
+			goto muls;
 
 		lshls:	fprintf(file, "\t\"\tmovzb\t(%%%%rbx), %%%%rax\\n\"\n");
 			fprintf(file, "\t\"\tlea\t(,%%%%rax,%zu), %%%%rax\\n\"\n", op1);
-			fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad);
-			regs_dirty = true;
-			break;
+			goto muls;
 
 		case BFI_INSTR_CPYA:
 			if(instr -> prev -> opcode == BFI_INSTR_CPYA
-				&& instr -> prev -> op1 == op1) goto cpya;
+				&& instr -> prev -> op1 == op1) goto mula;
 
 			fprintf(file, "\t\"\tmov\t(%%%%rbx), %%%%al\\n\"\n");
-		cpya:	fprintf(file, "\t\"\taddb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad);
-			regs_dirty = true;
-			break;
+			goto mula;
 
 		case BFI_INSTR_CPYS:
 			if(instr -> prev -> opcode == BFI_INSTR_CPYS
-				&& instr -> prev -> op1 == op1) goto cpys;
+				&& instr -> prev -> op1 == op1) goto muls;
 
 			fprintf(file, "\t\"\tmov\t(%%%%rbx), %%%%al\\n\"\n");
-		cpys:	fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%rbx)\\n\"\n", ad);
-			regs_dirty = true;
-			break;
+			goto muls;
 
 		case BFI_INSTR_SUB:
 			fprintf(file, "\n\t\"_%zu:\\n\"\n", op1);

@@ -46,6 +46,11 @@ void BFt_translate_c() {
 	BFo_optimise();
 	if(!strlen(BFf_outfile_name)) {
 		strcpy(BFf_outfile_name, BFf_mainfile_name);
+		size_t len = strlen(BFf_outfile_name);
+
+		for(size_t i = len; i <= len; i--)
+			if(BFf_outfile_name[i] == '.') BFf_outfile_name[i] = 0;
+		
 		strncat(BFf_outfile_name, ".c",
 			BF_FILENAME_SIZE - 1 - strlen(BFf_outfile_name));
 	}

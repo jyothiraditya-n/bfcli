@@ -327,7 +327,7 @@ static void init(int argc, char **argv) {
 	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
 	var -> id = "max-subs";
-	var -> fmt = "%zu";
+	var -> fmt = "%zd";
 	var -> data = &BFo_max_subs;
 
 	arg = LCa_new();
