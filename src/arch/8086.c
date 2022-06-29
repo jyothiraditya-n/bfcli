@@ -31,7 +31,7 @@
 
 void BFa_8086_t(FILE *file) {
 	fprintf(file, "\tbits\t16\n");
-	fprintf(file, "\torg\t256\n\n");
+	fprintf(file, "\torg\t100h\n\n");
 
 	fprintf(file, "init:\n");
 	fprintf(file, "\txor\tbx, bx\n");
@@ -74,25 +74,25 @@ void BFa_8086_t(FILE *file) {
 		fprintf(file, "\tint\t10h\n");
 		fprintf(file, "\tret\n\n");
 
-		fprintf(file, "main:\n");
-		fprintf(file, "\tmov\tsi, cells\n");
 		break;
 	}
+
+	fprintf(file, "main:\n");
+	fprintf(file, "\tmov\tsi, cells\n");
 
 	bool done_ret = false;
 
 	for(BFi_instr_t *instr = BFi_code; instr; instr = instr -> next) {
-		size_t op1 = instr -> op1;
-		size_t op2 = instr -> op2;
-		ssize_t ad = instr -> ad;
+		size_t op1 = instr -> op1, op2 = instr -> op2;
+		ssize_t ad1 = instr -> ad1, ad2 = instr -> ad2;
 
 		switch(instr -> opcode) {
 		case BFI_INSTR_INC:
 			if(op1 != 1) fprintf(file, "\tadd\t");
 			else fprintf(file, "\tinc\t");
 
-			if(ad > 0) fprintf(file, "byte [si + %zd]", ad);
-			else if(ad < 0) fprintf(file, "byte [si - %zd]", -ad);
+			if(ad1 > 0) fprintf(file, "byte [si + %zd]", ad1);
+			else if(ad1 < 0) fprintf(file, "byte [si - %zd]", -ad1);
 			else fprintf(file, "byte [si]");
 
 			if(op1 != 1) fprintf(file, ", %zu\n", op1);
@@ -103,8 +103,8 @@ void BFa_8086_t(FILE *file) {
 			if(op1 != 1) fprintf(file, "\tsub\t");
 			else fprintf(file, "\tdec\t");
 
-			if(ad > 0) fprintf(file, "byte [si + %zd]", ad);
-			else if(ad < 0) fprintf(file, "byte [si - %zd]", -ad);
+			if(ad1 > 0) fprintf(file, "byte [si + %zd]", ad1);
+			else if(ad1 < 0) fprintf(file, "byte [si - %zd]", -ad1);
 			else fprintf(file, "byte [si]");
 
 			if(op1 != 1) fprintf(file, ", %zu\n", op1);
@@ -125,16 +125,16 @@ void BFa_8086_t(FILE *file) {
 			fprintf(file, "\tcall\tinput\n");
 
 			fprintf(file, "\tmov\t");
-			if(ad > 0) fprintf(file, "[si + %zd], ", ad);
-			else if(ad < 0) fprintf(file, "[si - %zd], ", -ad);
+			if(ad1 > 0) fprintf(file, "[si + %zd], ", ad1);
+			else if(ad1 < 0) fprintf(file, "[si - %zd], ", -ad1);
 			else fprintf(file, "[si], ");
 			fprintf(file, "al\n");
 			break;
 
 		case BFI_INSTR_OUT:
 			fprintf(file, "\tmov\tal, ");
-			if(ad > 0) fprintf(file, "[si + %zd]\n", ad);
-			else if(ad < 0) fprintf(file, "[si - %zd]\n", -ad);
+			if(ad1 > 0) fprintf(file, "[si + %zd]\n", ad1);
+			else if(ad1 < 0) fprintf(file, "[si - %zd]\n", -ad1);
 			else fprintf(file, "[si]\n");
 
 			fprintf(file, "\tcall\toutput\n");
@@ -167,67 +167,140 @@ void BFa_8086_t(FILE *file) {
 
 		case BFI_INSTR_MOV:
 			fprintf(file, "\tmov\tbyte ");
-			if(ad > 0) fprintf(file, "[si + %zd], ", ad);
-			else if(ad < 0) fprintf(file, "[si - %zd], ", -ad);
+			if(ad1 > 0) fprintf(file, "[si + %zd], ", ad1);
+			else if(ad1 < 0) fprintf(file, "[si - %zd], ", -ad1);
 			else fprintf(file, "[si], ");
 			fprintf(file, "%zu\n", op1);
 			break;
 
 		case BFI_INSTR_MULA:
 			if(instr -> prev -> opcode == BFI_INSTR_MULA
-				&& instr -> prev -> op1 == op1) goto mula;
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto mula;
 
-			fprintf(file, "\tmov\tal, [si]\n");
+			fprintf(file, "\tmov\tal, ");
+			if(ad2 > 0) fprintf(file, "[si + %zd]\n", ad2);
+			else if(ad2 < 0) fprintf(file, "[si - %zd]\n", -ad2);
+			else fprintf(file, "[si]\n");
+			
 			fprintf(file, "\tmov\tcl, %zu\n", op1);
 			fprintf(file, "\tmul\tcl\n");
 
 		mula:	fprintf(file, "\tadd\t");
-			if(ad > 0) fprintf(file, "[si + %zd], al\n", ad);
-			else fprintf(file, "[si - %zd], al\n", -ad);
+			if(ad1 > 0) fprintf(file, "[si + %zd], al\n", ad1);
+			else fprintf(file, "[si - %zd], al\n", -ad1);
 			break;
 
 		case BFI_INSTR_MULS:
 			if(instr -> prev -> opcode == BFI_INSTR_MULS
-				&& instr -> prev -> op1 == op1) goto muls;
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto muls;
 
-			fprintf(file, "\tmov\tal, [si]\n");
+			fprintf(file, "\tmov\tal, ");
+			if(ad2 > 0) fprintf(file, "[si + %zd]\n", ad2);
+			else if(ad2 < 0) fprintf(file, "[si - %zd]\n", -ad2);
+			else fprintf(file, "[si]\n");
+			
 			fprintf(file, "\tmov\tcl, %zu\n", op1);
 			fprintf(file, "\tmul\tcl\n");
 
 		muls:	fprintf(file, "\tsub\t");
-			if(ad > 0) fprintf(file, "[si + %zd], al\n", ad);
-			else fprintf(file, "[si - %zd], al\n", -ad);
+			if(ad1 > 0) fprintf(file, "[si + %zd], al\n", ad1);
+			else fprintf(file, "[si - %zd], al\n", -ad1);
+			break;
+
+		case BFI_INSTR_MULM:
+			if((instr -> prev -> opcode == BFI_INSTR_MULM
+				|| instr -> prev -> opcode == BFI_INSTR_MULA)
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto mulm;
+
+			fprintf(file, "\tmov\tal, ");
+			if(ad2 > 0) fprintf(file, "[si + %zd]\n", ad2);
+			else if(ad2 < 0) fprintf(file, "[si - %zd]\n", -ad2);
+			else fprintf(file, "[si]\n");
+			
+			fprintf(file, "\tmov\tcl, %zu\n", op1);
+			fprintf(file, "\tmul\tcl\n");
+
+		mulm:	fprintf(file, "\tmov\t");
+			if(ad1 > 0) fprintf(file, "[si + %zd], al\n", ad1);
+			else fprintf(file, "[si - %zd], al\n", -ad1);
 			break;
 
 		case BFI_INSTR_SHLA:
 			if(instr -> prev -> opcode == BFI_INSTR_SHLA
-				&& instr -> prev -> op2 == op2) goto mula;
+				&& instr -> prev -> op2 == op2
+				&& instr -> prev -> ad1 == ad1) goto mula;
 
-			fprintf(file, "\tmov\tal, [si]\n");
+			fprintf(file, "\tmov\tal, ");
+			if(ad2 > 0) fprintf(file, "[si + %zd]\n", ad2);
+			else if(ad2 < 0) fprintf(file, "[si - %zd]\n", -ad2);
+			else fprintf(file, "[si]\n");
+			
 			fprintf(file, "\tshl\tal, %zu\n", op2);
 			goto mula;
 
 		case BFI_INSTR_SHLS:
 			if(instr -> prev -> opcode == BFI_INSTR_SHLS
-				&& instr -> prev -> op2 == op2) goto muls;
+				&& instr -> prev -> op2 == op2
+				&& instr -> prev -> ad1 == ad1) goto muls;
 
-			fprintf(file, "\tmov\tal, [si]\n");
+			fprintf(file, "\tmov\tal, ");
+			if(ad2 > 0) fprintf(file, "[si + %zd]\n", ad2);
+			else if(ad2 < 0) fprintf(file, "[si - %zd]\n", -ad2);
+			else fprintf(file, "[si]\n");
+			
 			fprintf(file, "\tshl\tal, %zu\n", op2);
 			goto muls;
 
+		case BFI_INSTR_SHLM:
+			if((instr -> prev -> opcode == BFI_INSTR_SHLM
+				|| instr -> prev -> opcode == BFI_INSTR_SHLA)
+				&& instr -> prev -> op2 == op2
+				&& instr -> prev -> ad1 == ad1) goto mulm;
+
+			fprintf(file, "\tmov\tal, ");
+			if(ad2 > 0) fprintf(file, "[si + %zd]\n", ad2);
+			else if(ad2 < 0) fprintf(file, "[si - %zd]\n", -ad2);
+			else fprintf(file, "[si]\n");
+			
+			fprintf(file, "\tshl\tal, %zu\n", op2);
+			goto mulm;
+
 		case BFI_INSTR_CPYA:
 			if(instr -> prev -> opcode == BFI_INSTR_CPYA
-				&& instr -> prev -> op1 == op1) goto mula;
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto mula;
 
-			fprintf(file, "\tmov\tal, [si]\n");
+			fprintf(file, "\tmov\tal, ");
+			if(ad2 > 0) fprintf(file, "[si + %zd]\n", ad2);
+			else if(ad2 < 0) fprintf(file, "[si - %zd]\n", -ad2);
+			else fprintf(file, "[si]\n");
 			goto mula;
 
 		case BFI_INSTR_CPYS:
 			if(instr -> prev -> opcode == BFI_INSTR_CPYS
-				&& instr -> prev -> op1 == op1) goto muls;
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto muls;
 
-			fprintf(file, "\tmov\tal, [si]\n");
+			fprintf(file, "\tmov\tal, ");
+			if(ad2 > 0) fprintf(file, "[si + %zd]\n", ad2);
+			else if(ad2 < 0) fprintf(file, "[si - %zd]\n", -ad2);
+			else fprintf(file, "[si]\n");
 			goto muls;
+
+		case BFI_INSTR_CPYM:
+			if((instr -> prev -> opcode == BFI_INSTR_CPYM
+				|| instr -> prev -> opcode == BFI_INSTR_CPYA)
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto mulm;
+
+			fprintf(file, "\tmov\tal, ");
+			if(ad2 > 0) fprintf(file, "[si + %zd]\n", ad2);
+			else if(ad2 < 0) fprintf(file, "[si - %zd]\n", -ad2);
+			else fprintf(file, "[si]\n");
+			goto mulm;
 
 		case BFI_INSTR_SUB:
 			fprintf(file, "\n_%zu:\n", op1);

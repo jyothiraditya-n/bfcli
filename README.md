@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter
 ```
 Copyright (C) 2021-2022 Jyothiraditya Nellakra
-Version 10.2: A Mug of Hot Chocolate
+Version 10.3: A Friend's Microwave Popcorn
 
 bfcli:0%
 ```
@@ -88,10 +88,11 @@ The following are the command-line arguments that this program accepts:
                       memory dump to OUT.
 
     -A, --arch ARCH   Sets the assembly architecture to ARCH. Valid values are
-                      amd64 and i386.
+                      amd64, i386, 8086, z80 (this feature is in beta) and bfir
+                      (Intermediate compiler code representation).
 
     -O, --optim BAND  Sets the optimisation band to BAND. Valid values are 0,
-                      1, 2, 3 and S/s.
+                      1, 2, 3, 4 and S/s.
 
     -M, --max-subs N  Sets the maximum number of subroutines and relocations
                       used by `-OS` to N. (N = -1 disables the limit.)

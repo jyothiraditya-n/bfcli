@@ -24,7 +24,7 @@
 
 #include <sys/types.h>
 
-#include "level_3.h"
+#include "level_4.h"
 #include "size.h"
 
 #include "../interpreter.h"
@@ -62,17 +62,22 @@ static void evaluate(BFi_instr_t *our_base, size_t index);
 static ret_t rec_eval(BFi_instr_t *our_base, ret_t data);
 
 BFi_instr_t *BFo_optimise_size() {
-	BFi_instr_t *start = BFo_optimise_lv3();
+	BFi_instr_t *start = BFo_optimise_lv4();
 
 	BFi_instr_t *instr;
 	for(instr = start; instr; instr = instr -> next) {
 		switch(instr -> opcode) {
 		case BFI_INSTR_NOP: case BFI_INSTR_CMPL:
-			instr -> op1 = instr -> op2 = instr -> ad = 0;
+			instr -> op1 = instr -> op2 = 0;
+			instr -> ad1 = instr -> ad2 = 0;
 			break;
 
-		case BFI_INSTR_INC: case BFI_INSTR_DEC: case BFI_INSTR_MOV:
-		case BFI_INSTR_MULA: case BFI_INSTR_MULS:
+		case BFI_INSTR_INC: case BFI_INSTR_DEC:
+			instr -> op2 = instr -> ad2 = 0;
+			break;
+
+		
+		case BFI_INSTR_MULA: case BFI_INSTR_MULS: case BFI_INSTR_MOV:
 			instr -> op2 = 0;
 			break;
 
@@ -82,10 +87,13 @@ BFi_instr_t *BFo_optimise_size() {
 
 		case BFI_INSTR_FWD: case BFI_INSTR_BCK:
 		case BFI_INSTR_LOOP: case BFI_INSTR_ENDL:
-			instr -> op2 = instr -> ad = 0;
+			instr -> op2 = instr -> ad1 = instr -> ad2 = 0;
 			break;
 
 		case BFI_INSTR_INP: case BFI_INSTR_OUT:
+			instr -> op1 = instr -> op2 = instr -> ad2 = 0;
+			break;
+
 		case BFI_INSTR_CPYA: case BFI_INSTR_CPYS:
 			instr -> op1 = instr -> op2 = 0;
 			break;
@@ -145,7 +153,8 @@ loop:	total_nodes = 0;
 		end -> opcode = instr -> opcode;
 		end -> op1 = instr -> op1;
 		end -> op2 = instr -> op2;
-		end -> ad = instr -> ad;
+		end -> ad1 = instr -> ad1;
+		end -> ad2 = instr -> ad2;
 
 		instr = instr -> next;
 	}
@@ -168,7 +177,7 @@ loop:	total_nodes = 0;
 
 		new -> opcode = BFI_INSTR_JSR;
 		new -> op1 = BFo_sub_count;
-		new -> op2 = new -> ad = 0;
+		new -> op2 = new -> ad1 = new -> ad2 = 0;
 
 		if(first -> prev) first -> prev -> next = new;
 		if(last -> next) last -> next -> prev = new;
@@ -210,8 +219,8 @@ static int are_equal(BFi_instr_t *a, BFi_instr_t *b) {
 		return -3;
 	}
 
-	return (a -> op1 == b -> op1) && (a -> ad == b -> ad)
-	    && (a -> op2 == b -> op2);
+	return (a -> op1 == b -> op1) && (a -> ad1 == b -> ad1)
+	    && (a -> op2 == b -> op2) && (a -> ad2 == b -> ad2);
 }
 
 static void insert(BFi_instr_t **node) {
@@ -223,7 +232,8 @@ static void insert(BFi_instr_t **node) {
 	(*node) -> next = NULL;
 
 	(*node) -> opcode = BFI_INSTR_NOP;
-	(*node) -> op1 = (*node) -> op2 = (*node) -> ad = 0;
+	(*node) -> op1 = (*node) -> op2 = 0;
+	(*node) -> ad1 = (*node) -> ad2 = 0;
 }
 
 static void *call_eval(void *data_p) {

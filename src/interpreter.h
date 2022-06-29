@@ -28,7 +28,7 @@ typedef struct BFi_instr_s {
 	
 	int opcode;
 	size_t op1, op2;
-	ssize_t ad;
+	ssize_t ad1, ad2;
 
 	#define BFI_INSTR_NOP 0
 
@@ -53,19 +53,26 @@ typedef struct BFi_instr_s {
 	#define BFI_INSTR_ENDL 17
 	#define BFI_INSTR_IFNZ 18
 	#define BFI_INSTR_ENDIF 19
+
 	#define BFI_INSTR_CMPL 20
 	#define BFI_INSTR_MOV 21
+
 	#define BFI_INSTR_MULA 22
 	#define BFI_INSTR_MULS 23
-	#define BFI_INSTR_SHLA 24
-	#define BFI_INSTR_SHLS 25
-	#define BFI_INSTR_CPYA 26
-	#define BFI_INSTR_CPYS 27
+	#define BFI_INSTR_MULM 24
 
-	#define BFI_INSTR_SUB 28
-	#define BFI_INSTR_JSR 29
-	#define BFI_INSTR_RTS 30
-	#define BFI_INSTR_RET 31
+	#define BFI_INSTR_SHLA 25
+	#define BFI_INSTR_SHLS 26
+	#define BFI_INSTR_SHLM 27
+	
+	#define BFI_INSTR_CPYA 28
+	#define BFI_INSTR_CPYS 29
+	#define BFI_INSTR_CPYM 30
+
+	#define BFI_INSTR_SUB 31
+	#define BFI_INSTR_JSR 32
+	#define BFI_INSTR_RTS 33
+	#define BFI_INSTR_RET 34
 
 } BFi_instr_t;
 

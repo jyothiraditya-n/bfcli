@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #ifndef BF_OPTIMS_H
@@ -21,6 +22,7 @@
 
 extern char BFo_level;
 extern ssize_t BFo_mem_padding;
+extern bool BFo_advanced_ops;
 
 extern size_t BFo_sub_count;
 extern size_t BFo_max_subs;

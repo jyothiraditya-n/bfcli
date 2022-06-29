@@ -22,8 +22,9 @@
 #include "level_1.h"
 #include "level_2.h"
 
-#include "../interpreter.h"
 #include "../errors.h"
+#include "../interpreter.h"
+#include "../optims.h"
 
 #define IS_2_POW(X) !(X & (X - 1))
 
@@ -39,21 +40,22 @@ static BFi_instr_t *conv_instr(BFi_instr_t *start, BFi_instr_t *end,
 
 BFi_instr_t *BFo_optimise_lv2() {
 	BFi_instr_t *start = BFo_optimise_lv1();
+	if(!BFo_advanced_ops) return start;
 
 	BFi_instr_t *init = NULL;
 	size_t per_cycle = 0;
 
 	for(BFi_instr_t *i = start; i; i = i -> next) {
 		size_t op1 = i -> op1;
-		ssize_t ad = i -> ad;
+		ssize_t ad1 = i -> ad1;
 
 		switch(i -> opcode) {
 		case BFI_INSTR_INC:
-			if(!ad) per_cycle += op1;
+			if(!ad1) per_cycle += op1;
 			break;
 
 		case BFI_INSTR_DEC:
-			if(!ad) per_cycle -= op1;
+			if(!ad1) per_cycle -= op1;
 			break;
 
 		case BFI_INSTR_FWD:
@@ -81,7 +83,7 @@ BFi_instr_t *BFo_optimise_lv2() {
 	for(BFi_instr_t *i = start; i; i = i -> next) {
 		switch(i -> opcode) {
 		case BFI_INSTR_MOV:
-			if(i -> next -> ad) continue;
+			if(i -> next -> ad1) continue;
 
 			switch(i -> next -> opcode) {
 			case BFI_INSTR_INC:
@@ -118,7 +120,7 @@ static void conv_loop(BFi_instr_t *start, BFi_instr_t *end, bool compl) {
 	else new -> opcode = BFI_INSTR_NOP;
 
 	for(BFi_instr_t *i = start -> next; i != end; i = i -> next)
-		if(i -> ad) new = conv_instr(start_new, new, i);
+		if(i -> ad1) new = conv_instr(start_new, new, i);
 
 	for(BFi_instr_t *i = start -> next; i != end;) {
 		BFi_instr_t *instr = i;
@@ -132,7 +134,7 @@ static void conv_loop(BFi_instr_t *start, BFi_instr_t *end, bool compl) {
 
 		start -> opcode = BFI_INSTR_NOP;
 		end -> opcode = BFI_INSTR_MOV;
-		end -> ad = 0; end -> op1 = 0;
+		end -> ad1 = end -> ad2 = end -> op1 = 0;
 
 		free(new);
 		return;
@@ -149,7 +151,7 @@ static void conv_loop(BFi_instr_t *start, BFi_instr_t *end, bool compl) {
 	new -> op1 = end -> op1;
 
 	end -> opcode = BFI_INSTR_MOV;
-	end -> op1 = 0; end -> ad = 0;
+	end -> op1 = end -> ad2 = end -> ad1 = 0;
 
 	start -> next = start_new;
 	end -> prev = new;
@@ -162,7 +164,8 @@ static BFi_instr_t *conv_instr(BFi_instr_t *start, BFi_instr_t *end,
 			       BFi_instr_t *instr)
 {
 	size_t op = instr -> op1;
-	ssize_t ad = instr -> ad;
+	ssize_t ad1 = instr -> ad1;
+	ssize_t ad2 = instr -> ad2;
 
 	int opcode = BFI_INSTR_NOP;
 	size_t op1 = 0, op2 = 0;
@@ -209,8 +212,9 @@ static BFi_instr_t *conv_instr(BFi_instr_t *start, BFi_instr_t *end,
 	if(!new) BFe_report_err(BFE_UNKNOWN_ERROR);
 
 	new -> prev = i; new -> next = i -> next;
-	new -> opcode = opcode; new -> ad = ad;
-	new -> op1 = op1; new -> op2 = op2; 
+	new -> ad1 = ad1; new -> ad2 = ad2;
+	new -> op1 = op1; new -> op2 = op2;
+	new -> opcode = opcode;
 
 	if(i -> next) i -> next -> prev = new;
 	i -> next = new;

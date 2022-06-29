@@ -29,8 +29,6 @@
 #include "../optims.h"
 #include "../translator.h"
 
-// why preserve edx?
-
 void BFa_i386_tasm(FILE *file) {
 	fprintf(file, "\t.bss\n");
 	if(BFo_mem_padding) fprintf(file, "\t.skip\t%zu\n", BFo_mem_padding);
@@ -50,20 +48,19 @@ void BFa_i386_tasm(FILE *file) {
 	bool done_ret = false;
 
 	for(BFi_instr_t *instr = BFi_code; instr; instr = instr -> next) {
-		size_t op1 = instr -> op1;
-		size_t op2 = instr -> op2;
-		ssize_t ad = instr -> ad;
+		size_t op1 = instr -> op1, op2 = instr -> op2;
+		ssize_t ad1 = instr -> ad1, ad2 = instr -> ad2;
 
 		switch(instr -> opcode) {
 		case BFI_INSTR_INC:
 			fprintf(file, "\taddb\t$%zu, ", op1);
-			if(ad) fprintf(file, "%zd(%%esi)\n", ad);
+			if(ad1) fprintf(file, "%zd(%%esi)\n", ad1);
 			else fprintf(file, "(%%esi)\n");
 			break;
 
 		case BFI_INSTR_DEC:
 			fprintf(file, "\tsubb\t$%zu, ", op1);
-			if(ad) fprintf(file, "%zd(%%esi)\n", ad);
+			if(ad1) fprintf(file, "%zd(%%esi)\n", ad1);
 			else fprintf(file, "(%%esi)\n");
 			break;
 
@@ -76,7 +73,7 @@ void BFa_i386_tasm(FILE *file) {
 			break;
 
 		case BFI_INSTR_INP:
-			if(ad) fprintf(file, "\tlea\t%zd", ad);
+			if(ad1) fprintf(file, "\tlea\t%zd", ad1);
 			else fprintf(file, "\tlea\t");
 			fprintf(file, "(%%esi), %%ecx\n");
 
@@ -93,7 +90,7 @@ void BFa_i386_tasm(FILE *file) {
 			break;
 
 		case BFI_INSTR_OUT:
-			if(ad) fprintf(file, "\tlea\t%zd", ad);
+			if(ad1) fprintf(file, "\tlea\t%zd", ad1);
 			else fprintf(file, "\tlea\t");
 			fprintf(file, "(%%esi), %%ecx\n");
 
@@ -138,49 +135,96 @@ void BFa_i386_tasm(FILE *file) {
 
 		case BFI_INSTR_MOV:
 			fprintf(file, "\tmovb\t$%zu, ", op1);
-			if(ad) fprintf(file, "%zd(%%esi)\n", ad);
+			if(ad1) fprintf(file, "%zd(%%esi)\n", ad1);
 			else fprintf(file, "(%%esi)\n");
 			break;
 
 		case BFI_INSTR_MULA:
 			if(instr -> prev -> opcode == BFI_INSTR_MULA
-				&& instr -> prev -> op1 == op1) goto mula;
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto mula;
 
 			if(op1 == 3 || op1 == 5 || op1 == 9) goto lmula;
 
-			fprintf(file, "\tmov\t(%%esi), %%al\n");
+			if(ad2) fprintf(file, "\tmov\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmov\t(%%esi), ");
+			fprintf(file, "%%al\n");
+
 			fprintf(file, "\tmov\t$%zu, %%cl\n", op1);
 			fprintf(file, "\tmul\t%%cl\n");
-		mula:	fprintf(file, "\taddb\t%%al, %zd(%%esi)\n", ad);
+		mula:	fprintf(file, "\taddb\t%%al, ");
+			if(ad1) fprintf(file, "%zd(%%esi)\n", ad1);
+			else fprintf(file, "(%%esi)\n");
 			regs_dirty = true;
 			break;
 
-		lmula:	fprintf(file, "\tmovzb\t(%%esi), %%eax\n");
+		lmula:	if(ad2) fprintf(file, "\tmovzb\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmovzb\t(%%esi), ");
+			fprintf(file, "%%eax\n");
+
 			fprintf(file, "\tlea\t(%%eax,%%eax,%zu), %%eax\n",
 				op1 - 1);
 			goto mula;
 
 		case BFI_INSTR_MULS:
 			if(instr -> prev -> opcode == BFI_INSTR_MULS
-				&& instr -> prev -> op1 == op1) goto muls;
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto muls;
 
 			if(op1 == 3 || op1 == 5 || op1 == 9) goto lmuls;
 
-			fprintf(file, "\tmov\t(%%esi), %%al\n");
+			if(ad2) fprintf(file, "\tmov\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmov\t(%%esi), ");
+			fprintf(file, "%%al\n");
+
 			fprintf(file, "\tmov\t$%zu, %%cl\n", op1);
 			fprintf(file, "\tmul\t%%cl\n");
-		muls:	fprintf(file, "\tsubb\t%%al, %zd(%%esi)\n", ad);
+		muls:	fprintf(file, "\tsubb\t%%al, ");
+			if(ad1) fprintf(file, "%zd(%%esi)\n", ad1);
+			else fprintf(file, "(%%esi)\n");
 			regs_dirty = true;
 			break;
 
-		lmuls:	fprintf(file, "\tmovzb\t(%%esi), %%eax\n");
+		lmuls:	if(ad2) fprintf(file, "\tmovzb\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmovzb\t(%%esi), ");
+			fprintf(file, "%%eax\n");
+
 			fprintf(file, "\tlea\t(%%eax,%%eax,%zu), %%eax\n",
 				op1 - 1);
 			goto muls;
 
+		case BFI_INSTR_MULM:
+			if((instr -> prev -> opcode == BFI_INSTR_MULM
+				|| instr -> prev -> opcode == BFI_INSTR_MULA)
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto mulm;
+
+			if(op1 == 3 || op1 == 5 || op1 == 9) goto lmulm;
+
+			if(ad2) fprintf(file, "\tmov\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmov\t(%%esi), ");
+			fprintf(file, "%%al\n");
+
+			fprintf(file, "\tmov\t$%zu, %%cl\n", op1);
+			fprintf(file, "\tmul\t%%cl\n");
+		mulm:	fprintf(file, "\tmovb\t%%al, ");
+			if(ad1) fprintf(file, "%zd(%%esi)\n", ad1);
+			else fprintf(file, "(%%esi)\n");
+			regs_dirty = true;
+			break;
+
+		lmulm:	if(ad2) fprintf(file, "\tmovzb\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmovzb\t(%%esi), ");
+			fprintf(file, "%%eax\n");
+
+			fprintf(file, "\tlea\t(%%eax,%%eax,%zu), %%eax\n",
+				op1 - 1);
+			goto mulm;
+
 		case BFI_INSTR_SHLA:
 			if(instr -> prev -> opcode == BFI_INSTR_SHLA
-				&& instr -> prev -> op2 == op2) goto mula;
+				&& instr -> prev -> op2 == op2
+				&& instr -> prev -> ad1 == ad1) goto mula;
 
 			switch(op2) {
 				case 1: op1 = 2; goto lshla;
@@ -188,17 +232,24 @@ void BFa_i386_tasm(FILE *file) {
 				case 3: op1 = 8; goto lshla;
 			}
 
-			fprintf(file, "\tmov\t(%%esi), %%al\n");
+			if(ad2) fprintf(file, "\tmov\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmov\t(%%esi), ");
+			fprintf(file, "%%al\n");
+
 			fprintf(file, "\tshl\t$%zu, %%al\n", op2);
 			goto mula;
 
-		lshla:	fprintf(file, "\tmovzb\t(%%esi), %%eax\n");
+		lshla:	if(ad2) fprintf(file, "\tmovzb\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmovzb\t(%%esi), ");
+			fprintf(file, "%%eax\n");
+
 			fprintf(file, "\tlea\t(,%%eax,%zu), %%eax\n", op1);
 			goto mula;
 
 		case BFI_INSTR_SHLS:
 			if(instr -> prev -> opcode == BFI_INSTR_SHLS
-				&& instr -> prev -> op2 == op2) goto muls;
+				&& instr -> prev -> op2 == op2
+				&& instr -> prev -> ad1 == ad1) goto muls;
 
 			switch(op2) {
 				case 1: op1 = 2; goto lshls;
@@ -206,27 +257,76 @@ void BFa_i386_tasm(FILE *file) {
 				case 3: op1 = 8; goto lshls;
 			}
 
-			fprintf(file, "\tmov\t(%%esi), %%al\n");
+			if(ad2) fprintf(file, "\tmov\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmov\t(%%esi), ");
+			fprintf(file, "%%al\n");
+
 			fprintf(file, "\tshl\t$%zu, %%al\n", op2);
 			goto muls;
 
-		lshls:	fprintf(file, "\tmovzb\t(%%esi), %%eax\n");
+		lshls:	if(ad2) fprintf(file, "\tmovzb\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmovzb\t(%%esi), ");
+			fprintf(file, "%%eax\n");
+
 			fprintf(file, "\tlea\t(,%%eax,%zu), %%eax\n", op1);
 			goto muls;
 
+		case BFI_INSTR_SHLM:
+			if((instr -> prev -> opcode == BFI_INSTR_SHLM
+				|| instr -> prev -> opcode == BFI_INSTR_SHLA)
+				&& instr -> prev -> op2 == op2
+				&& instr -> prev -> ad1 == ad1) goto mulm;
+
+			switch(op2) {
+				case 1: op1 = 2; goto lshlm;
+				case 2: op1 = 4; goto lshlm;
+				case 3: op1 = 8; goto lshlm;
+			}
+
+			if(ad2) fprintf(file, "\tmov\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmov\t(%%esi), ");
+			fprintf(file, "%%al\n");
+
+			fprintf(file, "\tshl\t$%zu, %%al\n", op2);
+			goto mulm;
+
+		lshlm:	if(ad2) fprintf(file, "\tmovzb\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmovzb\t(%%esi), ");
+			fprintf(file, "%%eax\n");
+
+			fprintf(file, "\tlea\t(,%%eax,%zu), %%eax\n", op1);
+			goto mulm;
+
 		case BFI_INSTR_CPYA:
 			if(instr -> prev -> opcode == BFI_INSTR_CPYA
-				&& instr -> prev -> op1 == op1) goto mula;
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto mula;
 
-			fprintf(file, "\tmov\t(%%esi), %%al\n");
+			if(ad2) fprintf(file, "\tmov\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmov\t(%%esi), ");
+			fprintf(file, "%%al\n");
 			goto mula;
 
 		case BFI_INSTR_CPYS:
 			if(instr -> prev -> opcode == BFI_INSTR_CPYS
-				&& instr -> prev -> op1 == op1) goto muls;
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto muls;
 
-			fprintf(file, "\tmov\t(%%esi), %%al\n");
+			if(ad2) fprintf(file, "\tmov\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmov\t(%%esi), ");
+			fprintf(file, "%%al\n");
 			goto muls;
+
+		case BFI_INSTR_CPYM:
+			if((instr -> prev -> opcode == BFI_INSTR_CPYM
+				|| instr -> prev -> opcode == BFI_INSTR_CPYA)
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto mulm;
+
+			if(ad2) fprintf(file, "\tmov\t%zd(%%esi), ", ad2);
+			else fprintf(file, "\tmov\t(%%esi), ");
+			fprintf(file, "%%al\n");
+			goto mulm;
 
 		case BFI_INSTR_SUB:
 			fprintf(file, "\n_%zu:\n", op1);
@@ -265,20 +365,19 @@ void BFa_i386_tc(FILE *file) {
 	bool regs_dirty = true;
 
 	for(BFi_instr_t *instr = BFi_code; instr; instr = instr -> next) {
-		size_t op1 = instr -> op1;
-		size_t op2 = instr -> op2;
-		ssize_t ad = instr -> ad;
+		size_t op1 = instr -> op1, op2 = instr -> op2;
+		ssize_t ad1 = instr -> ad1, ad2 = instr -> ad2;
 
 		switch(instr -> opcode) {
 		case BFI_INSTR_INC:
 			fprintf(file, "\t\"\taddb\t$%zu, ", op1);
-			if(ad) fprintf(file, "%zd(%%%%esi)\\n\"\n", ad);
+			if(ad1) fprintf(file, "%zd(%%%%esi)\\n\"\n", ad1);
 			else fprintf(file, "(%%%%esi)\\n\"\n");
 			break;
 
 		case BFI_INSTR_DEC:
 			fprintf(file, "\t\"\tsubb\t$%zu, ", op1);
-			if(ad) fprintf(file, "%zd(%%%%esi)\\n\"\n", ad);
+			if(ad1) fprintf(file, "%zd(%%%%esi)\\n\"\n", ad1);
 			else fprintf(file, "(%%%%esi)\\n\"\n");
 			break;
 
@@ -291,7 +390,7 @@ void BFa_i386_tc(FILE *file) {
 			break;
 
 		case BFI_INSTR_INP:
-			if(ad) fprintf(file, "\t\"\tlea\t%zd", ad);
+			if(ad1) fprintf(file, "\t\"\tlea\t%zd", ad1);
 			else fprintf(file, "\t\"\tlea\t");
 			fprintf(file, "(%%%%esi), %%%%ecx\\n\"\n");
 
@@ -308,7 +407,7 @@ void BFa_i386_tc(FILE *file) {
 			break;
 
 		case BFI_INSTR_OUT:
-			if(ad) fprintf(file, "\t\"\tlea\t%zd", ad);
+			if(ad1) fprintf(file, "\t\"\tlea\t%zd", ad1);
 			else fprintf(file, "\t\"\tlea\t");
 			fprintf(file, "(%%%%esi), %%%%ecx\\n\"\n");
 
@@ -353,49 +452,96 @@ void BFa_i386_tc(FILE *file) {
 
 		case BFI_INSTR_MOV:
 			fprintf(file, "\t\"\tmovb\t$%zu, ", op1);
-			if(ad) fprintf(file, "%zd(%%%%esi)\\n\"\n", ad);
+			if(ad1) fprintf(file, "%zd(%%%%esi)\\n\"\n", ad1);
 			else fprintf(file, "(%%%%esi)\\n\"\n");
 			break;
 
 		case BFI_INSTR_MULA:
 			if(instr -> prev -> opcode == BFI_INSTR_MULA
-				&& instr -> prev -> op1 == op1) goto mula;
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto mula;
 
 			if(op1 == 3 || op1 == 5 || op1 == 9) goto lmula;
 
-			fprintf(file, "\t\"\tmov\t(%%%%esi), %%%%al\\n\"\n");
+			if(ad2) fprintf(file, "\t\"\tmov\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmov\t(%%%%esi)");
+			fprintf(file, "%%%%al\\n\"\n");
+
 			fprintf(file, "\t\"\tmov\t$%zu, %%%%cl\\n\"\n", op1);
 			fprintf(file, "\t\"\tmul\t%%%%cl\\n\"\n");
-		mula:	fprintf(file, "\t\"\taddb\t%%%%al, %zd(%%%%esi)\\n\"\n", ad);
+		mula:	fprintf(file, "\t\"\taddb\t%%%%al, ");
+			if(ad1) fprintf(file, "%zd(%%%%esi)\\n\"\n", ad1);
+			else fprintf(file, "(%%%%esi)\\n\"\n");
 			regs_dirty = true;
 			break;
 
-		lmula:	fprintf(file, "\t\"\tmovzb\t(%%%%esi), %%%%eax\\n\"\n");
+		lmula:	if(ad2) fprintf(file, "\t\"\tmovzb\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmovzb\t(%%%%esi)");
+			fprintf(file, "%%%%eax\\n\"\n");
+
 			fprintf(file, "\t\"\tlea\t(%%%%eax,%%%%eax,%zu),%%%%eax\\n\"\n",
 				op1 - 1);
 			goto mula;
 
 		case BFI_INSTR_MULS:
 			if(instr -> prev -> opcode == BFI_INSTR_MULS
-				&& instr -> prev -> op1 == op1) goto muls;
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto muls;
 
 			if(op1 == 3 || op1 == 5 || op1 == 9) goto lmuls;
 
-			fprintf(file, "\t\"\tmov\t(%%%%esi), %%%%al\\n\"\n");
+			if(ad2) fprintf(file, "\t\"\tmov\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmov\t(%%%%esi)");
+			fprintf(file, "%%%%al\\n\"\n");
+
 			fprintf(file, "\t\"\tmov\t$%zu, %%%%cl\\n\"\n", op1);
 			fprintf(file, "\t\"\tmul\t%%%%cl\\n\"\n");
-		muls:	fprintf(file, "\t\"\tsubb\t%%%%al, %zd(%%%%esi)\\n\"\n", ad);
+		muls:	fprintf(file, "\t\"\tsubb\t%%%%al, ");
+			if(ad1) fprintf(file, "%zd(%%%%esi)\\n\"\n", ad1);
+			else fprintf(file, "(%%%%esi)\\n\"\n");
 			regs_dirty = true;
 			break;
 
-		lmuls:	fprintf(file, "\t\"\tmovzb\t(%%%%esi), %%%%eax\\n\"\n");
+		lmuls:	if(ad2) fprintf(file, "\t\"\tmovzb\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmovzb\t(%%%%esi)");
+			fprintf(file, "%%%%eax\\n\"\n");
+
 			fprintf(file, "\t\"\tlea\t(%%%%eax,%%%%eax,%zu), %%%%eax\\n\"\n",
 				op1 - 1);
 			goto muls;
 
+		case BFI_INSTR_MULM:
+			if((instr -> prev -> opcode == BFI_INSTR_MULM
+				|| instr -> prev -> opcode == BFI_INSTR_MULA)
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto mulm;
+
+			if(op1 == 3 || op1 == 5 || op1 == 9) goto lmulm;
+
+			if(ad2) fprintf(file, "\t\"\tmov\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmov\t(%%%%esi)");
+			fprintf(file, "%%%%al\\n\"\n");
+
+			fprintf(file, "\t\"\tmov\t$%zu, %%%%cl\\n\"\n", op1);
+			fprintf(file, "\t\"\tmul\t%%%%cl\\n\"\n");
+		mulm:	fprintf(file, "\t\"\tmovb\t%%%%al, ");
+			if(ad1) fprintf(file, "%zd(%%%%esi)\\n\"\n", ad1);
+			else fprintf(file, "(%%%%esi)\\n\"\n");
+			regs_dirty = true;
+			break;
+
+		lmulm:	if(ad2) fprintf(file, "\t\"\tmovzb\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmovzb\t(%%%%esi)");
+			fprintf(file, "%%%%eax\\n\"\n");
+
+			fprintf(file, "\t\"\tlea\t(%%%%eax,%%%%eax,%zu),%%%%eax\\n\"\n",
+				op1 - 1);
+			goto mulm;
+
 		case BFI_INSTR_SHLA:
 			if(instr -> prev -> opcode == BFI_INSTR_SHLA
-				&& instr -> prev -> op2 == op2) goto mula;
+				&& instr -> prev -> op2 == op2
+				&& instr -> prev -> ad1 == ad1) goto mula;
 
 			switch(op2) {
 				case 1: op1 = 2; goto lshla;
@@ -403,17 +549,24 @@ void BFa_i386_tc(FILE *file) {
 				case 3: op1 = 8; goto lshla;
 			}
 
-			fprintf(file, "\t\"\tmov\t(%%%%esi), %%%%al\\n\"\n");
+			if(ad2) fprintf(file, "\t\"\tmov\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmov\t(%%%%esi)");
+			fprintf(file, "%%%%al\\n\"\n");
+
 			fprintf(file, "\t\"\tshl\t$%zu, %%%%al\\n\"\n", op2);
 			goto mula;
 
-		lshla:	fprintf(file, "\t\"\tmovzb\t(%%%%esi), %%%%eax\\n\"\n");
+		lshla:	if(ad2) fprintf(file, "\t\"\tmovzb\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmovzb\t(%%%%esi)");
+			fprintf(file, "%%%%eax\\n\"\n");
+
 			fprintf(file, "\t\"\tlea\t(,%%%%eax,%zu), %%%%eax\\n\"\n", op1);
 			goto mula;
 
 		case BFI_INSTR_SHLS:
 			if(instr -> prev -> opcode == BFI_INSTR_SHLS
-				&& instr -> prev -> op2 == op2) goto muls;
+				&& instr -> prev -> op2 == op2
+				&& instr -> prev -> ad1 == ad1) goto muls;
 
 			switch(op2) {
 				case 1: op1 = 2; goto lshls;
@@ -421,27 +574,76 @@ void BFa_i386_tc(FILE *file) {
 				case 3: op1 = 8; goto lshls;
 			}
 
-			fprintf(file, "\t\"\tmov\t(%%%%esi), %%%%al\\n\"\n");
+			if(ad2) fprintf(file, "\t\"\tmov\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmov\t(%%%%esi)");
+			fprintf(file, "%%%%al\\n\"\n");
+
 			fprintf(file, "\t\"\tshl\t$%zu, %%%%al\\n\"\n", op2);
 			goto muls;
 
-		lshls:	fprintf(file, "\t\"\tmovzb\t(%%%%esi), %%%%eax\\n\"\n");
+		lshls:	if(ad2) fprintf(file, "\t\"\tmovzb\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmovzb\t(%%%%esi)");
+			fprintf(file, "%%%%eax\\n\"\n");
+
 			fprintf(file, "\t\"\tlea\t(,%%%%eax,%zu), %%%%eax\\n\"\n", op1);
 			goto muls;
 
+		case BFI_INSTR_SHLM:
+			if((instr -> prev -> opcode == BFI_INSTR_SHLM
+				|| instr -> prev -> opcode == BFI_INSTR_SHLA)
+				&& instr -> prev -> op2 == op2
+				&& instr -> prev -> ad1 == ad1) goto mulm;
+
+			switch(op2) {
+				case 1: op1 = 2; goto lshlm;
+				case 2: op1 = 4; goto lshlm;
+				case 3: op1 = 8; goto lshlm;
+			}
+
+			if(ad2) fprintf(file, "\t\"\tmov\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmov\t(%%%%esi)");
+			fprintf(file, "%%%%al\\n\"\n");
+
+			fprintf(file, "\t\"\tshl\t$%zu, %%%%al\\n\"\n", op2);
+			goto mulm;
+
+		lshlm:	if(ad2) fprintf(file, "\t\"\tmovzb\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmovzb\t(%%%%esi)");
+			fprintf(file, "%%%%eax\\n\"\n");
+
+			fprintf(file, "\t\"\tlea\t(,%%%%eax,%zu), %%%%eax\\n\"\n", op1);
+			goto mulm;
+
 		case BFI_INSTR_CPYA:
 			if(instr -> prev -> opcode == BFI_INSTR_CPYA
-				&& instr -> prev -> op1 == op1) goto mula;
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto mula;
 
-			fprintf(file, "\t\"\tmov\t(%%%%esi), %%%%al\\n\"\n");
+			if(ad2) fprintf(file, "\t\"\tmov\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmov\t(%%%%esi)");
+			fprintf(file, "%%%%al\\n\"\n");
 			goto mula;
 
 		case BFI_INSTR_CPYS:
 			if(instr -> prev -> opcode == BFI_INSTR_CPYS
-				&& instr -> prev -> op1 == op1) goto muls;
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto muls;
 
-			fprintf(file, "\t\"\tmov\t(%%%%esi), %%%%al\\n\"\n");
+			if(ad2) fprintf(file, "\t\"\tmov\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmov\t(%%%%esi)");
+			fprintf(file, "%%%%al\\n\"\n");
 			goto muls;
+
+		case BFI_INSTR_CPYM:
+			if((instr -> prev -> opcode == BFI_INSTR_CPYM
+				|| instr -> prev -> opcode == BFI_INSTR_CPYA)
+				&& instr -> prev -> op1 == op1
+				&& instr -> prev -> ad1 == ad1) goto mulm;
+
+			if(ad2) fprintf(file, "\t\"\tmov\t%zd(%%%%esi), ", ad2);
+			else fprintf(file, "\t\"\tmov\t(%%%%esi)");
+			fprintf(file, "%%%%al\\n\"\n");
+			goto mulm;
 
 		case BFI_INSTR_SUB:
 			fprintf(file, "\n\t\"_%zu:\\n\"\n", op1);

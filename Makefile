@@ -63,7 +63,7 @@ $(DSFILES) : %.s : demo/%.bf bfcli
 	./bfcli -sOS $< -o $@
 
 kingdom.s : demo/kingdom.bf bfcli
-	./bfcli -sO3 demo/kingdom.bf -o kingdom.s
+	./bfcli -sO4 demo/kingdom.bf -o kingdom.s
 
 $(DOBJS) : %.o : %.s
 	$(AS) $(DSFLAGS) $< -o $@

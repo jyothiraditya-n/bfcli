@@ -201,10 +201,11 @@ void BFp_print_usage() {
 	puts("                      memory dump to OUT.\n");
 
 	puts("    -A, --arch ARCH   Sets the assembly architecture to ARCH. Valid values are");
-	puts("                      amd64 and i386.\n");
+	puts("                      amd64, i386, 8086, z80 (this feature is in beta) and bfir");
+	puts("                      (Intermediate compiler code representation).\n");
 
 	puts("    -O, --optim BAND  Sets the optimisation band to BAND. Valid values are 0,");
-	puts("                      1, 2, 3 and S/s.\n");
+	puts("                      1, 2, 3, 4 and S/s.\n");
 
 	puts("    -M, --max-subs N  Sets the maximum number of subroutines and relocations");
 	puts("                      used by `-OS` to N. (N = 0 disables the limit.)\n");

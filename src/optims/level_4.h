@@ -14,23 +14,11 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
-#include <stdbool.h>
-#include <stddef.h>
+#include "../interpreter.h"
 
-#ifndef BF_MAIN_H
-#define BF_MAIN_H 1
+#ifndef BF_OPTIMS_LEVEL4_H
+#define BF_OPTIMS_LEVEL4_H 1
 
-#define BF_VERSION 10
-#define BF_SUBVERSION 3
-#define BF_VERNAME "A Friend's Microwave Popcorn"
-
-#define BF_LINE_SIZE 4096
-#define BF_CODE_SIZE 65536
-#define BF_MEM_SIZE 32768
-
-#define BF_FILENAME_SIZE 4096
-#define BF_FILENAME_SCN "%4095c"
-
-extern size_t BFm_insertion_point;
+extern BFi_instr_t *BFo_optimise_lv4();
 
 #endif

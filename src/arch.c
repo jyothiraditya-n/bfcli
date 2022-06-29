@@ -29,6 +29,8 @@
 #include "arch/amd64.h"
 #include "arch/i386.h"
 #include "arch/8086.h"
+#include "arch/z80.h"
+#include "arch/bfir.h"
 
 char BFa_target_arch[BF_FILENAME_SIZE];
 
@@ -40,8 +42,10 @@ extern void BFa_translate() {
 	}
 
 	if(!strlen(BFf_outfile_name)) {
-		char *extension = ".s";
+		const char *extension = ".s";
 		if(!strcmp(BFa_target_arch, "8086")) extension = ".asm";
+		else if(!strcmp(BFa_target_arch, "z80")) extension = ".asm";
+		else if(!strcmp(BFa_target_arch, "bfir")) extension = ".bfir";
 
 		strcpy(BFf_outfile_name, BFf_mainfile_name);
 		size_t len = strlen(BFf_outfile_name);
@@ -62,9 +66,13 @@ extern void BFa_translate() {
 	}
 
 	BFo_optimise();
+
 	if(!strcmp(BFa_target_arch, "amd64")) BFa_amd64_tasm(file);
 	else if(!strcmp(BFa_target_arch, "i386")) BFa_i386_tasm(file);
 	else if(!strcmp(BFa_target_arch, "8086")) BFa_8086_t(file);
+	else if(!strcmp(BFa_target_arch, "z80")) BFa_z80_t(file);
+	else if(!strcmp(BFa_target_arch, "bfir")) BFa_bfir_t(file);
+
 	else { BFe_report_err(BFE_BAD_ARCH); exit(BFE_BAD_ARCH); }
 
 	int ret = fclose(file);

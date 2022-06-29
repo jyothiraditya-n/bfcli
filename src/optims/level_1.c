@@ -21,8 +21,9 @@
 
 #include "level_1.h"
 
-#include "../interpreter.h"
 #include "../errors.h"
+#include "../interpreter.h"
+#include "../optims.h"
 
 static void delete(BFi_instr_t *node, ssize_t offset);
 static void insert(BFi_instr_t *node, ssize_t offset);
@@ -30,6 +31,8 @@ static void insert(BFi_instr_t *node, ssize_t offset);
 BFi_instr_t *BFo_optimise_lv1() {
 	bool call_delete = false;
 	ssize_t offset = 0;
+
+	if(!BFo_advanced_ops) return BFi_code;
 
 	for(BFi_instr_t *instr = BFi_code; instr; instr = instr -> next) {
 		if(call_delete) {
@@ -40,12 +43,12 @@ BFi_instr_t *BFo_optimise_lv1() {
 		switch(instr -> opcode) {
 		case BFI_INSTR_INC:
 			instr -> op1 = instr -> op1 % 256;
-			instr -> ad = offset;
+			instr -> ad1 = offset;
 			break;
 
 		case BFI_INSTR_DEC:
 			instr -> op1 = instr -> op1 % 256;
-			instr -> ad = offset;
+			instr -> ad1 = offset;
 			break;
 
 		case BFI_INSTR_FWD:
@@ -58,11 +61,11 @@ BFi_instr_t *BFo_optimise_lv1() {
 			break;
 
 		case BFI_INSTR_INP:
-			instr -> ad = offset;
+			instr -> ad1 = offset;
 			break;
 
 		case BFI_INSTR_OUT:
-			instr -> ad = offset;
+			instr -> ad1 = offset;
 			break;
 
 		case BFI_INSTR_LOOP: case BFI_INSTR_ENDL:
@@ -122,6 +125,7 @@ static void insert(BFi_instr_t *node, ssize_t offset) {
 
 		new -> ptr = NULL;
 		new -> op2 = 0;
-		new -> ad = 0;
+		new -> ad1 = 0;
+		new -> ad2 = 0;
 	}
 }

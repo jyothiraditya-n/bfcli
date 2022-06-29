@@ -105,7 +105,8 @@ static BFi_instr_t *compile(char *str, int mode) {
 	first -> opcode = BFI_INSTR_NOP;
 	first -> op1 = 0;
 	first -> op2 = 0;
-	first -> ad = 0;
+	first -> ad1 = 0;
+	first -> ad2 = 0;
 
 	size_t length = strlen(str);
 	size_t brackets = 0, nesting = 0;
@@ -236,7 +237,8 @@ static void append_simple(BFi_instr_t **current, int opcode) {
 	(*current) -> next -> opcode = BFI_INSTR_NOP;
 	(*current) -> next -> op1 = 0;
 	(*current) -> next -> op2 = 0;
-	(*current) -> next -> ad = 0;
+	(*current) -> next -> ad1 = 0;
+	(*current) -> next -> ad2 = 0;
 
 	*current = (*current) -> next;
 	return;

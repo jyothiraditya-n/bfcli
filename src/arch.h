@@ -14,6 +14,8 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <stdio.h>
+
 #ifndef BF_ARCH_H
 #define BF_ARCH_H 1
 
