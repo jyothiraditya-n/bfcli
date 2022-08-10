@@ -32,6 +32,7 @@ BFi_instr_t *BFo_optimise_lv1() {
 	bool call_delete = false;
 	ssize_t offset = 0;
 
+	BFi_compile(true);
 	if(!BFo_advanced_ops) return BFi_code;
 
 	for(BFi_instr_t *instr = BFi_code; instr; instr = instr -> next) {

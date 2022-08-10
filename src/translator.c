@@ -63,7 +63,10 @@ void BFt_translate_c() {
 		exit(BFE_FILE_UNWRITABLE);
 	}
 
-	if(!BFt_compile) fputs("#include <stdio.h>\n\n", file);
+	if(!BFt_compile || BFo_precomp_output)
+		fputs("#include <stdio.h>\n\n", file);
+
+	if(!BFi_program_str[0]) goto next;
 
 	if(BFc_direct_inp) {
 		fputs("#include <termios.h>\n", file);
@@ -72,12 +75,30 @@ void BFt_translate_c() {
 		fputs("struct termios cooked, raw;\n", file);
 	}
 
-	fprintf(file, "unsigned char cells[%zu]",
-		BFi_mem_size + BFo_mem_padding);
+	fprintf(file, "unsigned char cells[%zu]", BFi_mem_size + BFo_mem_padding);
+
+	if(BFo_precomp_cells) {
+		fprintf(file, " = {\n\t");
+		size_t cols = 8;
+		char buf[16] = {0};
+
+		for(size_t i = 0; i < BFo_mem_padding + BFo_precomp_cells; i++) {
+			cols += sprintf(buf, "%d, ",
+				i < (unsigned) BFo_mem_padding?
+				0 : BFi_mem[i - BFo_mem_padding]);
+			
+			if(cols < 80) fprintf(file, "%s", buf);
+			else cols = fprintf(file, "\n\t%s", buf) + 5; 
+		}
+
+		fprintf(file, cols < 79? "0\n}" : "\n\t0\n}");
+	}
 
 	if(!BFt_compile) {
-		if(!BFo_mem_padding) fprintf(file, ", *p = cells");
-		else fprintf(file, ", *p = &cells[%zu]", BFo_mem_padding);
+		size_t index = BFo_mem_padding + BFo_precomp_ptr;
+
+		if(!index) fprintf(file, ", *p = cells");
+		else fprintf(file, ", *p = &cells[%zu]", index);
 
 		if(BFo_advanced_ops) fprintf(file, ", a = 0");
 	}
@@ -100,9 +121,9 @@ void BFt_translate_c() {
 	}
 
 	if(BFo_sub_count > 1) fputs(";\n\n", file);
-	fputs("int main() {\n", file);
+next:	fputs("int main() {\n", file);
 
-	if(BFc_direct_inp) {
+	if(BFc_direct_inp && BFi_program_str[0]) {
 		fputs("\ttcgetattr(STDIN_FILENO, &cooked);\n", file);
 		fputs("\traw = cooked;\n", file);
 		fputs("\traw.c_lflag &= ~ICANON;\n", file);
@@ -112,8 +133,16 @@ void BFt_translate_c() {
 		fputs("\ttcsetattr(STDIN_FILENO, TCSANOW, &raw);\n\n", file);
 	}
 
+	if(BFo_precomp_output) {
+		fprintf(file, "\tfputs(\"");
+		BFf_printstr(file, BFo_precomp_output, false);
+		fprintf(file,  "\", stdout);\n\tfflush(stdout);\n");
+		fprintf(file, BFi_program_str[0]? "\n" : "");
+	}
+
 	if(BFt_compile) BFa_translate_c(file);
 	else translate(file);
+
 	fputs("}\n", file);
 
 	int ret = fclose(file);
@@ -126,7 +155,8 @@ static void translate(FILE *file) {
 	size_t chars = 8;
 	char mode = 'a';
 
-	fputc('\t', file);
+	if(!BFi_program_str[0]) return;
+	else fputs("\t", file);
 
 	for(BFi_instr_t *instr = BFi_code; instr; instr = instr -> next) {
 		size_t op1 = instr -> op1, op2 = instr -> op2;

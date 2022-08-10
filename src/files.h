@@ -14,6 +14,9 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <stdbool.h>
+#include <stdio.h>
+
 #ifndef BF_FILES_H
 #define BF_FILES_H 1
 
@@ -25,6 +28,8 @@ extern void BFf_init();
 extern int BFf_load_file();
 extern void BFf_save_file(char *buffer, size_t size);
 extern void BFf_dump_mem();
+
+extern void BFf_printstr(FILE *file, unsigned char *str, bool non_c);
 
 #define FILE_OK 0
 

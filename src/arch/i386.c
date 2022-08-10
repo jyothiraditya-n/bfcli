@@ -30,18 +30,63 @@
 #include "../translator.h"
 
 void BFa_i386_tasm(FILE *file) {
-	fprintf(file, "\t.bss\n");
+	if(BFo_precomp_output) {
+		fprintf(file, "\t.data\n");
+
+		fprintf(file, "header:\t.ascii\t\"");
+		BFf_printstr(file, BFo_precomp_output, false);
+		fprintf(file, "\"\n");
+		fprintf(file, "length\t=\t. - header\n\n");
+	}
+
+	if(!BFi_program_str[0]) goto n2;
+
+	if(BFo_precomp_output) {
+		if(!BFo_precomp_cells) fprintf(file, "\t.bss\n");
+	}
+
+	else {
+		if(BFo_precomp_cells) fprintf(file, "\t.data\n");
+		else fprintf(file, "\t.bss\n");
+	}
+
 	if(BFo_mem_padding) fprintf(file, "\t.skip\t%zu\n", BFo_mem_padding);
-	fprintf(file, "\n");
 
-	fprintf(file, "cells:\n");
-	fprintf(file, "\t.skip\t%zu\n\n", BFi_mem_size);
+	fprintf(file, BFo_precomp_cells? "cells:\n\t.byte\t" : "cells:\n");
+	if(!BFo_precomp_cells) goto next;
 
+	size_t cols = 16;
+	char buf[16] = {0};
+
+	for(size_t i = 0; i < BFo_precomp_cells; i++) {
+		cols += sprintf(buf, "%d, ", BFi_mem[i]);
+
+		if(cols < 80) fprintf(file, "%s", buf);
+		else {
+			fprintf(file, "%d", BFi_mem[i]);
+			cols = fprintf(file, "\n\t.byte\t") + 13;
+		}
+	}
+
+	fprintf(file, "0\n");
+next:	fprintf(file, "\t.skip\t%zu\n\n", BFi_mem_size - BFo_precomp_cells - 1);
+
+n2:	fprintf(file, "\t.text\n");
 	fprintf(file, "\t.global\t_start\n");
-	fprintf(file, "\t.text\n\n");
 
 	fprintf(file, "_start:\n");
-	fprintf(file, "\tmov\t$cells, %%esi\n");
+	if(BFo_precomp_output) {
+		fprintf(file, "\tmov\t$4, %%eax\n");
+		fprintf(file, "\tmov\t$1, %%ebx\n");
+		fprintf(file, "\tmov\t$header, %%ecx\n");
+		fprintf(file, "\tmov\t$length, %%edx\n");
+		fprintf(file, "\tint\t$0x80\n");
+	}
+
+	if(!BFi_program_str[0]) goto end;
+	
+	if(!BFo_precomp_ptr) fprintf(file, "\tmov\t$cells, %%esi\n");
+	else fprintf(file, "\tmov\t$(cells + %zu), %%esi\n", BFo_precomp_ptr);
 
 	int last_io_instr = BFI_INSTR_NOP;
 	bool regs_dirty = true;
@@ -236,7 +281,8 @@ void BFa_i386_tasm(FILE *file) {
 			else fprintf(file, "\tmov\t(%%esi), ");
 			fprintf(file, "%%al\n");
 
-			fprintf(file, "\tshl\t$%zu, %%al\n", op2);
+			if(op2 == 1) fprintf(file, "\tshl\t%%al\n");
+			else fprintf(file, "\tshl\t$%zu, %%al\n", op2);
 			goto mula;
 
 		lshla:	if(ad2) fprintf(file, "\tmovzb\t%zd(%%esi), ", ad2);
@@ -261,7 +307,8 @@ void BFa_i386_tasm(FILE *file) {
 			else fprintf(file, "\tmov\t(%%esi), ");
 			fprintf(file, "%%al\n");
 
-			fprintf(file, "\tshl\t$%zu, %%al\n", op2);
+			if(op2 == 1) fprintf(file, "\tshl\t%%al\n");
+			else fprintf(file, "\tshl\t$%zu, %%al\n", op2);
 			goto muls;
 
 		lshls:	if(ad2) fprintf(file, "\tmovzb\t%zd(%%esi), ", ad2);
@@ -287,7 +334,8 @@ void BFa_i386_tasm(FILE *file) {
 			else fprintf(file, "\tmov\t(%%esi), ");
 			fprintf(file, "%%al\n");
 
-			fprintf(file, "\tshl\t$%zu, %%al\n", op2);
+			if(op2 == 1) fprintf(file, "\tshl\t%%al\n");
+			else fprintf(file, "\tshl\t$%zu, %%al\n", op2);
 			goto mulm;
 
 		lshlm:	if(ad2) fprintf(file, "\tmovzb\t%zd(%%esi), ", ad2);
@@ -352,13 +400,13 @@ void BFa_i386_tasm(FILE *file) {
 	}
 
 	if(done_ret) return;
-	fprintf(file, "\tmov\t$1, %%eax\n");
+end:	fprintf(file, "\tmov\t$1, %%eax\n");
 	fprintf(file, "\tmov\t$0, %%ebx\n");
 	fprintf(file, "\tint\t$0x80\n");
 }
 
 void BFa_i386_tc(FILE *file) {
-	fprintf(file, "\tasm volatile ( \"I386_ASSEMBLY:\\n\"\n");
+	fprintf(file, "\tasm volatile (\n");
 	fprintf(file, "\t\"\tmov\t%%0, %%%%esi\\n\"\n");
 
 	int last_io_instr = BFI_INSTR_NOP;
@@ -553,7 +601,8 @@ void BFa_i386_tc(FILE *file) {
 			else fprintf(file, "\t\"\tmov\t(%%%%esi)");
 			fprintf(file, "%%%%al\\n\"\n");
 
-			fprintf(file, "\t\"\tshl\t$%zu, %%%%al\\n\"\n", op2);
+			if(op2 == 1) fprintf(file, "\t\"\tshl\t%%%%al\\n\"\n");
+			else fprintf(file, "\t\"\tshl\t$%zu, %%%%al\\n\"\n", op2);
 			goto mula;
 
 		lshla:	if(ad2) fprintf(file, "\t\"\tmovzb\t%zd(%%%%esi), ", ad2);
@@ -578,7 +627,8 @@ void BFa_i386_tc(FILE *file) {
 			else fprintf(file, "\t\"\tmov\t(%%%%esi)");
 			fprintf(file, "%%%%al\\n\"\n");
 
-			fprintf(file, "\t\"\tshl\t$%zu, %%%%al\\n\"\n", op2);
+			if(op2 == 1) fprintf(file, "\t\"\tshl\t%%%%al\\n\"\n");
+			else fprintf(file, "\t\"\tshl\t$%zu, %%%%al\\n\"\n", op2);
 			goto muls;
 
 		lshls:	if(ad2) fprintf(file, "\t\"\tmovzb\t%zd(%%%%esi), ", ad2);
@@ -604,7 +654,8 @@ void BFa_i386_tc(FILE *file) {
 			else fprintf(file, "\t\"\tmov\t(%%%%esi)");
 			fprintf(file, "%%%%al\\n\"\n");
 
-			fprintf(file, "\t\"\tshl\t$%zu, %%%%al\\n\"\n", op2);
+			if(op2 == 1) fprintf(file, "\t\"\tshl\t%%%%al\\n\"\n");
+			else fprintf(file, "\t\"\tshl\t$%zu, %%%%al\\n\"\n", op2);
 			goto mulm;
 
 		lshlm:	if(ad2) fprintf(file, "\t\"\tmovzb\t%zd(%%%%esi), ", ad2);
@@ -667,10 +718,10 @@ void BFa_i386_tc(FILE *file) {
 		}
 	}
 
-	fprintf(file, "\n\t: : \"r\" (&cells[%zu])\n",
-		BFi_mem_size + BFo_mem_padding);
+	fprintf(file, "\n\t: :\t\"r\" (&cells[%zu])\n",
+		BFo_mem_padding + BFo_precomp_ptr);
 	
-	fprintf(file, "\t: \"eax\", \"ebx\", \"ecx\", \"edx\", \"esi\");\n\n");
+	fprintf(file, "\t:\t\"eax\", \"ebx\", \"ecx\", \"edx\", \"esi\"\n\t);\n\n");
 
 	fprintf(file, "\treturn 0;\n");
 }

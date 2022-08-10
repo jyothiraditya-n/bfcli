@@ -30,8 +30,8 @@ CC = gcc
 AS = as
 LD = ld
 
-CPPFLAGS = -Wall -Wextra -Werror -std=c99 -O3 -I libClame/inc/
-CFLAGS = -std=c99 -s
+CPPFLAGS = -Wall -Wextra -std=c99 -O0 -I libClame/inc/ -g
+CFLAGS = -std=c99 -g
 LDLIBS += -L libClame/ -lClame -lpthread
 
 DLFLAGS += -s
@@ -59,11 +59,22 @@ libClame/libClame.a :
 bfcli : $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(OBJS) -o bfcli $(LDLIBS)
 
-$(DSFILES) : %.s : demo/%.bf bfcli
-	./bfcli -sOS $< -o $@
+specials += kingdom.s euler.s hanoi.s mandelbrot.s
+
+$(filter-out $(specials),$(DSFILES)) : %.s : demo/%.bf bfcli
+	./bfcli -sOa $< -o $@
 
 kingdom.s : demo/kingdom.bf bfcli
-	./bfcli -sO4 demo/kingdom.bf -o kingdom.s
+	./bfcli -sOp demo/kingdom.bf -o kingdom.s
+
+euler.s : demo/euler.bf bfcli
+	./bfcli -sOs demo/euler.bf -o euler.s
+
+hanoi.s : demo/hanoi.bf bfcli
+	./bfcli -sOs demo/hanoi.bf -o hanoi.s
+
+mandelbrot.s : demo/mandelbrot.bf bfcli
+	./bfcli -sOs demo/mandelbrot.bf -o mandelbrot.s
 
 $(DOBJS) : %.o : %.s
 	$(AS) $(DSFLAGS) $< -o $@

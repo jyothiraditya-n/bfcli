@@ -40,7 +40,7 @@ size_t BFi_code_size = BF_CODE_SIZE;
 
 static BFi_instr_t *cmd_code;
 
-bool Bfi_do_recompile = true;
+bool BFi_do_recompile = true;
 bool BFi_is_running;
 char BFi_last_output;
 
@@ -57,7 +57,16 @@ static void append_cmplx(BFi_instr_t **current, int *opcode, size_t *op,
 
 static char get_input();
 
+static void _on_fwd(size_t op) { (void) op; }
+static void _on_bck(size_t op) { (void) op; }
+
+int (*BFi_putchar)(int ch) = putchar;
+void (*BFi_on_fwd)(size_t op) = _on_fwd;
+void (*BFi_on_bck)(size_t op) = _on_bck;
+
 void BFi_init() {
+	if(!BFi_mem_size) BFi_mem_size++;
+
 	BFi_mem = calloc(BFi_mem_size, sizeof(unsigned char));
 	if(!BFi_mem) BFe_report_err(BFE_UNKNOWN_ERROR);
 }
@@ -71,7 +80,7 @@ void BFi_compile(bool translate) {
 
 	if(!translate) {
 		BFi_code = compile(BFi_program_str, PROGRAM_STRING);
-		Bfi_do_recompile = false;
+		BFi_do_recompile = false;
 	}
 
 	else BFi_code = compile(BFi_program_str, PARTIAL_OUTPUT);
@@ -90,7 +99,7 @@ void BFi_main(char *command_str) {
 }
 
 void BFi_exec() {
-	if(Bfi_do_recompile) BFi_compile(false);
+	if(BFi_do_recompile) BFi_compile(false);
 	run(BFi_code);
 }
 
@@ -304,6 +313,7 @@ static void run(BFi_instr_t *instr) {
 				return;
 			}
 
+			BFi_on_fwd(instr -> op1);
 			break;
 
 		case BFI_INSTR_BCK:
@@ -323,6 +333,7 @@ static void run(BFi_instr_t *instr) {
 				return;
 			}
 
+			BFi_on_bck(instr -> op1);
 			break;
 
 		case BFI_INSTR_INP:
@@ -331,7 +342,7 @@ static void run(BFi_instr_t *instr) {
 
 		case BFI_INSTR_OUT:
 			BFi_last_output = BFi_mem[BFi_mem_ptr];
-			putchar(BFi_mem[BFi_mem_ptr]);
+			BFi_putchar(BFi_mem[BFi_mem_ptr]);
 			fflush(stdout);
 			break;
 
@@ -410,7 +421,7 @@ static void run(BFi_instr_t *instr) {
 			if(ret == -1) BFe_report_err(BFE_UNKNOWN_ERROR);
 
 			printf("\e[H\e[J");
-			Bfi_do_recompile = true;
+			BFi_do_recompile = true;
 			BFi_last_output = '\n';
 			break;
 

@@ -27,6 +27,10 @@ extern bool BFo_advanced_ops;
 extern size_t BFo_sub_count;
 extern size_t BFo_max_subs;
 
+extern unsigned char *BFo_precomp_output;
+extern size_t BFo_precomp_cells;
+extern size_t BFo_precomp_ptr;
+
 extern void BFo_optimise();
 
 #endif

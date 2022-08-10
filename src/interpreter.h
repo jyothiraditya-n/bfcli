@@ -80,7 +80,7 @@ extern char *BFi_program_str;
 extern BFi_instr_t *BFi_code;
 extern size_t BFi_code_size;
 
-extern bool Bfi_do_recompile;
+extern bool BFi_do_recompile;
 extern bool BFi_is_running;
 extern char BFi_last_output;
 
@@ -93,5 +93,9 @@ extern void BFi_main(char *command_str);
 
 extern void BFi_compile(bool translate);
 extern void BFi_exec();
+
+extern int (*BFi_putchar)(int ch);
+extern void (*BFi_on_fwd)(size_t op);
+extern void (*BFi_on_bck)(size_t op);
 
 #endif

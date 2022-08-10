@@ -1,7 +1,7 @@
-# Bfcli: The Interactive Brainfuck Command-Line Interpreter
+# Bfcli: The Interactive Brainfuck Command-Line Interpreter (& Optimising Compiler)
 ```
 Copyright (C) 2021-2022 Jyothiraditya Nellakra
-Version 10.3: A Friend's Microwave Popcorn
+Version 10.4: A Friend's Homecooked Beef
 
 bfcli:0%
 ```
@@ -34,7 +34,7 @@ The following is a non-exhaustive list of the functionality I added:
 
 - Loading valid Brainfuck files at the prompt, performing code buffer editing with `%` and executing them with `@`. (Again, thanks to intergration with `libClame`.)
 
-- Translating Brainfuck code to C source code as well as partial or complete compilation to Amd64 assembly. The latter significantly boosts compilation performance while offering similar performance to GCC's `-O3`. There are also different levels of optimisation when converting Brainfuck code to C or Assembly.
+- Translating Brainfuck code to C source code as well as partial or complete compilation to many different assembly languages. The latter significantly boosts compilation performance while offering similar performance to GCC's `-O3`. There are also different levels of optimisation when converting Brainfuck code to C or Assembly.
 
 ## Building, Running and Installing the Program from Source
 
@@ -92,12 +92,21 @@ The following are the command-line arguments that this program accepts:
                       (Intermediate compiler code representation).
 
     -O, --optim BAND  Sets the optimisation band to BAND. Valid values are 0,
-                      1, 2, 3, 4 and S/s.
+                      1, 2, 3, P/p, S/s and A/a.
 
     -M, --max-subs N  Sets the maximum number of subroutines and relocations
                       used by `-OS` to N. (N = -1 disables the limit.)
 
   Note: If no output file is specified, a filename is chosen automatically.
+
+  Note: The following is the list of optimisations enabled by the --optim flags:
+     0: No optimisations enabled.
+     1: Merges most FWD and BCK operations into indexed INCs and DECs.
+     2: Detects and converts loops into multiply-and-add operations.
+     3: Optimises addition to zeroed-out cells away to a simple copy.
+   P/p: Precomputes final values as far as possible.
+   S/s: Moves repeated code to dedicated subroutines to save space.
+   A/a: Applies both precomputation and subroutine detection.
 
   Happy coding! :)
 

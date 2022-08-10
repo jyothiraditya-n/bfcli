@@ -31,7 +31,8 @@
 #include "optims/level_1.h"
 #include "optims/level_2.h"
 #include "optims/level_3.h"
-#include "optims/level_4.h"
+
+#include "optims/precomp.h"
 #include "optims/size.h"
 
 char BFo_level = '0';
@@ -41,6 +42,10 @@ bool BFo_advanced_ops = true;
 size_t BFo_sub_count = 1;
 size_t BFo_max_subs = SIZE_MAX;
 
+unsigned char *BFo_precomp_output;
+size_t BFo_precomp_cells;
+size_t BFo_precomp_ptr;
+
 void BFo_optimise() {
 	while(BFi_code) {
 		BFi_instr_t *instr = BFi_code;
@@ -49,17 +54,16 @@ void BFo_optimise() {
 	}
 
 	if(!strcmp(BFa_target_arch, "z80")) BFo_advanced_ops = false;
-	BFi_compile(true);
 
 	switch(BFo_level) {
-		case '0': break;
+		case '0': BFi_compile(true); break;
 		case '1': BFi_code = BFo_optimise_lv1(); break;
 		case '2': BFi_code = BFo_optimise_lv2(); break;
-		case '3': BFi_code = BFo_optimise_lv3(); break;
-		case '4': BFi_code = BFo_optimise_lv4(); break;
+		case '3': BFi_code = BFo_optimise_lv3_2(); break;
 
-		case 'S':
-		case 's': BFi_code = BFo_optimise_size(); break;
+		case 'P': case 'p': BFi_code = BFo_optimise_precomp(); break;
+		case 'S': case 's': BFi_code = BFo_optimise_size(false); break;
+		case 'A': case 'a': BFi_code = BFo_optimise_size(true); break;
 
 		default:
 			BFe_report_err(BFE_BAD_OPTIM);

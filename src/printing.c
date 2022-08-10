@@ -205,12 +205,21 @@ void BFp_print_usage() {
 	puts("                      (Intermediate compiler code representation).\n");
 
 	puts("    -O, --optim BAND  Sets the optimisation band to BAND. Valid values are 0,");
-	puts("                      1, 2, 3, 4 and S/s.\n");
+	puts("                      1, 2, 3, P/p, S/s and A/a.\n");
 
 	puts("    -M, --max-subs N  Sets the maximum number of subroutines and relocations");
 	puts("                      used by `-OS` to N. (N = 0 disables the limit.)\n");
 
 	puts("  Note: If no output file is specified, a filename is chosen automatically.\n");
+
+	puts("  Note: The following is the list of optimisations enabled by the --optim flags:");
+	puts("     0: No optimisations enabled.");
+	puts("     1: Merges most FWD and BCK operations into indexed INCs and DECs.");
+	puts("     2: Detects and converts loops into multiply-and-add operations.");
+	puts("     3: Optimises addition to zeroed-out cells away to a simple copy.");
+	puts("   P/p: Precomputes final values as far as possible.");
+	puts("   S/s: Moves repeated code to dedicated subroutines to save space.");
+	puts("   A/a: Applies both precomputation and subroutine detection.\n");
 
 	puts("  Happy coding! :)");
 }
@@ -219,7 +228,7 @@ void BFp_print_bytecode() {
 	bool no_pause = false;
 	size_t pages = 1;
 
-	if(Bfi_do_recompile) BFi_compile(false);
+	if(BFi_do_recompile) BFi_compile(false);
 	BFc_get_dimensions();
 
 	BFi_instr_t *instr = BFi_code;
@@ -337,8 +346,8 @@ void BFp_peek_at_mem() {
 	BFc_get_dimensions();
 	int width = hex_digits(BFi_mem_size);
 
-	size_t rows = (BFc_height * 2) / 3;
-	size_t cols = (BFc_width - width - 8) / 4;
+	size_t rows = (BFc_height * 2) / 3, cols = (BFc_width - width - 8) / 4;
+	while(rows * cols > BFi_mem_size) rows--;
 
 	size_t i = BFi_mem_ptr, offset = (rows * cols) / 2;
 

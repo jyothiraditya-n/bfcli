@@ -100,20 +100,22 @@ int main(int argc, char **argv) {
 			BFe_report_err(BFE_UNKNOWN_ERROR);
 		}
 
+		size_t len = strlen(line);
+		
+		if(BFc_minimal_mode) goto next;
 		strcpy(old_file, BFf_mainfile_name);
 		strcpy(BFf_mainfile_name, line);
 		ret = BFf_load_file();
 
 		if(ret == FILE_OK) {
 			printf("loaded '%s'.\n", BFf_mainfile_name);
-			Bfi_do_recompile = true;
+			BFi_do_recompile = true;
 			continue;
 		}
 
 		else strcpy(BFf_mainfile_name, old_file);
 		
-		size_t len = strlen(line);
-		ret = check(line, len);
+	next:	ret = check(line, len);
 
 		switch(ret) {
 		case CODE_OK:

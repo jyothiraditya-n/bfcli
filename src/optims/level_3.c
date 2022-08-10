@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 
@@ -26,6 +27,8 @@
 
 static void delete(BFi_instr_t *node, ssize_t offset);
 static void insert(BFi_instr_t *node, ssize_t offset);
+
+static bool evaluate(BFi_instr_t *start, ssize_t ad);
 
 BFi_instr_t *BFo_optimise_lv3() {
 	BFi_instr_t *start = BFo_optimise_lv2();
@@ -61,7 +64,7 @@ BFi_instr_t *BFo_optimise_lv3() {
 	bool call_delete = false;
 	ssize_t offset = 0;
 
-	for(BFi_instr_t *instr = BFi_code; instr; instr = instr -> next) {
+	for(; instr; instr = instr -> next) {
 		if(call_delete) {
 			delete(instr -> prev, offset);
 			call_delete = false;
@@ -97,6 +100,123 @@ BFi_instr_t *BFo_optimise_lv3() {
 			insert(instr -> prev, offset);
 			offset = 0;
 		}
+	}
+
+	for(BFi_instr_t *instr = start; instr; instr = instr -> next) {
+	loop:	if(instr -> opcode == BFI_INSTR_MOV && !instr -> op1)
+			if(evaluate(instr, instr -> ad1))
+		{
+			if(start == instr) start = start -> next;
+
+			if(instr -> prev) instr -> prev -> next = instr -> next;
+			if(instr -> next) instr -> next -> prev = instr -> prev;
+
+			BFi_instr_t *rip = instr;
+			instr = instr -> next;
+			free(rip);
+
+			if(instr) goto loop;
+			else break;
+		}
+	}
+
+	return start;
+}
+
+BFi_instr_t *BFo_optimise_lv3_2() {
+	BFi_instr_t *start = BFo_optimise_lv3();
+
+	for(size_t i = 0; i < BFi_mem_size; i++) {
+		ssize_t ad = i;
+
+		for(BFi_instr_t *instr = start; instr; instr = instr -> next) {
+		l3:	switch(instr -> opcode) {
+			case BFI_INSTR_INC:
+				if(instr -> ad1 != ad) break;
+				instr -> opcode = BFI_INSTR_MOV;
+				goto l2;
+
+			case BFI_INSTR_DEC:
+				if(instr -> ad1 != ad) break;
+
+				instr -> opcode = BFI_INSTR_MOV;
+				instr -> op1 = 256 - instr -> op1;
+				goto l2;
+
+			case BFI_INSTR_CMPL:
+				if(instr -> ad1 != ad) break;
+				
+				if(instr -> prev)
+					instr -> prev -> next = instr -> next;
+
+				if(instr -> next)
+					instr -> next -> prev = instr -> prev;
+
+				BFi_instr_t *rip = instr;
+				instr = instr -> next;
+				free(rip);
+
+				if(instr) goto l3;
+				else break;
+
+			case BFI_INSTR_MOV:
+				if(instr -> ad1 == ad) goto l2;
+				else break;
+
+			case BFI_INSTR_FWD:
+				ad += instr -> op1;
+				break;
+
+			case BFI_INSTR_BCK:
+				ad -= instr -> op1;
+				break;
+
+			case BFI_INSTR_INP:
+				if(instr -> ad1 == ad) goto l2;
+				else break;
+
+			case BFI_INSTR_LOOP: case BFI_INSTR_ENDL:
+				goto l2;
+
+			default:
+				if(instr -> ad2 == ad) {
+					if(instr -> prev)
+						instr -> prev -> next
+						= instr -> next;
+
+					if(instr -> next)
+						instr -> next -> prev
+						= instr -> prev;
+
+					BFi_instr_t *rip = instr;
+					instr = instr -> next;
+					free(rip);
+
+					if(instr) goto l3;
+					else break;
+				}
+
+				if(instr -> ad1 != ad) break;
+
+				switch(instr -> opcode) {
+				case BFI_INSTR_MULA:
+					instr -> opcode = BFI_INSTR_MULM;
+					break;
+
+				case BFI_INSTR_SHLA:
+					instr -> opcode = BFI_INSTR_SHLM;
+					break;
+
+				case BFI_INSTR_CPYA:
+					instr -> opcode = BFI_INSTR_CPYM;
+				}
+
+				goto l2;
+			}
+
+		}
+
+	l2: continue;
 	}
 
 	return start;
@@ -153,4 +273,95 @@ static void insert(BFi_instr_t *node, ssize_t offset) {
 		new -> ad1 = 0;
 		new -> ad2 = 0;
 	}
+}
+
+static bool evaluate(BFi_instr_t *start, ssize_t ad) {
+	bool ret = true;
+
+	for(BFi_instr_t *instr = start -> next; instr; instr = instr -> next) {
+	loop:	switch(instr -> opcode) {
+		case BFI_INSTR_INC:
+			if(instr -> ad1 != ad) break;
+
+			instr -> opcode = BFI_INSTR_MOV;
+			return ret;
+
+		case BFI_INSTR_DEC:
+			if(instr -> ad1 != ad) break;
+
+			instr -> opcode = BFI_INSTR_MOV;
+			instr -> op1 = 256 - instr -> op1;
+			return ret;
+
+		case BFI_INSTR_CMPL:
+			if(instr -> ad1 != ad) break;
+			
+			if(instr -> prev) instr -> prev -> next = instr -> next;
+			if(instr -> next) instr -> next -> prev = instr -> prev;
+			BFi_instr_t *rip = instr;
+			instr = instr -> next;
+			free(rip);
+
+			if(instr) goto loop;
+			else break;
+
+		case BFI_INSTR_OUT:
+			if(instr -> ad1 == ad) ret = false;
+			break;
+
+		case BFI_INSTR_MOV:
+			if(instr -> ad1 == ad) return ret;
+			else break;
+
+		case BFI_INSTR_FWD:
+			ad += instr -> op1;
+			break;
+
+		case BFI_INSTR_BCK:
+			ad -= instr -> op1;
+			break;
+
+		case BFI_INSTR_INP:
+			if(instr -> ad1 == ad) return ret;
+			else break;
+
+		case BFI_INSTR_LOOP: case BFI_INSTR_ENDL:
+			return false;
+
+		default:
+			if(instr -> ad2 == ad) {
+				if(instr -> prev)
+					instr -> prev -> next = instr -> next;
+
+				if(instr -> next)
+					instr -> next -> prev = instr -> prev;
+
+				BFi_instr_t *rip = instr;
+				instr = instr -> next;
+				free(rip);
+
+				if(instr) goto loop;
+				else break;
+			}
+
+			if(instr -> ad1 != ad) break;
+
+			switch(instr -> opcode) {
+			case BFI_INSTR_MULA:
+				instr -> opcode = BFI_INSTR_MULM;
+				break;
+
+			case BFI_INSTR_SHLA:
+				instr -> opcode = BFI_INSTR_SHLM;
+				break;
+
+			case BFI_INSTR_CPYA:
+				instr -> opcode = BFI_INSTR_CPYM;
+			}
+
+			return ret;
+		}
+	}
+
+	return ret;
 }

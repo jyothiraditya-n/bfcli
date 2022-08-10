@@ -15,6 +15,7 @@
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
 #include <ctype.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -295,4 +296,38 @@ static int hex_digits(size_t n) {
 	int ret = 0;
 	while(n) { n /= 16; ret++; }
 	return ret;
+}
+
+void BFf_printstr(FILE *file, unsigned char *str, bool non_c) {
+	bool quoted = false, contd = false;
+
+	if(non_c) goto non_c;
+
+	for(unsigned char *i = str; *i; i++) {
+		if(*i == '\\') fprintf(file, "\\\\");
+		else if(*i == '\"') fprintf(file, "\\\"");
+		else if(*i >= ' ' && *i <= '~') fprintf(file, "%c", *i);
+		else fprintf(file, "\\%03o", *i);
+	}
+
+	return;
+
+non_c:	for(unsigned char *i = str; *i; i++) {
+		if(contd) { fprintf(file, ", "); contd = false; }
+
+		if(*i == '\\') goto nope;
+
+		if(*i >= ' ' && *i <= '~') {
+			if(!quoted) { fprintf(file, "\""); quoted = true; }
+			fprintf(file, "%c", *i);
+		}
+
+		else {
+	nope:		if(quoted) { fprintf(file, "\""); quoted = false; }
+			fprintf(file, ", %d", *i);
+			contd = true;
+		}
+	}
+
+	if(quoted) fprintf(file, "\"");
 }

@@ -20,5 +20,6 @@
 #define BF_OPTIMS_LEVEL3_H 1
 
 extern BFi_instr_t *BFo_optimise_lv3();
+extern BFi_instr_t *BFo_optimise_lv3_2();
 
 #endif

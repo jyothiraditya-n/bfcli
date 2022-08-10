@@ -14,11 +14,13 @@
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>. */
 
+#include <stdbool.h>
+
 #include "../interpreter.h"
 
 #ifndef BF_OPTIMS_SIZE_H
 #define BF_OPTIMS_SIZE_H 1
 
-extern BFi_instr_t *BFo_optimise_size();
+extern BFi_instr_t *BFo_optimise_size(bool precomp);
 
 #endif

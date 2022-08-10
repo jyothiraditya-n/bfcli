@@ -24,7 +24,8 @@
 
 #include <sys/types.h>
 
-#include "level_4.h"
+#include "level_3.h"
+#include "precomp.h"
 #include "size.h"
 
 #include "../interpreter.h"
@@ -61,8 +62,9 @@ static void *call_eval(void *data_p);
 static void evaluate(BFi_instr_t *our_base, size_t index);
 static ret_t rec_eval(BFi_instr_t *our_base, ret_t data);
 
-BFi_instr_t *BFo_optimise_size() {
-	BFi_instr_t *start = BFo_optimise_lv4();
+BFi_instr_t *BFo_optimise_size(bool precomp) {
+	BFi_instr_t *start = precomp? BFo_optimise_precomp()
+		: BFo_optimise_lv3_2();
 
 	BFi_instr_t *instr;
 	for(instr = start; instr; instr = instr -> next) {

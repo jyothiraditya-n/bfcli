@@ -16,9 +16,9 @@
 
 #include "../interpreter.h"
 
-#ifndef BF_OPTIMS_LEVEL4_H
-#define BF_OPTIMS_LEVEL4_H 1
+#ifndef BF_OPTIMS_PRECOMP_H
+#define BF_OPTIMS_PRECOMP_H 1
 
-extern BFi_instr_t *BFo_optimise_lv4();
+extern BFi_instr_t *BFo_optimise_precomp();
 
 #endif

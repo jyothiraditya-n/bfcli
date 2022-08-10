@@ -19,10 +19,37 @@
 
 #include "bfir.h"
 
+#include "../files.h"
 #include "../interpreter.h"
+#include "../optims.h"
 
 void BFa_bfir_t(FILE *file) {
 	fprintf(file, "#0:");
+
+	if(BFo_mem_padding) fprintf(file, "\tpad\t%zu\n", BFo_mem_padding);
+
+	if(BFo_precomp_cells) {
+		fprintf(file, "\tinit\t");
+
+		size_t cols = 16;
+		char buf[16] = {0};
+
+		for(size_t i = 0; i < BFo_precomp_cells; i++) {
+			cols += sprintf(buf, "%d, ", BFi_mem[i]);
+			if(cols < 80) fprintf(file, "%s", buf);
+			else cols = fprintf(file, "\n\t\t%s", buf) + 13; 
+		}
+
+		cols += sprintf(buf, "%%%zd", BFo_precomp_ptr);
+		if(cols < 80) fprintf(file, "%s\n", buf);
+		else cols = fprintf(file, "\n\t\t%s\n", buf) + 13;
+	}
+
+	if(BFo_precomp_output) {
+		fprintf(file, "\tprint\t");
+		BFf_printstr(file, BFo_precomp_output, true);
+		fprintf(file, "\n");
+	}
 
 	for(BFi_instr_t *instr = BFi_code; instr; instr = instr -> next) {
 		size_t op1 = instr -> op1, op2 = instr -> op2;
