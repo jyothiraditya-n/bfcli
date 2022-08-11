@@ -27,7 +27,6 @@
 const char *BFc_cmd_name;
 const char *BFc_immediate;
 
-bool BFc_use_colour = false;
 size_t BFc_height = 24;
 size_t BFc_width = 80;
 

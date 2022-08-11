@@ -21,8 +21,8 @@
 #define BF_MAIN_H 1
 
 #define BF_VERSION 10
-#define BF_SUBVERSION 4
-#define BF_VERNAME "A Friend's Homecooked Beef"
+#define BF_SUBVERSION 5
+#define BF_VERNAME "A Friend's Rice Noodles"
 
 #define BF_LINE_SIZE 4096
 #define BF_CODE_SIZE 65536

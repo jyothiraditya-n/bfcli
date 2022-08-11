@@ -30,8 +30,8 @@ CC = gcc
 AS = as
 LD = ld
 
-CPPFLAGS = -Wall -Wextra -std=c99 -O0 -I libClame/inc/ -g
-CFLAGS = -std=c99 -g
+CPPFLAGS = -Wall -Wextra -std=c99 -O3 -I libClame/inc/
+CFLAGS = -std=c99 -s
 LDLIBS += -L libClame/ -lClame -lpthread
 
 DLFLAGS += -s
@@ -100,13 +100,14 @@ global : install
 	-sudo rm /bin/bfcli /bin/bf /bin/bfc
 	sudo ln -s $(DESTDIR)/bfcli /bin/bfcli
 	sudo ln -s $(DESTDIR)/bfcli /bin/bf
-	sudo ln -s $(DESTDIR)/bfcli /bin/bfc
+	sudo ln -s $(DESTDIR)/bfc /bin/bfc
 
-install : bfcli $(DESTDIR)/
+install : $(DESTDIR)/ bfcli script/bfc.sh
 	cp bfcli $(DESTDIR)/
+	cp script/bfc.sh $(DESTDIR)/bfc
 
 remove :
-	-rm $(DESTDIR)/bfcli
+	-rm $(DESTDIR)/bfcli $(SCRIPTS)
 
 _demos : $(DEMOS)
 

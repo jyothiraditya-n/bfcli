@@ -1,7 +1,7 @@
 # Bfcli: The Interactive Brainfuck Command-Line Interpreter (& Optimising Compiler)
 ```
 Copyright (C) 2021-2022 Jyothiraditya Nellakra
-Version 10.4: A Friend's Homecooked Beef
+Version 10.5: A Friend's Rice Noodles
 
 bfcli:0%
 ```
@@ -53,11 +53,10 @@ The following are the command-line arguments that this program accepts:
     -h, --help        Prints the help dialogue.
     -v, --version     Prints the program version.
 
-    -c, --colour      Enables colour output.
     -n, --no-ansi     Disables the use of ANSI escape sequences.
     -m, --minimal     Disables Brainfuck extensions.
 
-  Note: Colour support and use of ANSI escape sequences is enabled by default.
+  Note: The use of ANSI escape sequences is enabled by default.
 
   Note: When in Minimal Mode, it's you and the original Brainfuck language, and
         that's it. All of the extensions of interactive mode are disabled.
@@ -97,10 +96,11 @@ The following are the command-line arguments that this program accepts:
     -M, --max-subs N  Sets the maximum number of subroutines and relocations
                       used by `-OS` to N. (N = -1 disables the limit.)
 
-  Note: If no output file is specified, a filename is chosen automatically.
+  Note: If no output file is specified, a filename is chosen automatically. The
+        output filename of `-' designates stdout.
 
   Note: The following is the list of optimisations enabled by the --optim flags:
-     0: No optimisations enabled.
+     0: No optimisations enabled beyond run-length compression.
      1: Merges most FWD and BCK operations into indexed INCs and DECs.
      2: Detects and converts loops into multiply-and-add operations.
      3: Optimises addition to zeroed-out cells away to a simple copy.
@@ -120,8 +120,8 @@ TL;DR:
 
   Valid arguments are:
 
-    -a, --about      | -h, --help       | -v, --version    | -c, --colour
-    -m, --minimal    | -n, --no-ansi    | -f, --file FILE  |
+    -a, --about      | -h, --help       | -v, --version    | -m, --minimal
+    -n, --no-ansi    | -f, --file FILE  |
 
     -d, --direct-inp | -l, --length LEN | -r, --ram SIZE   | -t, --translate
     -x, --compile    | -s, --standalone |

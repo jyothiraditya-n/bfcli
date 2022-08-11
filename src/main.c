@@ -55,7 +55,6 @@ static void help();
 static void version();
 
 int main(int argc, char **argv) {
-	if(!strcmp(argv[0], "bfc")) BFt_translate = true;
 	init(argc, argv);
 
 	if(BFc_minimal_mode) {
@@ -170,18 +169,6 @@ static void init(int argc, char **argv) {
 	arg -> pre = version;
 
 	LCv_t *var = LCv_new();
-	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
-	var -> id = "colour";
-	var -> data = &BFc_use_colour;
-
-	arg = LCa_new();
-	if(!arg) BFe_report_err(BFE_UNKNOWN_ERROR);
-	arg -> long_flag = "colour";
-	arg -> short_flag = 'c';
-	arg -> var = var;
-	arg -> value = true;
-
-	var = LCv_new();
 	if(!var) BFe_report_err(BFE_UNKNOWN_ERROR);
 	var -> id = "no-ansi";
 	var -> data = &BFc_no_ansi;
@@ -358,7 +345,6 @@ static void init(int argc, char **argv) {
 	}
 
 	BFc_init(); BFi_init(); BFf_init();
-	if(BFc_no_ansi) BFc_use_colour = false;
 
 	if(!BFi_program_str) {
 		BFi_program_str = calloc(BFi_code_size, sizeof(char));

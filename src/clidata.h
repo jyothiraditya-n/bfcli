@@ -26,7 +26,6 @@
 extern const char *BFc_cmd_name;
 extern const char *BFc_immediate;
 
-extern bool BFc_use_colour;
 extern size_t BFc_height;
 extern size_t BFc_width;
 

@@ -57,7 +57,8 @@ extern void BFa_translate() {
 			BF_FILENAME_SIZE - 1 - strlen(BFf_outfile_name));
 	}
 
-	FILE *file = fopen(BFf_outfile_name, "w");
+	FILE *file = strcmp(BFf_outfile_name, "-")?
+		fopen(BFf_outfile_name, "w"): stdout;
 
 	if(!file) {
 		BFe_file_name = BFf_outfile_name;

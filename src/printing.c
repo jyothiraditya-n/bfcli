@@ -136,12 +136,12 @@ void BFp_print_help() {
 }
 
 void BFp_print_minihelp() {
-	printf("\n Usage: %s [ARGS] [FILE]\n\n", BFc_cmd_name);
+	printf("\n  Usage: %s [ARGS] [FILE]\n\n", BFc_cmd_name);
 	
 	puts("  Valid arguments are:\n");
 
-	puts("    -a, --about      | -h, --help       | -v, --version    | -c, --colour");
-	puts("    -m, --minimal    | -n, --no-ansi    | -f, --file FILE  |\n");
+	puts("    -a, --about      | -h, --help       | -v, --version    | -m, --minimal");
+	puts("    -n, --no-ansi    | -f, --file FILE  |\n");
 
 	puts("    -d, --direct-inp | -l, --length LEN | -r, --ram SIZE   | -t, --translate");
 	puts("    -x, --compile    | -s, --standalone |\n");
@@ -154,7 +154,6 @@ void BFp_print_minihelp() {
 
 void BFp_print_prompt() {
 	if(BFm_insertion_point) printf("> ");
-	else if(!BFc_use_colour) printf("bfcli:%zx%% ", BFi_mem_ptr);
 	else printf("\e[93mbfcli\e[0m:\e[33m%zx\e[0m%% ", BFi_mem_ptr);
 }
 
@@ -166,11 +165,10 @@ void BFp_print_usage() {
 	puts("    -h, --help        Prints the help dialogue.");
 	puts("    -v, --version     Prints the program version.\n");
 
-	puts("    -c, --colour      Enables colour output.");
 	puts("    -n, --no-ansi     Disables the use of ANSI escape sequences.");
 	puts("    -m, --minimal     Disables Brainfuck extensions.\n");
 
-	puts("  Note: Colour support and use of ANSI escape sequences is enabled by default.\n");
+	puts("  Note: The use of ANSI escape sequences is enabled by default.\n");
 
 	puts("  Note: When in Minimal Mode, it's you and the original Brainfuck language, and");
 	puts("        that's it. All of the extensions of interactive mode are disabled.\n");
@@ -210,10 +208,11 @@ void BFp_print_usage() {
 	puts("    -M, --max-subs N  Sets the maximum number of subroutines and relocations");
 	puts("                      used by `-OS` to N. (N = 0 disables the limit.)\n");
 
-	puts("  Note: If no output file is specified, a filename is chosen automatically.\n");
+	puts("  Note: If no output file is specified, a filename is chosen automatically. The");
+	puts("        output filename of `-' designates stdout.\n");
 
 	puts("  Note: The following is the list of optimisations enabled by the --optim flags:");
-	puts("     0: No optimisations enabled.");
+	puts("     0: No optimisations enabled beyond run-length compression.");
 	puts("     1: Merges most FWD and BCK operations into indexed INCs and DECs.");
 	puts("     2: Detects and converts loops into multiply-and-add operations.");
 	puts("     3: Optimises addition to zeroed-out cells away to a simple copy.");
@@ -366,17 +365,14 @@ void BFp_peek_at_mem() {
 			if(sub_addr >= BFi_mem_size) sub_addr -= BFi_mem_size;
 			unsigned char byte = BFi_mem[sub_addr];
 
-			if(BFc_use_colour) {
-				if(sub_addr == BFi_mem_ptr) printf("\e[97m");
-				else if(byte) printf("\e[93m");
-				else printf("\e[33m");
-			}
+			if(sub_addr == BFi_mem_ptr) printf("\e[97m");
+			else if(byte) printf("\e[93m");
+			else printf("\e[33m");
 
 			printf(" %02x", byte);
 		}
 
-		if(BFc_use_colour) printf("\e[0m |");
-		else printf(" |");
+		printf("\e[0m |");
 
 		for(size_t k = 0; k < cols; k++) {
 			size_t sub_addr = i + j + k;
@@ -422,16 +418,13 @@ void BFp_dump_mem() {
 			if(i + j >= BFi_mem_size) { printf("   "); continue; }
 			unsigned char byte = BFi_mem[i + j];
 
-			if(BFc_use_colour) {
-				if(byte) printf("\e[93m");
-				else printf("\e[33m");
-			}
+			if(byte) printf("\e[93m");
+			else printf("\e[33m");
 
 			printf(" %02x", byte);
 		}
 
-		if(BFc_use_colour) printf("\e[0m |");
-		else printf(" |");
+		printf("\e[0m |");
 
 		for(size_t j = 0; j < cols; j++) {
 			if(i + j >= BFi_mem_size) { printf("."); continue; }
