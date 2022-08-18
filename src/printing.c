@@ -211,11 +211,13 @@ void BFp_print_usage() {
 	puts("  Note: If no output file is specified, a filename is chosen automatically. The");
 	puts("        output filename of `-' designates stdout.\n");
 
-	puts("  Note: The following is the list of optimisations enabled by the --optim flags:");
+	puts("  Note: The following is the list of optimisations enabled by the --optim flags:\n");
+
 	puts("     0: No optimisations enabled beyond run-length compression.");
 	puts("     1: Merges most FWD and BCK operations into indexed INCs and DECs.");
 	puts("     2: Detects and converts loops into multiply-and-add operations.");
-	puts("     3: Optimises addition to zeroed-out cells away to a simple copy.");
+	puts("     3: Optimises addition to zeroed-out cells away to a simple copy.\n");
+
 	puts("   P/p: Precomputes final values as far as possible.");
 	puts("   S/s: Moves repeated code to dedicated subroutines to save space.");
 	puts("   A/a: Applies both precomputation and subroutine detection.\n");

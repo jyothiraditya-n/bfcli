@@ -100,10 +100,12 @@ The following are the command-line arguments that this program accepts:
         output filename of `-' designates stdout.
 
   Note: The following is the list of optimisations enabled by the --optim flags:
+
      0: No optimisations enabled beyond run-length compression.
      1: Merges most FWD and BCK operations into indexed INCs and DECs.
      2: Detects and converts loops into multiply-and-add operations.
      3: Optimises addition to zeroed-out cells away to a simple copy.
+
    P/p: Precomputes final values as far as possible.
    S/s: Moves repeated code to dedicated subroutines to save space.
    A/a: Applies both precomputation and subroutine detection.
