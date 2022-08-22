@@ -89,12 +89,12 @@ $(DEMOS) : % : %.o
 all : bfcli
 
 clean :
-	cd libClame; make clean
+	cd libClame; $(MAKE) clean
 	$(CLEAN)
 
 demos : bfcli
-	+make -j1 _translate_demos
-	+make _demos
+	+$(MAKE) -j1 _translate_demos
+	+$(MAKE) _demos
 
 global : install
 	-sudo rm /bin/bfcli /bin/bf /bin/bfc
