@@ -286,158 +286,226 @@ static void append_cmplx(BFi_instr_t **current, int *opcode, size_t *op,
 }
 
 static void run(BFi_instr_t *instr) {
-	while(instr && BFi_is_running) {
-		switch(instr -> opcode) {
-		case BFI_INSTR_INC:
-			BFi_mem[BFi_mem_ptr] += instr -> op1;
-			break;
+	static const void *jump_table[] = {
+		[BFI_INSTR_NOP] = &&nop,
+		[BFI_INSTR_INC]	= &&inc,
+		[BFI_INSTR_DEC]	= &&dec,
+		[BFI_INSTR_FWD]	= &&fwd,
+		[BFI_INSTR_BCK] = &&bck,
+		[BFI_INSTR_INP] = &&inp,
+		[BFI_INSTR_OUT] = &&out,
+		[BFI_INSTR_JMP] = &&jmp,
+		[BFI_INSTR_JZ]  = &&jz,
 
-		case BFI_INSTR_DEC:
-			BFi_mem[BFi_mem_ptr] -= instr -> op1;
-			break;
+		[BFI_INSTR_HELP] = &&help,
+		[BFI_INSTR_INIT] = &&init,
 
-		case BFI_INSTR_FWD:
-			BFi_mem_ptr += instr -> op1;
-			if(BFi_mem_ptr >= BFi_mem_size) {
-				BFi_mem_ptr -= instr -> op1;
+		[BFI_INSTR_MEM_PEEK] = &&peek,
+		[BFI_INSTR_MEM_DUMP] = &&dump,
 
-				BFe_file_name = BFc_immediate
-					? BFf_mainfile_name
-					: BFc_cmd_name;
+		[BFI_INSTR_EXEC] = &&exec,
+		[BFI_INSTR_EDIT] = &&edit,
+		[BFI_INSTR_COMP] = &&comp
+	};
 
-				if(BFi_last_output != '\n') putchar('\n');
-				BFe_report_err(BFE_SEGFAULT);
-				putchar('\n');
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
 
-				BFi_last_output = '\n';
-				return;
-			}
+nop:	instr = instr -> next;
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
 
-			BFi_on_fwd(instr -> op1);
-			break;
+inc:
+	BFi_mem[BFi_mem_ptr] += instr -> op1;
 
-		case BFI_INSTR_BCK:
-			BFi_mem_ptr -= instr -> op1;
-			if(BFi_mem_ptr >= BFi_mem_size) {
-				BFi_mem_ptr += instr -> op1;
+	instr = instr -> next;
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
 
-				BFe_file_name = BFc_immediate
-					? BFf_mainfile_name
-					: BFc_cmd_name;
+dec:
+	BFi_mem[BFi_mem_ptr] -= instr -> op1;
 
-				if(BFi_last_output != '\n') putchar('\n');
-				BFe_report_err(BFE_SEGFAULT);
-				putchar('\n');
+	instr = instr -> next;
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
 
-				BFi_last_output = '\n';
-				return;
-			}
+fwd:
+	BFi_mem_ptr += instr -> op1;
+	if(BFi_mem_ptr >= BFi_mem_size) {
+		BFi_mem_ptr -= instr -> op1;
 
-			BFi_on_bck(instr -> op1);
-			break;
+		BFe_file_name = BFc_immediate
+			? BFf_mainfile_name
+			: BFc_cmd_name;
 
-		case BFI_INSTR_INP:
-			BFi_mem[BFi_mem_ptr] = get_input();
-			break;
+		if(BFi_last_output != '\n') putchar('\n');
+		BFe_report_err(BFE_SEGFAULT);
+		putchar('\n');
 
-		case BFI_INSTR_OUT:
-			BFi_last_output = BFi_mem[BFi_mem_ptr];
-			BFi_putchar(BFi_mem[BFi_mem_ptr]);
-			fflush(stdout);
-			break;
-
-		case BFI_INSTR_JMP:
-			instr = instr -> ptr;
-			continue;
-
-		case BFI_INSTR_JZ:
-			if(BFi_mem[BFi_mem_ptr]) break;
-			instr = instr -> ptr;
-			continue;
-
-		case BFI_INSTR_HELP:
-			if(BFi_last_output != '\n') putchar('\n');
-
-			putchar('\n');
-			BFp_print_about();
-			putchar('\n');
-			BFp_print_help();
-			putchar('\n');
-
-			BFi_last_output = '\n';
-			break;
-
-		case BFI_INSTR_INIT:
-			for(size_t i = 0; i < BFi_mem_size; i++)
-				BFi_mem[i] = 0;
-
-			BFi_mem_ptr = 0;
-			break;
-
-		case BFI_INSTR_MEM_PEEK:
-			if(BFi_last_output != '\n') putchar('\n');
-
-			putchar('\n');
-			BFp_peek_at_mem();
-			putchar('\n');
-
-			BFi_last_output = '\n';
-			break;
-
-		case BFI_INSTR_MEM_DUMP:
-			if(strlen(BFf_outfile_name)) {
-				BFf_dump_mem();
-				break;
-			}
-
-			if(BFi_last_output != '\n') putchar('\n');
-
-			putchar('\n');
-			BFp_dump_mem();
-			putchar('\n');
-
-			BFi_last_output = '\n';
-			break;
-
-		case BFI_INSTR_EXEC:
-			BFi_exec();
-			break;
-
-		case BFI_INSTR_EDIT:
-			if(BFc_no_ansi) {
-				if(!strlen(BFi_program_str)) break;
-				printf("\n%s\n\n", BFi_program_str);
-				BFi_last_output = '\n';
-				break;
-			}
-
-			int ret = tcsetattr(STDIN_FILENO, TCSANOW, &BFc_cooked);
-			if(ret == -1) BFe_report_err(BFE_UNKNOWN_ERROR);
-
-			ret = LCe_edit();
-			if(ret != LCE_OK) BFe_report_err(BFE_UNKNOWN_ERROR);
-
-			ret = tcsetattr(STDIN_FILENO, TCSANOW, &BFc_raw);
-			if(ret == -1) BFe_report_err(BFE_UNKNOWN_ERROR);
-
-			printf("\e[H\e[J");
-			BFi_do_recompile = true;
-			BFi_last_output = '\n';
-			break;
-
-		case BFI_INSTR_COMP:
-			if(BFi_last_output != '\n') putchar('\n');
-
-			putchar('\n');
-			BFp_print_bytecode();
-			putchar('\n');
-
-			BFi_last_output = '\n';
-			break;
-		}
-
-		instr = instr -> next;
+		BFi_last_output = '\n';
+		return;
 	}
+
+	BFi_on_fwd(instr -> op1);
+
+	instr = instr -> next;
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
+
+bck:
+	BFi_mem_ptr -= instr -> op1;
+	if(BFi_mem_ptr >= BFi_mem_size) {
+		BFi_mem_ptr += instr -> op1;
+
+		BFe_file_name = BFc_immediate
+			? BFf_mainfile_name
+			: BFc_cmd_name;
+
+		if(BFi_last_output != '\n') putchar('\n');
+		BFe_report_err(BFE_SEGFAULT);
+		putchar('\n');
+
+		BFi_last_output = '\n';
+		return;
+	}
+
+	BFi_on_bck(instr -> op1);
+
+	instr = instr -> next;
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
+
+inp:
+	BFi_mem[BFi_mem_ptr] = get_input();
+
+	instr = instr -> next;
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
+
+out:
+	BFi_last_output = BFi_mem[BFi_mem_ptr];
+	BFi_putchar(BFi_mem[BFi_mem_ptr]);
+	fflush(stdout);
+
+	instr = instr -> next;
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
+
+jmp:
+	instr = instr -> ptr;
+
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
+
+jz:
+	if(BFi_mem[BFi_mem_ptr]) instr = instr -> next;
+	else instr = instr -> ptr;
+	
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
+
+help:
+	if(BFi_last_output != '\n') putchar('\n');
+
+	putchar('\n');
+	BFp_print_about();
+	putchar('\n');
+	BFp_print_help();
+	putchar('\n');
+
+	BFi_last_output = '\n';
+
+	instr = instr -> next;
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
+
+init:
+	for(size_t i = 0; i < BFi_mem_size; i++)
+		BFi_mem[i] = 0;
+
+	BFi_mem_ptr = 0;
+
+	instr = instr -> next;
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
+
+peek:
+	if(BFi_last_output != '\n') putchar('\n');
+
+	putchar('\n');
+	BFp_peek_at_mem();
+	putchar('\n');
+
+	BFi_last_output = '\n';
+
+	instr = instr -> next;
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
+
+dump:
+	if(strlen(BFf_outfile_name)) {
+		BFf_dump_mem();
+		goto dump_n;
+	}
+
+	if(BFi_last_output != '\n') putchar('\n');
+
+	putchar('\n');
+	BFp_dump_mem();
+	putchar('\n');
+
+	BFi_last_output = '\n';
+
+dump_n:	instr = instr -> next;
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
+
+exec:
+	BFi_exec();
+
+	instr = instr -> next;
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
+
+edit:
+	if(BFc_no_ansi) {
+		if(!strlen(BFi_program_str)) goto edit_n;
+		printf("\n%s\n\n", BFi_program_str);
+		BFi_last_output = '\n';
+		goto edit_n;
+	}
+
+	int ret = tcsetattr(STDIN_FILENO, TCSANOW, &BFc_cooked);
+	if(ret == -1) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+	ret = LCe_edit();
+	if(ret != LCE_OK) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+	ret = tcsetattr(STDIN_FILENO, TCSANOW, &BFc_raw);
+	if(ret == -1) BFe_report_err(BFE_UNKNOWN_ERROR);
+
+	printf("\e[H\e[J");
+	BFi_do_recompile = true;
+	BFi_last_output = '\n';
+
+edit_n:	instr = instr -> next;
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
+
+comp:
+	if(BFi_last_output != '\n') putchar('\n');
+
+	putchar('\n');
+	BFp_print_bytecode();
+	putchar('\n');
+
+	BFi_last_output = '\n';
+
+	instr = instr -> next;
+	if(instr && BFi_is_running) goto *jump_table[instr -> opcode];
+	else goto end;
+
+end:	return;
 }
 
 static char get_input() {

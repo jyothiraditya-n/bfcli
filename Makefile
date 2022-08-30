@@ -30,8 +30,8 @@ CC = gcc
 AS = as
 LD = ld
 
-CPPFLAGS = -Wall -Wextra -std=c99 -O3 -I libClame/inc/
-CFLAGS = -std=c99 -s
+CPPFLAGS = -Wall -Wextra -std=gnu99 -O3 -I libClame/inc/
+CFLAGS = -std=gnu99 -s
 LDLIBS += -L libClame/ -lClame -lpthread
 
 DLFLAGS += -s
